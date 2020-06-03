@@ -1,6 +1,6 @@
 {
   "name": "@webgpu/compute",
-  "version": "0.0.4",
+  "version": "0.0.1",
   "description": "Pretrained hand detection model",
   "main": "dist/index.js",
   "jsnext:main": "dist/compute.esm.js",
