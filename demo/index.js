@@ -1,249 +1,196 @@
-/**
- * @license
- * Copyright 2020 Google LLC. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * =============================================================================
- */
+import glslangModule from "https://unpkg.com/@webgpu/glslang@0.0.8/dist/web-devel/glslang.js";
 
-// import * as tfwebgpu from '@tensorflow/tfjs-backend-webgpu';
-import * as handpose from '@tensorflow-models/handpose';
-import * as tfjsWasm from '@tensorflow/tfjs-backend-wasm';
-import {version_wasm} from '@tensorflow/tfjs-backend-wasm';
-
-tfjsWasm.setWasmPath(
-    `https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${
-        version_wasm}/dist/tfjs-backend-wasm.wasm`);
-function isMobile() {
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  return isAndroid || isiOS;
-}
-
-let videoWidth, videoHeight,
-    scatterGLHasInitialized = false, scatterGL, fingerLookupIndices = {
-      thumb: [0, 1, 2, 3, 4],
-      indexFinger: [0, 5, 6, 7, 8],
-      middleFinger: [0, 9, 10, 11, 12],
-      ringFinger: [0, 13, 14, 15, 16],
-      pinky: [0, 17, 18, 19, 20]
-    };  // for rendering each finger as a polyline
-
-const VIDEO_WIDTH = 640;
-const VIDEO_HEIGHT = 500;
-const mobile = isMobile();
-// Don't render the point cloud on mobile in order to maximize performance and
-// to avoid crowding limited screen space.
-const renderPointcloud = mobile === false;
-
-const state = {
-  backend: 'webgl'
-};
-
-if (renderPointcloud) {
-  state.renderPointcloud = true;
-}
-
-function setupDatGui() {
-  const gui = new dat.GUI();
-  gui.add(state, 'backend', ['wasm', 'webgl', 'cpu', 'webgpu'])
-      .onChange(async backend => {
-        await tf.setBackend(backend);
-      });
-
-  if (renderPointcloud) {
-    gui.add(state, 'renderPointcloud').onChange(render => {
-      document.querySelector('#scatter-gl-container').style.display =
-          render ? 'inline-block' : 'none';
-    });
-  }
-}
-function drawPoint(ctx, y, x, r) {
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, 2 * Math.PI);
-  ctx.fill();
-}
-
-function drawKeypoints(ctx, keypoints) {
-  const keypointsArray = keypoints;
-
-  for (let i = 0; i < keypointsArray.length; i++) {
-    const y = keypointsArray[i][0];
-    const x = keypointsArray[i][1];
-    drawPoint(ctx, x - 2, y - 2, 3);
+(async () => {
+  if (!navigator.gpu) {
+    console.log(
+      "WebGPU is not supported. Enable chrome://flags/#enable-unsafe-webgpu flag."
+    );
+    return;
   }
 
-  const fingers = Object.keys(fingerLookupIndices);
-  for (let i = 0; i < fingers.length; i++) {
-    const finger = fingers[i];
-    const points = fingerLookupIndices[finger].map(idx => keypoints[idx]);
-    drawPath(ctx, points, false);
-  }
-}
+  const adapter = await navigator.gpu.requestAdapter();
+  const device = await adapter.requestDevice();
 
-function drawPath(ctx, points, closePath) {
-  const region = new Path2D();
-  region.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length; i++) {
-    const point = points[i];
-    region.lineTo(point[0], point[1]);
-  }
+  // First Matrix
 
-  if (closePath) {
-    region.closePath();
-  }
-  ctx.stroke(region);
-}
+  const firstMatrix = new Float32Array([
+    2 /* rows */,
+    4 /* columns */,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ]);
 
-let model;
-
-async function setupCamera() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    throw new Error(
-        'Browser API navigator.mediaDevices.getUserMedia not available');
-  }
-
-  const video = document.getElementById('video');
-  const stream = await navigator.mediaDevices.getUserMedia({
-    'audio': false,
-    'video': {
-      facingMode: 'user',
-      // Only setting the video to a specified size in order to accommodate a
-      // point cloud, so on mobile devices accept the default size.
-      width: mobile ? undefined : VIDEO_WIDTH,
-      height: mobile ? undefined : VIDEO_HEIGHT
-    },
+  const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
+    size: firstMatrix.byteLength,
+    usage: GPUBufferUsage.STORAGE
   });
-  video.srcObject = stream;
+  new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
+  gpuBufferFirstMatrix.unmap();
 
-  return new Promise((resolve) => {
-    video.onloadedmetadata = () => {
-      resolve(video);
-    };
+  // Second Matrix
+
+  const secondMatrix = new Float32Array([
+    4 /* rows */,
+    2 /* columns */,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ]);
+
+  const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] = device.createBufferMapped({
+    size: secondMatrix.byteLength,
+    usage: GPUBufferUsage.STORAGE
   });
-}
+  new Float32Array(arrayBufferSecondMatrix).set(secondMatrix);
+  gpuBufferSecondMatrix.unmap();
 
-async function loadVideo() {
-  const video = await setupCamera();
-  video.play();
-  return video;
-}
+  // Result Matrix
 
-const main =
-    async () => {
-  await tf.setBackend(state.backend);
-  model = await handpose.load();
-  let video;
+  const resultMatrixBufferSize =
+    Float32Array.BYTES_PER_ELEMENT * (2 + firstMatrix[0] * secondMatrix[1]);
+  const resultMatrixBuffer = device.createBuffer({
+    size: resultMatrixBufferSize,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  });
 
-  try {
-    video = await loadVideo();
-  } catch (e) {
-    let info = document.getElementById('info');
-    info.textContent = e.message;
-    info.style.display = 'block';
-    throw e;
-  }
+  // Bind group layout and bind group
 
-  landmarksRealTime(video);
-}
-
-const landmarksRealTime = async (video) => {
-  setupDatGui();
-
-  const stats = new Stats();
-  stats.showPanel(0);
-  document.body.appendChild(stats.dom);
-
-  videoWidth = video.videoWidth;
-  videoHeight = video.videoHeight;
-
-  const canvas = document.getElementById('output');
-
-  canvas.width = videoWidth;
-  canvas.height = videoHeight;
-
-  const ctx = canvas.getContext('2d');
-
-  video.width = videoWidth;
-  video.height = videoHeight;
-
-  ctx.clearRect(0, 0, videoWidth, videoHeight);
-  ctx.strokeStyle = 'red';
-  ctx.fillStyle = 'red';
-
-  ctx.translate(canvas.width, 0);
-  ctx.scale(-1, 1);
-
-  // These anchor points allow the hand pointcloud to resize according to its
-  // position in the input.
-  const ANCHOR_POINTS = [
-    [0, 0, 0], [0, -VIDEO_HEIGHT, 0], [-VIDEO_WIDTH, 0, 0],
-    [-VIDEO_WIDTH, -VIDEO_HEIGHT, 0]
-  ];
-
-  async function frameLandmarks() {
-    stats.begin();
-    ctx.drawImage(
-        video, 0, 0, videoWidth, videoHeight, 0, 0, canvas.width,
-        canvas.height);
-    const predictions = await model.estimateHands(video);
-    if (predictions.length > 0) {
-      const result = predictions[0].landmarks;
-      drawKeypoints(ctx, result, predictions[0].annotations);
-
-      if (renderPointcloud === true && scatterGL != null) {
-        const pointsData = result.map(point => {
-          return [-point[0], -point[1], -point[2]];
-        });
-
-        const dataset =
-            new ScatterGL.Dataset([...pointsData, ...ANCHOR_POINTS]);
-
-        if (!scatterGLHasInitialized) {
-          scatterGL.render(dataset);
-
-          const fingers = Object.keys(fingerLookupIndices);
-
-          scatterGL.setSequences(
-              fingers.map(finger => ({indices: fingerLookupIndices[finger]})));
-          scatterGL.setPointColorer((index) => {
-            if (index < pointsData.length) {
-              return 'steelblue';
-            }
-            return 'white';  // Hide.
-          });
-        } else {
-          scatterGL.updateDataset(dataset);
-        }
-        scatterGLHasInitialized = true;
+  const bindGroupLayout = device.createBindGroupLayout({
+    entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        type: "readonly-storage-buffer"
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        type: "readonly-storage-buffer"
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        type: "storage-buffer"
       }
+    ]
+  });
+
+  const bindGroup = device.createBindGroup({
+    layout: bindGroupLayout,
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: gpuBufferFirstMatrix
+        }
+      },
+      {
+        binding: 1,
+        resource: {
+          buffer: gpuBufferSecondMatrix
+        }
+      },
+      {
+        binding: 2,
+        resource: {
+          buffer: resultMatrixBuffer
+        }
+      }
+    ]
+  });
+
+  // Compute shader code (GLSL)
+
+  const computeShaderCode = `#version 450
+
+  layout(std430, set = 0, binding = 0) readonly buffer FirstMatrix {
+      vec2 size;
+      float numbers[];
+  } firstMatrix;
+
+  layout(std430, set = 0, binding = 1) readonly buffer SecondMatrix {
+      vec2 size;
+      float numbers[];
+  } secondMatrix;
+
+  layout(std430, set = 0, binding = 2) buffer ResultMatrix {
+      vec2 size;
+      float numbers[];
+  } resultMatrix;
+
+  void main() {
+    resultMatrix.size = vec2(firstMatrix.size.x, secondMatrix.size.y);
+
+    ivec2 resultCell = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
+    float result = 0.0;
+    for (int i = 0; i < firstMatrix.size.y; i++) {
+      int a = i + resultCell.x * int(firstMatrix.size.y);
+      int b = resultCell.y + i * int(secondMatrix.size.y);
+      result += firstMatrix.numbers[a] * secondMatrix.numbers[b];
     }
-    stats.end();
-    requestAnimationFrame(frameLandmarks);
-  };
 
-  frameLandmarks();
-
-  if (renderPointcloud) {
-    document.querySelector('#scatter-gl-container').style =
-        `width: ${VIDEO_WIDTH}px; height: ${VIDEO_HEIGHT}px;`;
-
-    scatterGL = new ScatterGL(
-        document.querySelector('#scatter-gl-container'),
-        {'rotateOnStart': false, 'selectEnabled': false});
+    int index = resultCell.y + resultCell.x * int(secondMatrix.size.y);
+    resultMatrix.numbers[index] = result;
   }
-};
+  `;
 
-navigator.getUserMedia = navigator.getUserMedia ||
-    navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+  // Pipeline setup
 
-main();
+  const glslang = await glslangModule();
+
+  const computePipeline = device.createComputePipeline({
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayout]
+    }),
+    computeStage: {
+      module: device.createShaderModule({
+        code: glslang.compileGLSL(computeShaderCode, "compute")
+      }),
+      entryPoint: "main"
+    }
+  });
+
+  // Commands submission
+
+  const commandEncoder = device.createCommandEncoder();
+
+  const passEncoder = commandEncoder.beginComputePass();
+  passEncoder.setPipeline(computePipeline);
+  passEncoder.setBindGroup(0, bindGroup);
+  passEncoder.dispatch(firstMatrix[0] /* x */, secondMatrix[1] /* y */);
+  passEncoder.endPass();
+
+  // Get a GPU buffer for reading in an unmapped state.
+  const gpuReadBuffer = device.createBuffer({
+    size: resultMatrixBufferSize,
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+  });
+
+  // Encode commands for copying buffer to buffer.
+  commandEncoder.copyBufferToBuffer(
+    resultMatrixBuffer /* source buffer */,
+    0 /* source offset */,
+    gpuReadBuffer /* destination buffer */,
+    0 /* destination offset */,
+    resultMatrixBufferSize /* size */
+  );
+
+  // Submit GPU commands.
+  const gpuCommands = commandEncoder.finish();
+  device.defaultQueue.submit([gpuCommands]);
+
+  // Read buffer.
+  const arrayBuffer = await gpuReadBuffer.mapReadAsync();
+  console.log(new Float32Array(arrayBuffer));
+})();
