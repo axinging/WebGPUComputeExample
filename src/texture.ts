@@ -1,14 +1,15 @@
 
-// import glslangInit from '@webgpu/glslang/dist/web-devel-onefile/glslang';
-
+import {Glslang} from '@webgpu/glslang/dist/web-devel-onefile/glslang';
 import {expectContents} from './fixture';
 
 export class Texture {
   device: GPUDevice;
   queue: GPUQueue;
-  constructor(device: GPUDevice) {
+  glslang: Glslang;
+  constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
+    this.glslang = glslang;
   }
 
   createCopyForMapRead(src: any, size: any) {
