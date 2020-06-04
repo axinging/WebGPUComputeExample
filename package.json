@@ -12,6 +12,10 @@
     "type": "git",
     "url": "https://github.com/tensorflow/tfjs-models.git"
   },
+  "dependencies": {
+    "@webgpu/glslang": "0.0.12",
+    "@webgpu/types": "0.0.18"
+  },
   "devDependencies": {
     "@types/jasmine": "~2.5.53",
     "jasmine": "~3.2.0",

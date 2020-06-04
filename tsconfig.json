@@ -24,10 +24,10 @@
     "experimentalDecorators": true
   },
   "include": [
-    "src/"
+    "src/",
+    "node_modules/@webgpu/types"
   ],
   "exclude": [
-    "node_modules/",
     "dist/"
   ]
 }
