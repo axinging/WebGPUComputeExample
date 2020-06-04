@@ -8,7 +8,7 @@ import glslangModule from '@webgpu/glslang/dist/web-devel/glslang.onefile';
     );
     return;
   }
-  console.log(compute.hello());
+  console.log(compute.texture_init());
 
   const adapter = await navigator.gpu.requestAdapter();
   const device = await adapter.requestDevice();
