@@ -1,4 +1,4 @@
-import * as compute from '@webgpu/compute';
+import * as compute  from '@webgpu/compute';
 import glslangModule from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 
 (async () => {
@@ -8,10 +8,11 @@ import glslangModule from '@webgpu/glslang/dist/web-devel/glslang.onefile';
     );
     return;
   }
-  console.log(compute.texture_init());
-
   const adapter = await navigator.gpu.requestAdapter();
   const device = await adapter.requestDevice();
+
+  const texture = new compute.Texture(device);
+  console.log(texture.compileAndRun());
 
   // First Matrix
 
