@@ -8,6 +8,8 @@ export class BufferOp {
   glslang: Glslang;
   commandQueue: GPUCommandEncoder[];
   times: [];
+  resultMatrixBuffer: GPUBuffer;
+  resultMatrixBufferSize: number;
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
@@ -98,10 +100,10 @@ export class BufferOp {
     gpuBufferSecondMatrix.unmap();
 
     // Result Matrix
-    const resultMatrixBufferSize =
+    this.resultMatrixBufferSize =
         Float32Array.BYTES_PER_ELEMENT * (2 + firstMatrix[0] * secondMatrix[1]);
-    const resultMatrixBuffer = this.device.createBuffer({
-      size: resultMatrixBufferSize,
+    this.resultMatrixBuffer = this.device.createBuffer({
+      size: this.resultMatrixBufferSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
 
@@ -127,7 +129,7 @@ export class BufferOp {
       entries: [
         {binding: 0, resource: {buffer: gpuBufferFirstMatrix}},
         {binding: 1, resource: {buffer: gpuBufferSecondMatrix}},
-        {binding: 2, resource: {buffer: resultMatrixBuffer}}
+        {binding: 2, resource: {buffer: this.resultMatrixBuffer}}
       ]
     });
 
@@ -147,7 +149,7 @@ export class BufferOp {
       }
     });
     return {
-      computePipeline, bindGroup, resultMatrixBuffer, resultMatrixBufferSize
+      computePipeline, bindGroup
     }
   }
 
@@ -155,12 +157,8 @@ export class BufferOp {
   async compileAndRun(
       firstMatrix: Float32Array, secondMatrix: Float32Array,
       computeShaderCode: any) {
-    const {
-      computePipeline,
-      bindGroup,
-      resultMatrixBuffer,
-      resultMatrixBufferSize
-    } = this.compile(firstMatrix, secondMatrix, computeShaderCode);
+    const {computePipeline, bindGroup} =
+        this.compile(firstMatrix, secondMatrix, computeShaderCode);
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
 
@@ -176,26 +174,24 @@ export class BufferOp {
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
-    const arrayBuffer =
-        await this.getBufferData(resultMatrixBuffer, resultMatrixBufferSize);
+    const arrayBuffer = await this.getBufferData();
     console.log(new Float32Array(arrayBuffer));
     return true;
   }
 
-  async getBufferData(
-      resultMatrixBuffer: GPUBuffer, resultMatrixBufferSize: number) {
+  async getBufferData() {
     // Get a GPU buffer for reading in an unmapped state.
     const gpuReadBuffer = this.device.createBuffer({
-      size: resultMatrixBufferSize,
+      size: this.resultMatrixBufferSize,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
     // Encode commands for copying buffer to buffer.
     commandEncoder.copyBufferToBuffer(
-        resultMatrixBuffer /* source buffer */, 0 /* source offset */,
+        this.resultMatrixBuffer /* source buffer */, 0 /* source offset */,
         gpuReadBuffer /* destination buffer */, 0 /* destination offset */,
-        resultMatrixBufferSize /* size */
+        this.resultMatrixBufferSize /* size */
     );
 
     // Submit GPU commands.

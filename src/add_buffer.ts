@@ -7,17 +7,15 @@ export class AddBufferOp extends BufferOp {
   }
   async execute() {
     // First Matrix
-
     const firstMatrix = new Float32Array(
         [4 /* rows */, 2 /* columns */, 1, 2, 3, 4, 5, 6, 7, 8]);
-    // Second Matrix
 
+    // Second Matrix
     const secondMatrix = new Float32Array(
         [4 /* rows */, 2 /* columns */, 1, 2, 3, 4, 5, 6, 7, 8]);
-    console.log(firstMatrix.byteLength);
     const result =
         await this.compileAndRun(firstMatrix, secondMatrix, this.getShader());
-    console.log(result);
+    return result;
   }
   getShader() {
     // Compute shader code (GLSL)
