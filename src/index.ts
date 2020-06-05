@@ -3,5 +3,6 @@ export function hello() {
 }
 
 export {AddBufferOp} from './add_buffer';
+export {AddTextureOp} from './add_texture';
 export {BufferOp} from './buffer';
 export {TextureOp} from './texture';

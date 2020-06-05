@@ -9,6 +9,13 @@ yarn & yarn build
 yarn watch
 ```
 
+## Status
+```
+add_buffer: Pass
+add_texture: Fail
+```
+
+
 ## Other usage
 Brach TypeScriptStarter demos how to write a TypeScript application from scratch.
 

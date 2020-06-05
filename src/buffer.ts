@@ -1,12 +1,7 @@
 // import {Glslang} from '@webgpu/glslang/dist/web-devel-onefile/glslang';
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import {expectContents} from './fixture';
-/*
-type PipelineAndBindGroup = {
-  computePipeline: any,
-  bindGroup: any
-};
-*/
+
 export class BufferOp {
   device: GPUDevice;
   queue: GPUQueue;
@@ -37,7 +32,6 @@ export class BufferOp {
     const dst = this.createCopyForMapRead(src, expected.buffer.byteLength);
     console.log(exp);
     console.log(dst);
-    // eventualAsyncExpectation(async (niceStack: {message: any;}) => {
     const actual = new Uint8Array((await dst.mapReadAsync()));
     const result = expectContents(actual, exp);
     console.log(result);
@@ -50,7 +44,7 @@ export class BufferOp {
 
   createCopyForMapRead2(size: any) {
     const data = new Uint32Array([0x01020304]);
-    // the HOST buffer
+    // The HOST buffer.
     const [src, map] = this.device.createBufferMapped({
       size: 4,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST |
@@ -58,7 +52,7 @@ export class BufferOp {
     });
     new Uint32Array(map).set(data);
     src.unmap();
-    // the Device buffer
+    // The Device buffer.
     const dst = this.device.createBuffer({
       size: 4,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -73,7 +67,6 @@ export class BufferOp {
     var x = new Int32Array(1);
     x[0] = 17;
     console.log(x[0]);
-    console.log(x[1]);
     console.log(x.length);
     this.uploadToGPU(x, 4, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
   */
@@ -87,7 +80,7 @@ export class BufferOp {
     return buffer;
   }
 
-  compile(
+  private compile(
       firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
       computeShaderCode: any) {
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
@@ -136,7 +129,7 @@ export class BufferOp {
         computeShaderCode);
   }
 
-  createLayout(
+  private createLayout(
       gpuBufferFirstMatrix: GPUBuffer, gpuBufferSecondMatrix: GPUBuffer,
       shapeBuffer: GPUBuffer, computeShaderCode: any) {
     // Bind group layout and bind group
@@ -191,7 +184,7 @@ export class BufferOp {
     }
   }
 
-  compileStaging(
+  private compileStaging(
       firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
       computeShaderCode: any) {
     const gpuBufferFirstMatrix = this.uploadToGPU(
@@ -241,7 +234,7 @@ export class BufferOp {
     return true;
   }
 
-  async dispatchAndSubmit(
+  private async dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number) {
     const start = this.now();
