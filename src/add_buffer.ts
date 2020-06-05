@@ -5,28 +5,16 @@ export class AddBufferOp extends BufferOp {
   constructor(device: GPUDevice, glslang: Glslang) {
     super(device, glslang);
   }
-  async execute() {
+  async execute(mode = 0) {
     // First Matrix
-    const firstMatrix = new Float32Array(
-        [4 /* rows */, 2 /* columns */, 1, 2, 3, 4, 5, 6, 7, 8]);
+    const firstMatrix = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8]);
 
     // Second Matrix
-    const secondMatrix = new Float32Array(
-        [4 /* rows */, 2 /* columns */, 1, 2, 3, 4, 5, 6, 7, 8]);
-    const result =
-        await this.compileAndRun(firstMatrix, secondMatrix, this.getShader());
-    return result;
-  }
-  async executeStaging() {
-    // First Matrix
-    const firstMatrix = new Float32Array(
-        [4 /* rows */, 2 /* columns */, 1, 2, 3, 4, 5, 6, 7, 8]);
-
-    // Second Matrix
-    const secondMatrix = new Float32Array(
-        [4 /* rows */, 2 /* columns */, 1, 2, 3, 4, 5, 6, 7, 8]);
-    const result = await this.compileAndRunStaging(
-        firstMatrix, secondMatrix, this.getShader());
+    const secondMatrix = new Float32Array([1, 9, 3, 4, 5, 6, 7, 8]);
+    const shape = new Int32Array([2, 4, 2, 4, 2, 4]);
+    let result;
+    result = await this.compileAndRun(
+        firstMatrix, secondMatrix, shape, this.getShader(), mode);
     return result;
   }
 
@@ -37,26 +25,35 @@ export class AddBufferOp extends BufferOp {
   getShader() {
     // Compute shader code (GLSL)
     const computeShaderCode = `#version 450
-        layout(std430, set = 0, binding = 0) readonly buffer FirstMatrix {
-            vec2 size;
+        layout(set = 0, binding = 0) uniform Uniforms {
+          int inputWidth;
+          int inputHeight;
+          int filterWidth;
+          int filterHeight;
+          int outputWidth;
+          int outputHeight;
+        } uniforms;
+
+        layout(set = 0, binding = 1) readonly buffer FirstMatrix {
+            //vec2 size;
             float numbers[];
         } firstMatrix;
       
-        layout(std430, set = 0, binding = 1) readonly buffer SecondMatrix {
-            vec2 size;
+        layout(set = 0, binding = 2) readonly buffer SecondMatrix {
+            //vec2 size;
             float numbers[];
         } secondMatrix;
       
-        layout(std430, set = 0, binding = 2) buffer ResultMatrix {
-            vec2 size;
+        layout(set = 0, binding = 3) buffer ResultMatrix {
+            //vec2 size;
             float numbers[];
         } resultMatrix;
       
         void main() {
-          resultMatrix.size = vec2(firstMatrix.size.x, secondMatrix.size.y);
+          //resultMatrix.size = vec2(inputWidth, inputHeight);
           ivec2 resultCell = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
       
-          int index = resultCell.y + resultCell.x * int(secondMatrix.size.y);
+          int index = resultCell.y + resultCell.x * int(uniforms.inputHeight);
           resultMatrix.numbers[index] = firstMatrix.numbers[index]+secondMatrix.numbers[index];
         }
         `;
