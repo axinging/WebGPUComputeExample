@@ -6,10 +6,13 @@ export class BufferOp {
   device: GPUDevice;
   queue: GPUQueue;
   glslang: Glslang;
+  commandQueue: GPUCommandEncoder[];
+  times: [];
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
+    this.commandQueue = [];
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -75,8 +78,7 @@ export class BufferOp {
     return dst;
   }
 
-  // TODO: Float32Array is bad.
-  async compileAndRun(
+  compile(
       firstMatrix: Float32Array, secondMatrix: Float32Array,
       computeShaderCode: any) {
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
@@ -144,7 +146,21 @@ export class BufferOp {
         entryPoint: 'main'
       }
     });
+    return {
+      computePipeline, bindGroup, resultMatrixBuffer, resultMatrixBufferSize
+    }
+  }
 
+  // TODO: Float32Array is bad. And buffer is bad.
+  async compileAndRun(
+      firstMatrix: Float32Array, secondMatrix: Float32Array,
+      computeShaderCode: any) {
+    const {
+      computePipeline,
+      bindGroup,
+      resultMatrixBuffer,
+      resultMatrixBufferSize
+    } = this.compile(firstMatrix, secondMatrix, computeShaderCode);
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
 
@@ -153,13 +169,28 @@ export class BufferOp {
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.dispatch(firstMatrix[0] /* x */, secondMatrix[1] /* y */);
     passEncoder.endPass();
+    // Submit GPU commands.
+    const gpuCommands = commandEncoder.finish();
+    this.device.defaultQueue.submit([gpuCommands]);
 
+    const fence = this.queue.createFence();
+    this.queue.signal(fence, 1);
+    await fence.onCompletion(1);
+    const arrayBuffer =
+        await this.getBufferData(resultMatrixBuffer, resultMatrixBufferSize);
+    console.log(new Float32Array(arrayBuffer));
+    return true;
+  }
+
+  async getBufferData(
+      resultMatrixBuffer: GPUBuffer, resultMatrixBufferSize: number) {
     // Get a GPU buffer for reading in an unmapped state.
     const gpuReadBuffer = this.device.createBuffer({
       size: resultMatrixBufferSize,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
-
+    // Commands submission
+    const commandEncoder = this.device.createCommandEncoder();
     // Encode commands for copying buffer to buffer.
     commandEncoder.copyBufferToBuffer(
         resultMatrixBuffer /* source buffer */, 0 /* source offset */,
@@ -171,9 +202,11 @@ export class BufferOp {
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
 
+    const fence = this.queue.createFence();
+    this.queue.signal(fence, 1);
+    await fence.onCompletion(1);
     // Read buffer.
     const arrayBuffer = await gpuReadBuffer.mapReadAsync();
-    // console.log(new Float32Array(arrayBuffer));
     return arrayBuffer;
   }
 }
