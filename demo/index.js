@@ -13,6 +13,6 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
   const buffer = new compute.AddBufferOp(device, glslang);
-  await buffer.execute()
+  await buffer.executeStaging()
   console.log(await buffer.data());
 })();

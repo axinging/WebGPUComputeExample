@@ -39,26 +39,10 @@ export class BufferOp {
     dst.destroy();
   }
 
-  /*
-    var x = new Int32Array(1);
-    x[0] = 17;
-    console.log(x[0]);
-    console.log(x[1]);
-    console.log(x.length);
-    this.uploadToGPU(x, 4, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
-  */
-  /*
-    private uploadToGPU(
-        values: ArrayBufferView, byteSize: number, usage: GPUBufferUsage) {
-      const buffer = this.device.createBuffer({size: byteSize, usage});
+  now(): number {
+    return performance.now();
+  }
 
-      if (values) {
-        buffer.setSubData(0, values as ArrayBufferView);
-        values = null;
-      }
-      return buffer;
-    }
-  */
   createCopyForMapRead2(size: any) {
     const data = new Uint32Array([0x01020304]);
     // the HOST buffer
@@ -152,15 +136,121 @@ export class BufferOp {
       computePipeline, bindGroup
     }
   }
-  now(): number {
-    return performance.now();
+  /*
+    var x = new Int32Array(1);
+    x[0] = 17;
+    console.log(x[0]);
+    console.log(x[1]);
+    console.log(x.length);
+    this.uploadToGPU(x, 4, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
+  */
+  private uploadToGPU(values: ArrayBufferView, byteSize: number, usage: any) {
+    const buffer = this.device.createBuffer({size: byteSize, usage});
+
+    if (values) {
+      buffer.setSubData(0, values as ArrayBufferView);
+      values = null;
+    }
+    return buffer;
   }
+
+  compileStaging(
+      firstMatrix: Float32Array, secondMatrix: Float32Array,
+      computeShaderCode: any) {
+    const gpuBufferFirstMatrix = this.uploadToGPU(
+        firstMatrix, (firstMatrix as Float32Array).byteLength,
+        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
+            GPUBufferUsage.COPY_DST);
+    const gpuBufferSecondMatrix = this.uploadToGPU(
+        secondMatrix, (firstMatrix as Float32Array).byteLength,
+        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
+            GPUBufferUsage.COPY_DST);
+
+    // Result Matrix
+    this.resultMatrixBufferSize =
+        Float32Array.BYTES_PER_ELEMENT * (2 + firstMatrix[0] * secondMatrix[1]);
+    this.resultMatrixBuffer = this.device.createBuffer({
+      size: this.resultMatrixBufferSize,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
+
+    // Bind group layout and bind group
+    const bindGroupLayout = this.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          type: 'readonly-storage-buffer'
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.COMPUTE,
+          type: 'readonly-storage-buffer'
+        },
+        {binding: 2, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer'}
+      ]
+    });
+
+    const bindGroup = this.device.createBindGroup({
+      layout: bindGroupLayout,
+      entries: [
+        {binding: 0, resource: {buffer: gpuBufferFirstMatrix}},
+        {binding: 1, resource: {buffer: gpuBufferSecondMatrix}},
+        {binding: 2, resource: {buffer: this.resultMatrixBuffer}}
+      ]
+    });
+
+    // Pipeline setup
+    const result =
+        this.glslang.compileGLSLZeroCopy(computeShaderCode, 'compute', false);
+    if (result.data.length === 0) {
+      throw new Error('Shader compilation failed');
+    }
+    const computePipeline = this.device.createComputePipeline({
+      layout: this.device.createPipelineLayout(
+          {bindGroupLayouts: [bindGroupLayout]}),
+
+      computeStage: {
+        module: this.device.createShaderModule({code: result.data}),
+        entryPoint: 'main'
+      }
+    });
+    return {
+      computePipeline, bindGroup
+    }
+  }
+
   // TODO: Float32Array is bad. And buffer is bad.
   async compileAndRun(
       firstMatrix: Float32Array, secondMatrix: Float32Array,
       computeShaderCode: any) {
     const {computePipeline, bindGroup} =
         this.compile(firstMatrix, secondMatrix, computeShaderCode);
+    const start = this.now();
+    // Commands submission
+    const commandEncoder = this.device.createCommandEncoder();
+
+    const passEncoder = commandEncoder.beginComputePass();
+    passEncoder.setPipeline(computePipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.dispatch(firstMatrix[0] /* x */, secondMatrix[1] /* y */);
+    passEncoder.endPass();
+    // Submit GPU commands.
+    const gpuCommands = commandEncoder.finish();
+    this.device.defaultQueue.submit([gpuCommands]);
+    const fence = this.queue.createFence();
+    this.queue.signal(fence, 1);
+    await fence.onCompletion(1);
+    console.log('Fence time: ' + (this.now() - start));
+    return true;
+  }
+
+  // TODO: Float32Array is bad. And buffer is bad.
+  async compileAndRunStaging(
+      firstMatrix: Float32Array, secondMatrix: Float32Array,
+      computeShaderCode: any) {
+    const {computePipeline, bindGroup} =
+        this.compileStaging(firstMatrix, secondMatrix, computeShaderCode);
     const start = this.now();
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
@@ -200,8 +290,8 @@ export class BufferOp {
     this.device.defaultQueue.submit([gpuCommands]);
 
     const fence = this.queue.createFence();
-    this.queue.signal(fence, 1);
-    await fence.onCompletion(1);
+    this.queue.signal(fence, 2);
+    await fence.onCompletion(2);
     // Read buffer.
     const arrayBuffer = await gpuReadBuffer.mapReadAsync();
     return arrayBuffer;
