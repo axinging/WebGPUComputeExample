@@ -1,3 +1,5 @@
+## Introduction
+This is the WebGPU version of [VulkanCompute](https://github.com/math3d/VulkanCompute).
 ## Build
 ```
 yarn & yarn build-npm & yarn link
@@ -7,6 +9,8 @@ yarn & yarn build
 yarn watch
 ```
 
+## Other usage
+Brach TypeScriptStarter demos how to write a TypeScript application from scratch.
 
 ## Error fix
 
