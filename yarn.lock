@@ -17,10 +17,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-13.7.7.tgz#1628e6461ba8cc9b53196dfeaeec7b07fa6eea99"
   integrity sha512-Uo4chgKbnPNlxQwoFmYIwctkQVkMMmsAoGGU4JKwLuvBefF0pCq4FybNSnfkfRCpC7ZW7kttcC/TrRtAJsvGtg==
 
-"@webgpu/glslang@0.0.15":
-  version "0.0.15"
-  resolved "https://registry.npm.taobao.org/@webgpu/glslang/download/@webgpu/glslang-0.0.15.tgz#f5ccaf6015241e6175f4b90906b053f88483d1f2"
-  integrity sha1-9cyvYBUkHmF19LkJBrBT+ISD0fI=
+"@webgpu/glslang@0.0.12":
+  version "0.0.12"
+  resolved "https://registry.npm.taobao.org/@webgpu/glslang/download/@webgpu/glslang-0.0.12.tgz#ee40e8d38c31436508147feaf0f646fde9bb4da6"
+  integrity sha1-7kDo04wxQ2UIFH/q8PZG/em7TaY=
 
 "@webgpu/types@0.0.24":
   version "0.0.24"

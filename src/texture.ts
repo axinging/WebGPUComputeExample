@@ -1,8 +1,9 @@
 
-import {Glslang} from '@webgpu/glslang/dist/web-devel-onefile/glslang';
+// import {Glslang} from '@webgpu/glslang/dist/web-devel-onefile/glslang';
+import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import {expectContents} from './fixture';
 
-export class Texture {
+export class TextureOp {
   device: GPUDevice;
   queue: GPUQueue;
   glslang: Glslang;
@@ -35,11 +36,9 @@ export class Texture {
   }
 
   async compileAndRun() {
-    // const glslang = await glslangInit();
-    // console.log(glslang);
-
     const data = new Uint32Array([0x01020304]);
 
+    // Staging buffer.
     const [src, map] = this.device.createBufferMapped({
       size: 4,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -47,6 +46,7 @@ export class Texture {
     new Uint32Array(map).set(data);
     src.unmap();
 
+    // Device buffer.
     const dst = this.device.createBuffer({
       size: 4,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,

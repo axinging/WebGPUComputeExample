@@ -829,11 +829,6 @@
   resolved "https://registry.npm.taobao.org/@webgpu/glslang/download/@webgpu/glslang-0.0.12.tgz#ee40e8d38c31436508147feaf0f646fde9bb4da6"
   integrity sha1-7kDo04wxQ2UIFH/q8PZG/em7TaY=
 
-"@webgpu/glslang@0.0.15":
-  version "0.0.15"
-  resolved "https://registry.npm.taobao.org/@webgpu/glslang/download/@webgpu/glslang-0.0.15.tgz#f5ccaf6015241e6175f4b90906b053f88483d1f2"
-  integrity sha1-9cyvYBUkHmF19LkJBrBT+ISD0fI=
-
 "@webgpu/types@0.0.24":
   version "0.0.24"
   resolved "https://registry.npm.taobao.org/@webgpu/types/download/@webgpu/types-0.0.24.tgz#c1952a0f09416b90df10b7abea069a00e4be4452"

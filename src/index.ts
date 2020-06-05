@@ -2,4 +2,6 @@ export function hello() {
   return 'Hello';
 }
 
-export {Texture} from './texture';
+export {AddBufferOp} from './add_buffer';
+export {BufferOp} from './buffer';
+export {TextureOp} from './texture';

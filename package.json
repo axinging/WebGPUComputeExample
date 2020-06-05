@@ -13,7 +13,7 @@
     "url": "https://github.com/tensorflow/tfjs-models.git"
   },
   "dependencies": {
-    "@webgpu/glslang": "0.0.15",
+    "@webgpu/glslang": "0.0.12",
     "@webgpu/types": "0.0.24"
   },
   "devDependencies": {
