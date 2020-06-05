@@ -17,6 +17,10 @@ export class AddBufferOp extends BufferOp {
         await this.compileAndRun(firstMatrix, secondMatrix, this.getShader());
     return result;
   }
+  async data() {
+    const arrayBuffer = await this.getBufferData();
+    return new Float32Array(arrayBuffer);
+  }
   getShader() {
     // Compute shader code (GLSL)
     const computeShaderCode = `#version 450

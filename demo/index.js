@@ -15,5 +15,6 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
   const texture = new compute.TextureOp(device, glslang);
   console.log(await texture.compileAndRun());
   const buffer = new compute.AddBufferOp(device, glslang);
-  console.log(await buffer.execute());
+  await buffer.execute()
+  console.log(await buffer.data());
 })();

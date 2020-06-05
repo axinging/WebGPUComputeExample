@@ -174,8 +174,6 @@ export class BufferOp {
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
-    const arrayBuffer = await this.getBufferData();
-    console.log(new Float32Array(arrayBuffer));
     return true;
   }
 
