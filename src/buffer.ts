@@ -152,13 +152,16 @@ export class BufferOp {
       computePipeline, bindGroup
     }
   }
-
+  now(): number {
+    return performance.now();
+  }
   // TODO: Float32Array is bad. And buffer is bad.
   async compileAndRun(
       firstMatrix: Float32Array, secondMatrix: Float32Array,
       computeShaderCode: any) {
     const {computePipeline, bindGroup} =
         this.compile(firstMatrix, secondMatrix, computeShaderCode);
+    const start = this.now();
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
 
@@ -170,10 +173,10 @@ export class BufferOp {
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
-
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
+    console.log('Fence time: ' + (this.now() - start));
     return true;
   }
 
