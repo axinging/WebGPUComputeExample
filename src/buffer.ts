@@ -132,30 +132,21 @@ export class BufferOp {
   private createLayout(
       gpuBufferFirstMatrix: GPUBuffer, gpuBufferSecondMatrix: GPUBuffer,
       shapeBuffer: GPUBuffer, computeShaderCode: any) {
-    // Bind group layout and bind group
-    const bindGroupLayout = this.device.createBindGroupLayout({
-      entries: [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.COMPUTE,
-          type: 'uniform-buffer'
-        },
-        {
-          binding: 1,
-          visibility: GPUShaderStage.COMPUTE,
-          type: 'readonly-storage-buffer'
-        },
-        {
-          binding: 2,
-          visibility: GPUShaderStage.COMPUTE,
-          type: 'readonly-storage-buffer'
-        },
-        {binding: 3, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer'}
-      ]
+    // Pipeline setup
+    const result =
+        this.glslang.compileGLSLZeroCopy(computeShaderCode, 'compute', false);
+    if (result.data.length === 0) {
+      throw new Error('Shader compilation failed');
+    }
+    const computePipeline = this.device.createComputePipeline({
+      computeStage: {
+        module: this.device.createShaderModule({code: result.data}),
+        entryPoint: 'main'
+      }
     });
 
     const bindGroup = this.device.createBindGroup({
-      layout: bindGroupLayout,
+      layout: computePipeline.getBindGroupLayout(0),
       entries: [
         {binding: 0, resource: {buffer: shapeBuffer}},
         {binding: 1, resource: {buffer: gpuBufferFirstMatrix}},
@@ -164,21 +155,6 @@ export class BufferOp {
       ]
     });
 
-    // Pipeline setup
-    const result =
-        this.glslang.compileGLSLZeroCopy(computeShaderCode, 'compute', false);
-    if (result.data.length === 0) {
-      throw new Error('Shader compilation failed');
-    }
-    const computePipeline = this.device.createComputePipeline({
-      layout: this.device.createPipelineLayout(
-          {bindGroupLayouts: [bindGroupLayout]}),
-
-      computeStage: {
-        module: this.device.createShaderModule({code: result.data}),
-        entryPoint: 'main'
-      }
-    });
     return {
       computePipeline, bindGroup
     }
