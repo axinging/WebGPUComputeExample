@@ -1,6 +1,7 @@
 // import {Glslang} from '@webgpu/glslang/dist/web-devel-onefile/glslang';
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import {expectContents} from './fixture';
+import * as tex_util from './tex_util';
 
 export class TextureOp {
   device: GPUDevice;
@@ -64,9 +65,12 @@ export class TextureOp {
     return dst;
   }
 
-  private copyFromHostBufferToDeviceTexture(src: GPUBuffer) {
+  private copyFromHostBufferToDeviceTexture(
+      src: GPUBuffer, width: number, height: number) {
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(width, height);
     const texture = this.device.createTexture({
-      size: {width: 2, height: 2, depth: 1},
+      size: {width: widthTex, height: heightTex, depth: 1},
       format: 'rgba32float',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
     });
@@ -75,7 +79,7 @@ export class TextureOp {
     encoder.copyBufferToTexture(
         {buffer: src, bytesPerRow: 256},
         {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
-        {width: 2, height: 2, depth: 1});
+        {width: width, height: height, depth: 1});
     this.device.defaultQueue.submit([encoder.finish()]);
     return texture;
   }
@@ -90,8 +94,8 @@ export class TextureOp {
         });
     new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
     gpuBufferFirstMatrix.unmap();
-    const gpuTextureFirstMatrix =
-        this.copyFromHostBufferToDeviceTexture(gpuBufferFirstMatrix);
+    const gpuTextureFirstMatrix = this.copyFromHostBufferToDeviceTexture(
+        gpuBufferFirstMatrix, this.shape[0], this.shape[1]);
 
     const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] =
         this.device.createBufferMapped({
@@ -101,14 +105,17 @@ export class TextureOp {
     new Float32Array(arrayBufferSecondMatrix).set(secondMatrix);
     gpuBufferSecondMatrix.unmap();
 
-    const gpuTextureSecondMatrix =
-        this.copyFromHostBufferToDeviceTexture(gpuBufferSecondMatrix);
+    const gpuTextureSecondMatrix = this.copyFromHostBufferToDeviceTexture(
+        gpuBufferSecondMatrix, this.shape[2], this.shape[3]);
     // Result Matrix
     this.resultMatrixTextureSize =
         Float32Array.BYTES_PER_ELEMENT * (shape[4] * shape[5]);
 
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            this.shape[4], this.shape[5]);
     this.resultMatrixTexture = this.device.createTexture({
-      size: {width: 1, height: 1, depth: 1},
+      size: {width: widthTex, height: heightTex, depth: 1},
       format: 'rgba32float',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
     });
@@ -213,6 +220,9 @@ export class TextureOp {
     });
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            this.shape[4], this.shape[5]);
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(
         {
@@ -221,7 +231,7 @@ export class TextureOp {
           origin: {x: 0, y: 0, z: 0}
         },
         {buffer: gpuReadBuffer, bytesPerRow: 256},
-        {width: 2, height: 2, depth: 1});
+        {width: widthTex, height: heightTex, depth: 1});
     // Submit GPU commands.
     this.device.defaultQueue.submit([commandEncoder.finish()]);
     // t.expectContents(dst, data);
