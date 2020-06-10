@@ -72,7 +72,7 @@ export class TextureOp {
     const texture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
       format: 'rgba32float',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE
     });
     const encoder = this.device.createCommandEncoder();
     // TODO: fix the width height.
@@ -117,7 +117,7 @@ export class TextureOp {
     this.resultMatrixTexture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
       format: 'rgba32float',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE
     });
 
     // This works.

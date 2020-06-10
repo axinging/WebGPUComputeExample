@@ -17,7 +17,7 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
   const loop = 1;
   for (var i = 0; i < loop; i++) {
     await addTextureOp.execute();
-    //console.log("not staging: "+await addTextureOp.data());
+    console.log("not staging: "+await addTextureOp.data());
   }
 
   const buffer = new compute.AddBufferOp(device, glslang);
