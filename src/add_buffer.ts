@@ -6,13 +6,26 @@ export class AddBufferOp extends BufferOp {
     super(device, glslang);
   }
 
-  async execute(mode = 0) {
-    // First Matrix
-    const firstMatrix = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8]);
+  createArray(w: number, h: number) {
+    let matrix = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      matrix[i] = i;
+    }
+    return matrix;
+  }
 
-    // Second Matrix
-    const secondMatrix = new Float32Array([1, 9, 3, 4, 5, 6, 7, 8]);
-    const shape = new Int32Array([2, 4, 2, 4, 2, 4]);
+  async execute(mode = 0) {
+    // First Matrix.
+    const firstMatrixSize = [4, 8];
+    const firstMatrix = this.createArray(4, 8);
+
+    // Second Matrix.
+    const secondMatrixSize = [4, 8];
+    const secondMatrix = this.createArray(4, 8);
+    const shape = new Int32Array([
+      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+    ]);
     let result;
     result = await this.compileAndRun(
         firstMatrix, secondMatrix, shape, this.getShader(), mode);

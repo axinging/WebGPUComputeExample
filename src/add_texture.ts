@@ -5,13 +5,27 @@ export class AddTextureOp extends TextureOp {
   constructor(device: GPUDevice, glslang: Glslang) {
     super(device, glslang);
   }
+
+  createArray(w: number, h: number) {
+    let matrix = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      matrix[i] = i;
+    }
+    return matrix;
+  }
+
   async execute(mode = 0) {
     // First Matrix
-    const firstMatrix = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8]);
+    const firstMatrixSize = [2, 4];
+    const firstMatrix = this.createArray(2, 4);
 
     // Second Matrix
-    const secondMatrix = new Float32Array([1, 9, 3, 4, 5, 6, 7, 8]);
-    const shape = new Int32Array([2, 4, 2, 4, 2, 4]);
+    const secondMatrixSize = [2, 4];
+    const secondMatrix = this.createArray(2, 4);
+    const shape = new Int32Array([
+      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+    ]);
     let result;
     result = await this.compileAndRun(
         firstMatrix, secondMatrix, shape, this.getShader(), mode);

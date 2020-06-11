@@ -110,7 +110,8 @@ export class TextureOp {
 
     const gpuTextureSecondMatrix = this.copyFromHostBufferToDeviceTexture(
         gpuBufferSecondMatrix, this.shape[2], this.shape[3]);
-    // Result Matrix
+
+    // Result Matrix.
     this.resultMatrixTextureSize =
         Float32Array.BYTES_PER_ELEMENT * (shape[4] * shape[5]);
 

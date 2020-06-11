@@ -19,7 +19,7 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
     await addTextureOp.execute();
     console.log("not staging: "+await addTextureOp.data());
   }
-  /*
+
   const buffer = new compute.AddBufferOp(device, glslang);
   for (var i = 0; i < loop; i++) {
     await buffer.execute()
@@ -29,5 +29,5 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
     await buffer.execute(1)
     console.log("staging: "+await buffer.data());
   }
-  */
+
 })();
