@@ -1,7 +1,7 @@
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
-import {BufferOp} from './buffer';
+import {TextureOp} from './texture';
 
-export class AddTextureOp extends BufferOp {
+export class AddTextureOp extends TextureOp {
   constructor(device: GPUDevice, glslang: Glslang) {
     super(device, glslang);
   }
