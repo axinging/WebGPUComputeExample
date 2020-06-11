@@ -16,12 +16,12 @@ export class AddTextureOp extends TextureOp {
 
   async execute(mode = 0) {
     // First Matrix
-    const firstMatrixSize = [2, 4];
-    const firstMatrix = this.createArray(2, 4);
+    const firstMatrixSize = [4, 8];
+    const firstMatrix = this.createArray(4, 8);
 
     // Second Matrix
-    const secondMatrixSize = [2, 4];
-    const secondMatrix = this.createArray(2, 4);
+    const secondMatrixSize = [4, 8];
+    const secondMatrix = this.createArray(4, 8);
     const shape = new Int32Array([
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
