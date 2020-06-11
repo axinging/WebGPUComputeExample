@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2017 Google Inc. All Rights Reserved.
+ * Copyright 2020 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,7 +68,6 @@ export enum PhysicalTextureType {
   PACKED_2X2_FLOAT16
 }
 
-
 export function getUnpackedMatrixTextureShapeWidthHeight(
     rows: number, columns: number): [number, number] {
   return [columns, rows];
@@ -109,11 +108,18 @@ export function decodeMatrixFromUnpackedColorRGBAArray(
   }
 }
 
+/*
 export function getPackedMatrixTextureShapeWidthHeight(
     rows: number, columns: number): [number, number] {
   return [
     Math.max(1, Math.ceil(columns / 2)), Math.max(1, Math.ceil(rows / 2))
   ];
+}
+*/
+
+export function getPackedMatrixTextureShapeWidthHeight(
+    rows: number, columns: number): [number, number] {
+  return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns / 4))];
 }
 
 export function getPackedRGBAArraySizeFromMatrixShape(

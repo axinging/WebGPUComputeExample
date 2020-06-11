@@ -69,6 +69,7 @@ export class TextureOp {
       src: GPUBuffer, width: number, height: number) {
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(width, height);
+
     const texture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
       format: 'rgba32float',
@@ -79,7 +80,7 @@ export class TextureOp {
     encoder.copyBufferToTexture(
         {buffer: src, bytesPerRow: 256},
         {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
-        {width: width, height: height, depth: 1});
+        {width: widthTex, height: heightTex, depth: 1});
     this.device.defaultQueue.submit([encoder.finish()]);
     return texture;
   }
@@ -90,7 +91,8 @@ export class TextureOp {
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
           size: (firstMatrix as Float32Array).byteLength,
-          usage: GPUBufferUsage.STORAGE
+          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
+              GPUBufferUsage.COPY_DST
         });
     new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
     gpuBufferFirstMatrix.unmap();
@@ -100,7 +102,8 @@ export class TextureOp {
     const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] =
         this.device.createBufferMapped({
           size: (secondMatrix as Float32Array).byteLength,
-          usage: GPUBufferUsage.STORAGE
+          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
+              GPUBufferUsage.COPY_DST
         });
     new Float32Array(arrayBufferSecondMatrix).set(secondMatrix);
     gpuBufferSecondMatrix.unmap();
@@ -194,7 +197,7 @@ export class TextureOp {
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number) {
     const start = this.now();
-    // Commands submission
+    // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
     const passEncoder = commandEncoder.beginComputePass();
@@ -218,11 +221,13 @@ export class TextureOp {
       size: this.resultMatrixTextureSize,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
-    // Commands submission
+    // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
+
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
             this.shape[4], this.shape[5]);
+
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(
         {

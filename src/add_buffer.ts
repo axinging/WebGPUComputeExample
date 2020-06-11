@@ -5,6 +5,7 @@ export class AddBufferOp extends BufferOp {
   constructor(device: GPUDevice, glslang: Glslang) {
     super(device, glslang);
   }
+
   async execute(mode = 0) {
     // First Matrix
     const firstMatrix = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8]);
@@ -22,6 +23,7 @@ export class AddBufferOp extends BufferOp {
     const arrayBuffer = await this.getBufferData();
     return new Float32Array(arrayBuffer);
   }
+
   getShader() {
     // Compute shader code (GLSL)
     const computeShaderCode = `#version 450

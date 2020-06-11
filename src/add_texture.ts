@@ -22,6 +22,7 @@ export class AddTextureOp extends TextureOp {
     const arrayBuffer = await this.getBufferData();
     return new Float32Array(arrayBuffer);
   }
+
   getShader() {
     // Compute shader code (GLSL)
     const computeShaderCode = `#version 450
