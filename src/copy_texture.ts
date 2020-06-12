@@ -29,7 +29,8 @@ export class CopyTextureOp {
     const texture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
       format: 'rgba32float',
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC |
+          GPUTextureUsage.STORAGE
     });
     console.log(
         'w =' + width + ', h=' + height + '; tex w=' + widthTex +
@@ -97,10 +98,12 @@ export class CopyTextureOp {
 
   async getBufferData() {
     // Get a GPU buffer for reading in an unmapped state.
+
     const gpuReadBuffer = this.device.createBuffer({
       size: Float32Array.BYTES_PER_ELEMENT * (this.shape[0] * this.shape[1]),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
+
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
@@ -117,6 +120,7 @@ export class CopyTextureOp {
         },
         {buffer: gpuReadBuffer, bytesPerRow: 256},
         {width: widthTex, height: heightTex, depth: 1});
+
     // Submit GPU commands.
     this.device.defaultQueue.submit([commandEncoder.finish()]);
     // t.expectContents(dst, data);

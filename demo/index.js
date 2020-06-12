@@ -13,11 +13,11 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
 
-  const addTextureOp = new compute.CopyTextureOp(device, glslang);
+  const copyTextureOp = new compute.CopyTextureOp(device, glslang);
   const loop = 1;
   for (var i = 0; i < loop; i++) {
-    await addTextureOp.execute();
-    //console.log("not staging: "+await addTextureOp.data());
+    await copyTextureOp.execute();
+    console.log("not staging: "+await copyTextureOp.data());
   }
 /*
   const buffer = new compute.AddBufferOp(device, glslang);
