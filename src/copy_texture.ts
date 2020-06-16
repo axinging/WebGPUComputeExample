@@ -79,7 +79,8 @@ export class CopyTextureOp {
   async execute(mode = 0) {
     // First Matrix
     const firstMatrixSize = [4, 8];
-    const firstMatrix = this.createArray(4, 8);
+    const firstMatrix =
+        this.createArray(firstMatrixSize[0], firstMatrixSize[1]);
     const shape = new Int32Array([firstMatrixSize[0], firstMatrixSize[1]]);
     const result = await this.compileAndRun(firstMatrix, null, shape, '', mode);
     return result;

@@ -119,7 +119,10 @@ export function getPackedMatrixTextureShapeWidthHeight(
 
 export function getPackedMatrixTextureShapeWidthHeight(
     rows: number, columns: number, format: GPUTextureFormat): [number, number] {
+  // kBytesPerTexel = 4;
   if (format == 'rgba32float')
+    return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns / 4))];
+  else if (format == 'rgba8uint')
     return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns / 4))];
   else
     return [rows, columns];
