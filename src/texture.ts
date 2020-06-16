@@ -12,11 +12,13 @@ export class TextureOp {
   resultMatrixTexture: GPUTexture;
   resultMatrixTextureSize: number;
   shape: Int32Array;
+  format: GPUTextureFormat;
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
+    this.format = 'rgba32float';
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -68,11 +70,12 @@ export class TextureOp {
   private copyFromHostBufferToDeviceTexture(
       src: GPUBuffer, width: number, height: number) {
     const [widthTex, heightTex] =
-        tex_util.getPackedMatrixTextureShapeWidthHeight(width, height);
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            width, height, this.format);
 
     const texture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
-      format: 'rgba32float',
+      format: this.format,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE
     });
     const encoder = this.device.createCommandEncoder();
@@ -117,7 +120,7 @@ export class TextureOp {
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[4], this.shape[5]);
+            this.shape[4], this.shape[5], this.format);
     this.resultMatrixTexture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
       format: 'rgba32float',
@@ -227,7 +230,7 @@ export class TextureOp {
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[4], this.shape[5]);
+            this.shape[4], this.shape[5], this.format);
 
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(

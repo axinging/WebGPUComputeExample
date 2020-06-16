@@ -2,7 +2,7 @@
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import * as tex_util from './tex_util';
 
-export class CopyTextureOp {
+export class CopyTextureRGBA8Op {
   device: GPUDevice;
   queue: GPUQueue;
   glslang: Glslang;
@@ -16,7 +16,7 @@ export class CopyTextureOp {
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
-    this.format = 'rgba32float';
+    this.format = 'rgba8uint';
   }
 
   now(): number {

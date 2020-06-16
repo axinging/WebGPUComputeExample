@@ -118,12 +118,15 @@ export function getPackedMatrixTextureShapeWidthHeight(
 */
 
 export function getPackedMatrixTextureShapeWidthHeight(
-    rows: number, columns: number): [number, number] {
-  return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns / 4))];
+    rows: number, columns: number, format: GPUTextureFormat): [number, number] {
+  if (format == 'rgba32float')
+    return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns / 4))];
+  else
+    return [rows, columns];
 }
 
 export function getPackedRGBAArraySizeFromMatrixShape(
-    rows: number, columns: number): number {
-  const [w, h] = getPackedMatrixTextureShapeWidthHeight(rows, columns);
+    rows: number, columns: number, format: GPUTextureFormat): number {
+  const [w, h] = getPackedMatrixTextureShapeWidthHeight(rows, columns, format);
   return w * h * 4;
 }

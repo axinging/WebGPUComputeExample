@@ -13,7 +13,7 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
 
-  const copyTextureOp = new compute.CopyTextureOp(device, glslang);
+  const copyTextureOp = new compute.CopyTextureRGBA8Op(device, glslang);
   const loop = 1;
   for (var i = 0; i < loop; i++) {
     await copyTextureOp.execute();
