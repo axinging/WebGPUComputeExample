@@ -95,7 +95,7 @@ export class CopyTextureRGBA8Op {
 
   async execute(mode = 0) {
     // First Matrix
-    const firstMatrixSize = [4, 8];
+    const firstMatrixSize = [8, 4];
     const firstMatrix =
         this.createArray(firstMatrixSize[0], firstMatrixSize[1]);
     const shape = new Int32Array([firstMatrixSize[0], firstMatrixSize[1]]);

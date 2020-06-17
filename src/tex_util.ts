@@ -123,7 +123,7 @@ export function getPackedMatrixTextureShapeWidthHeight(
   if (format == 'rgba32float')
     return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns / 4))];
   else if (format == 'rgba8uint')
-    return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns / 4))];
+    return [rows, columns];
   else
     return [rows, columns];
 }
@@ -132,4 +132,15 @@ export function getPackedRGBAArraySizeFromMatrixShape(
     rows: number, columns: number, format: GPUTextureFormat): number {
   const [w, h] = getPackedMatrixTextureShapeWidthHeight(rows, columns, format);
   return w * h * 4;
+}
+
+export function getBytesPerRow(width: number) {
+  const kTextureBytesPerRowAlignment = 256;
+  const alignment = kTextureBytesPerRowAlignment;
+  const kBytesPerTexel = 16;
+  const value = kBytesPerTexel * width;
+  // const bytesPerRow = (value + (alignment - 1)) & ~(alignment - 1);
+  const bytesPerRow =
+      ((value + (alignment - 1)) & ((~(alignment - 1)) >>> 0)) >>> 0;
+  return bytesPerRow;
 }

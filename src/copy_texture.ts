@@ -11,12 +11,14 @@ export class CopyTextureOp {
   gpuTextureFirstMatrix: GPUTexture;
   shape: Int32Array;
   format: GPUTextureFormat;
+  kBytesPerTexel: number;
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
     this.format = 'rgba32float';
+    this.kBytesPerTexel = 16;
   }
 
   now(): number {
@@ -36,27 +38,35 @@ export class CopyTextureOp {
           GPUTextureUsage.STORAGE
     });
     console.log(
-        'w =' + width + ', h=' + height + '; tex w=' + widthTex +
-        ', h= ' + heightTex);
+        'w = ' + width + ', h = ' + height + '; tex w = ' + widthTex +
+        ', h = ' + heightTex);
     const encoder = this.device.createCommandEncoder();
     // TODO: fix the width height.
     // copyBufferToTexture(source, destination, copySize).
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex);
+    console.log('bytesPerRow=' + bytesPerRow);
     encoder.copyBufferToTexture(
-        {buffer: src, bytesPerRow: 256},
+        {buffer: src, bytesPerRow: bytesPerRow},
         {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
         {width: widthTex, height: heightTex, depth: 1});
     this.device.defaultQueue.submit([encoder.finish()]);
     return texture;
   }
 
+  // From: Dawn:ComputeTextureCopyBufferSize
   getBufferSize() {
-    const bytesPerRow = 256;
     const blockHeight = 1;
     const blockWidth = 1;
-    const blockByteSize = 16;
 
-    const sliceSize = bytesPerRow * (this.shape[1] / blockHeight - 1) +
-        (this.shape[0] / blockWidth) * blockByteSize;
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            this.shape[0], this.shape[1], this.format);
+
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex);
+
+    const sliceSize = bytesPerRow * (heightTex / blockHeight - 1) +
+        (widthTex / blockWidth) * this.kBytesPerTexel;
+    console.log(sliceSize);
     return sliceSize;
   }
 
@@ -65,7 +75,8 @@ export class CopyTextureOp {
       computeShaderCode: any) {
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
-          size: (firstMatrix as Float32Array).byteLength,
+          size:
+              this.getBufferSize(),  //(firstMatrix as Float32Array).byteLength,
           usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
               GPUBufferUsage.COPY_DST
         });
@@ -89,7 +100,9 @@ export class CopyTextureOp {
 
   async execute(mode = 0) {
     // First Matrix
-    const firstMatrixSize = [4, 8];
+    // Works: [15, 7]; [16, 8]; [32, 16];
+    // Not work: [17, 9];
+    const firstMatrixSize = [17, 9];
     const firstMatrix =
         this.createArray(firstMatrixSize[0], firstMatrixSize[1]);
     const shape = new Int32Array([firstMatrixSize[0], firstMatrixSize[1]]);
@@ -116,7 +129,8 @@ export class CopyTextureOp {
     // Get a GPU buffer for reading in an unmapped state.
 
     const gpuReadBuffer = this.device.createBuffer({
-      size: Float32Array.BYTES_PER_ELEMENT * (this.shape[0] * this.shape[1]),
+      size: this.getBufferSize(),  // Float32Array.BYTES_PER_ELEMENT *
+                                   // (this.shape[0] * this.shape[1]),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
 
@@ -126,7 +140,8 @@ export class CopyTextureOp {
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
             this.shape[0], this.shape[1], this.format);
-
+    console.log('widthTex = ' + widthTex + '; heightTex = ' + heightTex);
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex);
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(
         {
@@ -134,7 +149,7 @@ export class CopyTextureOp {
           mipLevel: 0,
           origin: {x: 0, y: 0, z: 0}
         },
-        {buffer: gpuReadBuffer, bytesPerRow: 256},
+        {buffer: gpuReadBuffer, bytesPerRow: bytesPerRow},
         {width: widthTex, height: heightTex, depth: 1});
 
     // Submit GPU commands.
