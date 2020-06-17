@@ -49,6 +49,17 @@ export class CopyTextureOp {
     return texture;
   }
 
+  getBufferSize() {
+    const bytesPerRow = 256;
+    const blockHeight = 1;
+    const blockWidth = 1;
+    const blockByteSize = 16;
+
+    const sliceSize = bytesPerRow * (this.shape[1] / blockHeight - 1) +
+        (this.shape[0] / blockWidth) * blockByteSize;
+    return sliceSize;
+  }
+
   private compile(
       firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
       computeShaderCode: any) {

@@ -49,12 +49,29 @@ export class CopyTextureRGBA8Op {
     return texture;
   }
 
+  getBufferSize() {
+    const bytesPerRow = 256;
+    const blockHeight = 1;
+    const blockWidth = 1;
+    const blockByteSize = 4;
+
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            this.shape[0], this.shape[1], this.format);
+
+    const sliceSize = bytesPerRow * (heightTex / blockHeight - 1) +
+        (widthTex / blockWidth) * blockByteSize;
+    return sliceSize;
+  }
+
   private compile(
       firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
       computeShaderCode: any) {
+    console.log(this.getBufferSize());
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
-          size: (firstMatrix as Float32Array).byteLength,
+          size: this.getBufferSize(),  // (firstMatrix as
+                                       // Float32Array).byteLength,
           usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
               GPUBufferUsage.COPY_DST
         });
@@ -78,7 +95,7 @@ export class CopyTextureRGBA8Op {
 
   async execute(mode = 0) {
     // First Matrix
-    const firstMatrixSize = [1, 4];
+    const firstMatrixSize = [4, 8];
     const firstMatrix =
         this.createArray(firstMatrixSize[0], firstMatrixSize[1]);
     const shape = new Int32Array([firstMatrixSize[0], firstMatrixSize[1]]);
@@ -105,7 +122,8 @@ export class CopyTextureRGBA8Op {
     // Get a GPU buffer for reading in an unmapped state.
 
     const gpuReadBuffer = this.device.createBuffer({
-      size: Float32Array.BYTES_PER_ELEMENT * (this.shape[0] * this.shape[1]),
+      size: this.getBufferSize(),  // Float32Array.BYTES_PER_ELEMENT *
+                                   // (this.shape[0] * this.shape[1]),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
 
