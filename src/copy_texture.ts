@@ -94,6 +94,12 @@ export class CopyTextureOp {
     return;
   }
 
+  async execute(
+      firstMatrix: Float32Array|Uint32Array, shape: Uint32Array, mode = 0) {
+    const result = await this.compileAndRun(firstMatrix, null, shape, '', mode);
+    return result;
+  }
+
   // TODO: Float32Array is bad. And buffer is bad.
   async compileAndRun(
       firstMatrix: Float32Array|Uint32Array,
@@ -103,6 +109,12 @@ export class CopyTextureOp {
     this.shape = shape;
     this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
     return true;
+  }
+
+  async data() {
+    const arrayBuffer = await this.getBufferData();
+    // TODO: why this needs to be float.
+    return new Float32Array(arrayBuffer);
   }
 
   async getBufferData() {
