@@ -134,10 +134,15 @@ export function getPackedRGBAArraySizeFromMatrixShape(
   return w * h * 4;
 }
 
-export function getBytesPerRow(width: number) {
+// BufferSpec MinimumBufferSpec(uint32_t width, uint32_t height) {
+//  uint32_t bytesPerRow = Align(width * kBytesPerTexel,
+//  kTextureBytesPerRowAlignment); return {bytesPerRow * (height - 1) + width *
+//  kBytesPerTexel, 0, bytesPerRow};
+// }
+export function getBytesPerRow(width: number, kBytesPerTexel = 16) {
   const kTextureBytesPerRowAlignment = 256;
   const alignment = kTextureBytesPerRowAlignment;
-  const kBytesPerTexel = 16;
+  // const kBytesPerTexel = 16;
   const value = kBytesPerTexel * width;
   // const bytesPerRow = (value + (alignment - 1)) & ~(alignment - 1);
   const bytesPerRow =

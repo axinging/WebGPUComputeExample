@@ -9,14 +9,16 @@ export class CopyTextureRGBA8Op {
   commandQueue: GPUCommandEncoder[];
   times: [];
   gpuTextureFirstMatrix: GPUTexture;
-  shape: Int32Array;
+  shape: Uint32Array;
   format: GPUTextureFormat;
+  kBytesPerTexel: number;
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
     this.format = 'rgba8uint';
+    this.kBytesPerTexel = 4;
   }
 
   now(): number {
@@ -41,33 +43,38 @@ export class CopyTextureRGBA8Op {
     const encoder = this.device.createCommandEncoder();
     // TODO: fix the width height.
     // copyBufferToTexture(source, destination, copySize).
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
+    console.log('bytesPerRow=' + bytesPerRow);
     encoder.copyBufferToTexture(
-        {buffer: src, bytesPerRow: 256},
+        {buffer: src, bytesPerRow: bytesPerRow},
         {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
         {width: widthTex, height: heightTex, depth: 1});
     this.device.defaultQueue.submit([encoder.finish()]);
     return texture;
   }
 
+  // From: Dawn:ComputeTextureCopyBufferSize
   getBufferSize() {
-    const bytesPerRow = 256;
     const blockHeight = 1;
     const blockWidth = 1;
-    const blockByteSize = 4;
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
             this.shape[0], this.shape[1], this.format);
 
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
+
     const sliceSize = bytesPerRow * (heightTex / blockHeight - 1) +
-        (widthTex / blockWidth) * blockByteSize;
+        (widthTex / blockWidth) * this.kBytesPerTexel;
+    console.log(sliceSize);
     return sliceSize;
   }
 
   private compile(
-      firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
-    console.log(this.getBufferSize());
+    console.log('B2T this.getBufferSize()=' + this.getBufferSize());
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
           size: this.getBufferSize(),  // (firstMatrix as
@@ -86,7 +93,7 @@ export class CopyTextureRGBA8Op {
   }
 
   createArray(w: number, h: number) {
-    let matrix = new Float32Array(w * h);
+    let matrix = new Uint32Array(w * h);
     for (let i = 0; i < w * h; i++) {
       matrix[i] = i;
     }
@@ -95,10 +102,12 @@ export class CopyTextureRGBA8Op {
 
   async execute(mode = 0) {
     // First Matrix
-    const firstMatrixSize = [8, 4];
+    // Works: [256, 128];
+    // Not work: [259, 127]£» [7, 3];
+    const firstMatrixSize = [16, 8];
     const firstMatrix =
         this.createArray(firstMatrixSize[0], firstMatrixSize[1]);
-    const shape = new Int32Array([firstMatrixSize[0], firstMatrixSize[1]]);
+    const shape = new Uint32Array([firstMatrixSize[0], firstMatrixSize[1]]);
     const result = await this.compileAndRun(firstMatrix, null, shape, '', mode);
     return result;
   }
@@ -110,7 +119,8 @@ export class CopyTextureRGBA8Op {
 
   // TODO: Float32Array is bad. And buffer is bad.
   async compileAndRun(
-      firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any, mode: number) {
     // TODO: figure out how to return non const two values.
     this.shape = shape;
@@ -126,14 +136,15 @@ export class CopyTextureRGBA8Op {
                                    // (this.shape[0] * this.shape[1]),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
-
+    console.log('T2B this.getBufferSize()=' + this.getBufferSize());
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
             this.shape[0], this.shape[1], this.format);
-
+    console.log('widthTex = ' + widthTex + '; heightTex = ' + heightTex);
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(
         {
@@ -141,7 +152,7 @@ export class CopyTextureRGBA8Op {
           mipLevel: 0,
           origin: {x: 0, y: 0, z: 0}
         },
-        {buffer: gpuReadBuffer, bytesPerRow: 256},
+        {buffer: gpuReadBuffer, bytesPerRow: bytesPerRow},
         {width: widthTex, height: heightTex, depth: 1});
 
     // Submit GPU commands.
