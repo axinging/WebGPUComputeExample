@@ -28,6 +28,7 @@ function createUint32Array(w, h) {
   const adapter = await navigator.gpu.requestAdapter();
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
+  /*
   {
     // First Matrix
     // Works: [256, 128];
@@ -43,6 +44,7 @@ function createUint32Array(w, h) {
       console.log("Texture rgba8 not staging: "+await copyTextureOp.data());
     }
   }
+  */
 
   {
     // First Matrix

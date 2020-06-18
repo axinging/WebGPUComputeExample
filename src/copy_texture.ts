@@ -68,7 +68,6 @@ export class CopyTextureOp {
 
     const sliceSize = bytesPerRow * (heightTex / blockHeight - 1) +
         (widthTex / blockWidth) * this.kBytesPerTexel;
-    console.log(sliceSize);
     return sliceSize;
   }
 
