@@ -12,13 +12,15 @@ export class CopyTextureOp {
   shape: Uint32Array;
   format: GPUTextureFormat;
   kBytesPerTexel: number;
-  constructor(device: GPUDevice, glslang: Glslang) {
+  constructor(
+      device: GPUDevice, glslang: Glslang, format: GPUTextureFormat,
+      kBytesPerTexel: number) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
-    this.format = 'rgba32float';
-    this.kBytesPerTexel = 16;
+    this.format = format;
+    this.kBytesPerTexel = kBytesPerTexel;
   }
 
   now(): number {
@@ -90,31 +92,6 @@ export class CopyTextureOp {
     this.gpuTextureFirstMatrix = this.copyFromHostBufferToDeviceTexture(
         gpuBufferFirstMatrix, this.shape[0], this.shape[1]);
     return;
-  }
-
-  createArray(w: number, h: number) {
-    let matrix = new Float32Array(w * h);
-    for (let i = 0; i < w * h; i++) {
-      matrix[i] = i;
-    }
-    return matrix;
-  }
-
-  async execute(mode = 0) {
-    // First Matrix
-    // Works: [15, 7]; [16, 8]; [32, 16];
-    // Not work: [17, 9];
-    const firstMatrixSize = [16, 8];
-    const firstMatrix =
-        this.createArray(firstMatrixSize[0], firstMatrixSize[1]);
-    const shape = new Uint32Array([firstMatrixSize[0], firstMatrixSize[1]]);
-    const result = await this.compileAndRun(firstMatrix, null, shape, '', mode);
-    return result;
-  }
-
-  async data() {
-    const arrayBuffer = await this.getBufferData();
-    return new Float32Array(arrayBuffer);
   }
 
   // TODO: Float32Array is bad. And buffer is bad.

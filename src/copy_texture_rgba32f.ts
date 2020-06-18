@@ -2,7 +2,7 @@
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import {CopyTextureOp} from './copy_texture';
 
-export class CopyTextureRGBA8Op extends CopyTextureOp {
+export class CopyTextureRGBA32FOp extends CopyTextureOp {
   device: GPUDevice;
   queue: GPUQueue;
   glslang: Glslang;
@@ -13,11 +13,11 @@ export class CopyTextureRGBA8Op extends CopyTextureOp {
   format: GPUTextureFormat;
   kBytesPerTexel: number;
   constructor(device: GPUDevice, glslang: Glslang) {
-    super(device, glslang, 'rgba8uint', 4);
+    super(device, glslang, 'rgba32float', 16);
   }
 
   createArray(w: number, h: number) {
-    let matrix = new Uint32Array(w * h);
+    let matrix = new Float32Array(w * h);
     for (let i = 0; i < w * h; i++) {
       matrix[i] = i;
     }
@@ -26,8 +26,8 @@ export class CopyTextureRGBA8Op extends CopyTextureOp {
 
   async execute(mode = 0) {
     // First Matrix
-    // Works: [256, 128];
-    // Not work: [259, 127]; [7, 3];
+    // Works: [15, 7]; [16, 8]; [32, 16];
+    // Not work: [17, 9];
     const firstMatrixSize = [16, 8];
     const firstMatrix =
         this.createArray(firstMatrixSize[0], firstMatrixSize[1]);
