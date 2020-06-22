@@ -139,6 +139,48 @@ export class TextureOp {
     // Bind group layout and bind group
     // TODO: currently this doesn't support read write storage.
     // https://gpuweb.github.io/gpuweb/#enumdef-gpubindingtype
+    // Use old layout:
+	// Bind group layout and bind group
+	
+	// Old layout.
+    const bindGroupLayout = this.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          type: 'uniform-buffer'
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.COMPUTE,
+          type: 'writeonly-storage-texture',
+          storageTextureFormat: 'rgba32float'
+        },
+        {
+          binding: 2,
+          visibility: GPUShaderStage.COMPUTE,
+          type: 'readonly-storage-texture',
+          storageTextureFormat: 'rgba32float'
+        },
+        {
+          binding: 3,
+          visibility: GPUShaderStage.COMPUTE,
+          type: 'readonly-storage-texture',
+          storageTextureFormat: 'rgba32float'
+        }
+      ]
+    });
+
+    const bindGroup = this.device.createBindGroup({
+      layout: bindGroupLayout,
+      entries: [
+        {binding: 0, resource: {buffer: shapeBuffer}},
+        {binding: 1, resource: this.resultMatrixTexture.createView()},
+        {binding: 2, resource: gpuTextureFirstMatrix.createView()},
+        {binding: 3, resource: gpuTextureSecondMatrix.createView()},
+      ]
+    });
+	// Old layout end.
 
     // Pipeline setup
     const result =
@@ -147,12 +189,16 @@ export class TextureOp {
       throw new Error('Shader compilation failed');
     }
     const computePipeline = this.device.createComputePipeline({
+	  // For new layout, remove this line.
+	  layout: this.device.createPipelineLayout(
+          {bindGroupLayouts: [bindGroupLayout]}),
       computeStage: {
         module: this.device.createShaderModule({code: result.data}),
         entryPoint: 'main'
       }
     });
 
+    /* New layout
     const bindGroup = this.device.createBindGroup({
       layout: computePipeline.getBindGroupLayout(0),
       entries: [
@@ -162,6 +208,7 @@ export class TextureOp {
         {binding: 3, resource: gpuTextureSecondMatrix.createView()},
       ]
     });
+	*/
 
     return {
       computePipeline, bindGroup
