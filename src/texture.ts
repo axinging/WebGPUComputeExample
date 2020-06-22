@@ -11,7 +11,7 @@ export class TextureOp {
   times: [];
   resultMatrixTexture: GPUTexture;
   resultMatrixTextureSize: number;
-  shape: Int32Array;
+  shape: Uint32Array;
   format: GPUTextureFormat;
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
@@ -46,25 +46,9 @@ export class TextureOp {
     return performance.now();
   }
 
-  createCopyForMapRead2(size: any) {
-    const data = new Uint32Array([0x01020304]);
-    // The HOST buffer.
-    const [src, map] = this.device.createBufferMapped({
-      size: 4,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST |
-          GPUBufferUsage.MAP_READ,
-    });
-    new Uint32Array(map).set(data);
-    src.unmap();
-    // The Device buffer.
-    const dst = this.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    const c = this.device.createCommandEncoder();
-    c.copyBufferToBuffer(src, 0, dst, 0, size);
-    this.device.defaultQueue.submit([c.finish()]);
-    return dst;
+  async data() {
+    const arrayBuffer = await this.getBufferData();
+    return new Float32Array(arrayBuffer);
   }
 
   private copyFromHostBufferToDeviceTexture(
@@ -89,7 +73,8 @@ export class TextureOp {
   }
 
   private compile(
-      firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
@@ -132,7 +117,7 @@ export class TextureOp {
       size: shape.byteLength,
       usage: GPUBufferUsage.UNIFORM,
     });
-    new Int32Array(shapeMapping).set(shape);
+    new Uint32Array(shapeMapping).set(shape);
     shapeBuffer.unmap();
 
     // This works too.
@@ -185,7 +170,8 @@ export class TextureOp {
 
   // TODO: Float32Array is bad. And buffer is bad.
   async compileAndRun(
-      firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any, mode: number) {
     // TODO: figure out how to return non const two values.
     this.shape = shape;

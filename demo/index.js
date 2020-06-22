@@ -63,16 +63,41 @@ function createUint32Array(w, h) {
     }
   }
 
+  {
+    // First Matrix.
+    const firstMatrixSize = [4, 8];
+    const firstMatrix = createFloat32Array(4, 8);
+    // Second Matrix.
+    const secondMatrixSize = [4, 8];
+    const secondMatrix = createFloat32Array(4, 8);
+    const shape = new Uint32Array([
+      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+    ]);
+    const addBufferOP = new compute.AddBufferOp(device, glslang);
+    const loop = 1;
+    for (var i = 0; i < loop; i++) {
+      await addBufferOP.execute(firstMatrix, secondMatrix, shape);
+      console.log("not staging: "+await addBufferOP.data());
+     }
+   }
 
-/*
-  const buffer = new compute.AddBufferOp(device, glslang);
-  for (var i = 0; i < loop; i++) {
-    await buffer.execute()
-    console.log("not staging: "+await buffer.data());
-  }
-  for (var i = 0; i < loop; i++) {
-    await buffer.execute(1)
-    console.log("staging: "+await buffer.data());
-  }
-*/
+   {
+    // First Matrix.
+    const firstMatrixSize = [4, 8];
+    const firstMatrix = createFloat32Array(4, 8);
+    // Second Matrix.
+    const secondMatrixSize = [4, 8];
+    const secondMatrix = createFloat32Array(4, 8);
+    const shape = new Uint32Array([
+      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+    ]);
+    const addTextureOP = new compute.AddTextureOP(device, glslang);
+    const loop = 1;
+    for (var i = 0; i < loop; i++) {
+      await addTextureOP.execute(firstMatrix, secondMatrix, shape);
+      console.log("not staging: "+await addTextureOP.data());
+     }
+   }
 })();

@@ -42,27 +42,6 @@ export class BufferOp {
     return performance.now();
   }
 
-  createCopyForMapRead2(size: any) {
-    const data = new Uint32Array([0x01020304]);
-    // The HOST buffer.
-    const [src, map] = this.device.createBufferMapped({
-      size: 4,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST |
-          GPUBufferUsage.MAP_READ,
-    });
-    new Uint32Array(map).set(data);
-    src.unmap();
-    // The Device buffer.
-    const dst = this.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    const c = this.device.createCommandEncoder();
-    c.copyBufferToBuffer(src, 0, dst, 0, size);
-    this.device.defaultQueue.submit([c.finish()]);
-    return dst;
-  }
-
   /*
     var x = new Int32Array(1);
     x[0] = 17;
@@ -81,7 +60,8 @@ export class BufferOp {
   }
 
   private compile(
-      firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
@@ -113,7 +93,7 @@ export class BufferOp {
       size: shape.byteLength,
       usage: GPUBufferUsage.UNIFORM,
     });
-    new Int32Array(shapeMapping).set(shape);
+    new Uint32Array(shapeMapping).set(shape);
     shapeBuffer.unmap();
 
     // This works too.
@@ -161,7 +141,8 @@ export class BufferOp {
   }
 
   private compileStaging(
-      firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
     const gpuBufferFirstMatrix = this.uploadToGPU(
         firstMatrix, (firstMatrix as Float32Array).byteLength,
@@ -190,9 +171,15 @@ export class BufferOp {
         computeShaderCode);
   }
 
+  async data() {
+    const arrayBuffer = await this.getBufferData();
+    return new Float32Array(arrayBuffer);
+  }
+
   // TODO: Float32Array is bad. And buffer is bad.
   async compileAndRun(
-      firstMatrix: Float32Array, secondMatrix: Float32Array, shape: Int32Array,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any, mode: number) {
     // TODO: figure out how to return non const two values.
     if (mode == 0) {
