@@ -81,4 +81,24 @@ function createUint32Array(w, h) {
       console.log("not staging: "+await addBufferOP.data());
      }
    }
+
+   {
+    // First Matrix.
+    const firstMatrixSize = [4, 8];
+    const firstMatrix = createFloat32Array(4, 8);
+    // Second Matrix.
+    const secondMatrixSize = [4, 8];
+    const secondMatrix = createFloat32Array(4, 8);
+    const shape = new Uint32Array([
+      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+    ]);
+    const addTextureOP = new compute.AddTextureOp(device, glslang);
+    const loop = 1;
+    for (var i = 0; i < loop; i++) {
+      await addTextureOP.execute(firstMatrix, secondMatrix, shape);
+      console.log("not staging: "+await addTextureOP.data());
+     }
+   }
+
 })();

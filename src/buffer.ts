@@ -65,25 +65,25 @@ export class BufferOp {
       size: 16,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
-	console.log("getQueryTime.....................before submit.....");
+        console.log("getQueryTime.....................before submit.....");
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyBufferToBuffer(dstBuffer, 0, dst, 0, 16);
 
     this.device.defaultQueue.submit([commandEncoder.finish()]);
-	console.log("getQueryTime.....................after submit.....");
+        console.log("getQueryTime.....................after submit.....");
 
     // @ts-ignore
     const arrayBuf = new BigUint64Array(await dst.mapReadAsync());
 
     // Time delta is a gpu ticks, we need convert to time using gpu frequency
     const timeDelta = arrayBuf[1] - arrayBuf[0];
-	console.log("getQueryTime.......................... timeDelta="+timeDelta);
-    console.log(timeDelta);
+        console.log("getQueryTime..........................
+  timeDelta="+timeDelta); console.log(timeDelta);
 
     // gpu frequency can be got from console in chromium.
     // const timeInNS = timeDelta * 1000000000 / frequency;
-	dstBuffer.destroy();
+        dstBuffer.destroy();
     return Number(timeDelta);
   }
   */
@@ -141,9 +141,8 @@ export class BufferOp {
   private createLayout(
       gpuBufferFirstMatrix: GPUBuffer, gpuBufferSecondMatrix: GPUBuffer,
       shapeBuffer: GPUBuffer, computeShaderCode: any) {
-
     // Use old layout:
-	// Bind group layout and bind group
+    // Bind group layout and bind group
     const bindGroupLayout = this.device.createBindGroupLayout({
       entries: [
         {
@@ -174,7 +173,7 @@ export class BufferOp {
         {binding: 3, resource: {buffer: this.resultMatrixBuffer}}
       ]
     });
-	// Old layout end.
+    // Old layout end.
 
     // Pipeline setup
     const result =
@@ -183,15 +182,15 @@ export class BufferOp {
       throw new Error('Shader compilation failed');
     }
     const computePipeline = this.device.createComputePipeline({
-	  // For new layout, remove this line.
-	  layout: this.device.createPipelineLayout(
+      // For new layout, remove this line.
+      layout: this.device.createPipelineLayout(
           {bindGroupLayouts: [bindGroupLayout]}),
       computeStage: {
         module: this.device.createShaderModule({code: result.data}),
         entryPoint: 'main'
       }
     });
-	
+
     /* New layout
     const bindGroup = this.device.createBindGroup({
       layout: computePipeline.getBindGroupLayout(0),
@@ -202,7 +201,7 @@ export class BufferOp {
         {binding: 3, resource: {buffer: this.resultMatrixBuffer}}
       ]
     });
-	*/
+        */
 
     return {
       computePipeline, bindGroup
@@ -270,33 +269,33 @@ export class BufferOp {
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number) {
     const start = this.now();
-	// TIMESTAMP
-	/*
-	const querySet = this.device.createQuerySet({
-      type: 'timestamp',
-      count: 2,
-    });
-	const dstBuffer = this.device.createBuffer({
-      size: 16,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-	*/
+    // TIMESTAMP
+    /*
+    const querySet = this.device.createQuerySet({
+  type: 'timestamp',
+  count: 2,
+});
+    const dstBuffer = this.device.createBuffer({
+  size: 16,
+  usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+});
+    */
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
 
     const passEncoder = commandEncoder.beginComputePass();
-	// TIMESTAMPpassEncoder.writeTimestamp(querySet, 0);
+    // TIMESTAMPpassEncoder.writeTimestamp(querySet, 0);
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
     console.log(dispatchX + '+' + dispatchY);
     passEncoder.dispatch(dispatchX, dispatchY);
-	// TIMESTAMPpassEncoder.writeTimestamp(querySet, 1);
+    // TIMESTAMPpassEncoder.writeTimestamp(querySet, 1);
     passEncoder.endPass();
-	// TIMESTAMPcommandEncoder.resolveQuerySet(querySet, 0, 2, dstBuffer, 0);
+    // TIMESTAMPcommandEncoder.resolveQuerySet(querySet, 0, 2, dstBuffer, 0);
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
-	// TIMESTAMPawait this.getQueryTime(dstBuffer);
+    // TIMESTAMPawait this.getQueryTime(dstBuffer);
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
