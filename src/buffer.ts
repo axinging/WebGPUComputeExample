@@ -10,11 +10,13 @@ export class BufferOp {
   times: [];
   resultMatrixBuffer: GPUBuffer;
   resultMatrixBufferSize: number;
+  enableTimeStamp: boolean;
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
+    this.enableTimeStamp = false;
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -59,34 +61,31 @@ export class BufferOp {
     return buffer;
   }
   // TIMESTAMP
-  /*
   async getQueryTime(dstBuffer: GPUBuffer) {
-    const dst = this.device.createBuffer({
+    const dstStagingBuffer = this.device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
-        console.log("getQueryTime.....................before submit.....");
 
     const commandEncoder = this.device.createCommandEncoder();
-    commandEncoder.copyBufferToBuffer(dstBuffer, 0, dst, 0, 16);
-
+    commandEncoder.copyBufferToBuffer(dstBuffer, 0, dstStagingBuffer, 0, 16);
     this.device.defaultQueue.submit([commandEncoder.finish()]);
-        console.log("getQueryTime.....................after submit.....");
 
     // @ts-ignore
-    const arrayBuf = new BigUint64Array(await dst.mapReadAsync());
+    const arrayBuf = new BigUint64Array(await dstStagingBuffer.mapReadAsync());
 
     // Time delta is a gpu ticks, we need convert to time using gpu frequency
     const timeDelta = arrayBuf[1] - arrayBuf[0];
-        console.log("getQueryTime..........................
-  timeDelta="+timeDelta); console.log(timeDelta);
-
-    // gpu frequency can be got from console in chromium.
-    // const timeInNS = timeDelta * 1000000000 / frequency;
-        dstBuffer.destroy();
-    return Number(timeDelta);
+    // gpu frequency can be got from console in chromium. For Winodws on
+    // UHD630/RX560 = 25000000;
+    const frequency = 25000000;
+    // 1 ms = 1000 000 ns
+    const timeInMS = Number(timeDelta) * 1000 / frequency;
+    console.log(timeInMS + 'ms');
+    dstStagingBuffer.destroy();
+    dstBuffer.destroy();
+    return timeInMS;
   }
-  */
 
   private compile(
       firstMatrix: Float32Array|Uint32Array,
@@ -270,32 +269,43 @@ export class BufferOp {
       dispatchY: number) {
     const start = this.now();
     // TIMESTAMP
-    /*
-    const querySet = this.device.createQuerySet({
-  type: 'timestamp',
-  count: 2,
-});
-    const dstBuffer = this.device.createBuffer({
-  size: 16,
-  usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-});
-    */
+    // TODO: necessary to destroy querySet?
+    let querySet: any;
+    let dstBuffer: GPUBuffer;
+    if (this.enableTimeStamp) {
+      querySet = this.device.createQuerySet({
+        type: 'timestamp',
+        count: 2,
+      });
+      dstBuffer = this.device.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+      });
+    }
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
 
     const passEncoder = commandEncoder.beginComputePass();
-    // TIMESTAMPpassEncoder.writeTimestamp(querySet, 0);
+    if (this.enableTimeStamp) {
+      passEncoder.writeTimestamp(querySet, 0);
+    }
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
     console.log(dispatchX + '+' + dispatchY);
     passEncoder.dispatch(dispatchX, dispatchY);
-    // TIMESTAMPpassEncoder.writeTimestamp(querySet, 1);
+    if (this.enableTimeStamp) {
+      passEncoder.writeTimestamp(querySet, 1);
+    }
     passEncoder.endPass();
-    // TIMESTAMPcommandEncoder.resolveQuerySet(querySet, 0, 2, dstBuffer, 0);
+    if (this.enableTimeStamp) {
+      commandEncoder.resolveQuerySet(querySet, 0, 2, dstBuffer, 0);
+    }
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
-    // TIMESTAMPawait this.getQueryTime(dstBuffer);
+    if (this.enableTimeStamp) {
+      await this.getQueryTime(dstBuffer);
+    }
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);

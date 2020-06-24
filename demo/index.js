@@ -26,7 +26,7 @@ function createUint32Array(w, h) {
     return;
   }
   const adapter = await navigator.gpu.requestAdapter();
-  const device = await adapter.requestDevice();
+  const device = await adapter.requestDevice({extensions: ["timestamp-query"],});
   const glslang = await glslangInit();
   /*
   {
