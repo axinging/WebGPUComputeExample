@@ -45,7 +45,7 @@ function createUint32Array(w, h) {
     }
   }
   */
-
+  /*
   {
     // First Matrix
     // Works: [16, 8]; [32, 16];
@@ -62,7 +62,8 @@ function createUint32Array(w, h) {
       console.log("Texture rgba32f not staging: "+await copyTextureOp.data());
     }
   }
-
+  */
+ 
   {
     // First Matrix.
     const firstMatrixSize = [4, 8];
@@ -81,7 +82,7 @@ function createUint32Array(w, h) {
       console.log("not staging: "+await addBufferOP.data());
      }
    }
-
+  /*
    {
     // First Matrix.
     const firstMatrixSize = [4, 8];
@@ -100,5 +101,6 @@ function createUint32Array(w, h) {
       console.log("not staging: "+await addTextureOP.data());
      }
    }
+   */
 
 })();

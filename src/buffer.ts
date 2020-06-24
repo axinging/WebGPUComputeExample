@@ -81,7 +81,7 @@ export class BufferOp {
     const frequency = 25000000;
     // 1 ms = 1000 000 ns
     const timeInMS = Number(timeDelta) * 1000 / frequency;
-    console.log(timeInMS + 'ms');
+    console.log('timestamp: ' + timeInMS + 'ms');
     dstStagingBuffer.destroy();
     dstBuffer.destroy();
     return timeInMS;
