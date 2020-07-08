@@ -13,12 +13,16 @@ export class TextureOp {
   resultMatrixTextureSize: number;
   shape: Uint32Array;
   format: GPUTextureFormat;
-  constructor(device: GPUDevice, glslang: Glslang) {
+  kBytesPerTexel: number;
+  constructor(
+      device: GPUDevice, glslang: Glslang, format: GPUTextureFormat,
+      kBytesPerTexel: number) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
     this.format = 'rgba32float';
+    this.kBytesPerTexel = kBytesPerTexel;
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -60,28 +64,54 @@ export class TextureOp {
     const texture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
       format: this.format,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC |
+          GPUTextureUsage.STORAGE
     });
     const encoder = this.device.createCommandEncoder();
     // TODO: fix the width height.
+    // copyBufferToTexture(source, destination, copySize).
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
+    console.log('bytesPerRow=' + bytesPerRow);
     encoder.copyBufferToTexture(
-        {buffer: src, bytesPerRow: 256},
+        {buffer: src, bytesPerRow: bytesPerRow},
         {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
         {width: widthTex, height: heightTex, depth: 1});
     this.device.defaultQueue.submit([encoder.finish()]);
     return texture;
   }
 
+  // From: Dawn:ComputeTextureCopyBufferSize
+  // TODO: Make this works with different input size
+  getBufferSize() {
+    const blockHeight = 1;
+    const blockWidth = 1;
+
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            this.shape[0], this.shape[1], this.format);
+
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
+
+    const sliceSize = bytesPerRow * (heightTex / blockHeight - 1) +
+        (widthTex / blockWidth) * this.kBytesPerTexel;
+    return sliceSize;
+  }
+
   private compile(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
+    console.log('B2T this.getBufferSize()=' + this.getBufferSize());
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
-          size: (firstMatrix as Float32Array).byteLength,
+          size: this.getBufferSize(),  // (firstMatrix as
+                                       // Float32Array).byteLength,
           usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
               GPUBufferUsage.COPY_DST
         });
+    console.log(
+        'firstMatrix as Float32Array).byteLength=' +
+        (firstMatrix as Float32Array).byteLength);
     new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
     gpuBufferFirstMatrix.unmap();
     const gpuTextureFirstMatrix = this.copyFromHostBufferToDeviceTexture(
@@ -89,7 +119,8 @@ export class TextureOp {
 
     const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] =
         this.device.createBufferMapped({
-          size: (secondMatrix as Float32Array).byteLength,
+          size: this.getBufferSize(),  //(secondMatrix as
+                                       // Float32Array).byteLength,
           usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
               GPUBufferUsage.COPY_DST
         });
@@ -140,9 +171,9 @@ export class TextureOp {
     // TODO: currently this doesn't support read write storage.
     // https://gpuweb.github.io/gpuweb/#enumdef-gpubindingtype
     // Use old layout:
-	// Bind group layout and bind group
-	
-	// Old layout.
+    // Bind group layout and bind group
+
+    // Old layout.
     const bindGroupLayout = this.device.createBindGroupLayout({
       entries: [
         {
@@ -180,7 +211,7 @@ export class TextureOp {
         {binding: 3, resource: gpuTextureSecondMatrix.createView()},
       ]
     });
-	// Old layout end.
+    // Old layout end.
 
     // Pipeline setup
     const result =
@@ -189,8 +220,8 @@ export class TextureOp {
       throw new Error('Shader compilation failed');
     }
     const computePipeline = this.device.createComputePipeline({
-	  // For new layout, remove this line.
-	  layout: this.device.createPipelineLayout(
+      // For new layout, remove this line.
+      layout: this.device.createPipelineLayout(
           {bindGroupLayouts: [bindGroupLayout]}),
       computeStage: {
         module: this.device.createShaderModule({code: result.data}),
@@ -208,7 +239,7 @@ export class TextureOp {
         {binding: 3, resource: gpuTextureSecondMatrix.createView()},
       ]
     });
-	*/
+        */
 
     return {
       computePipeline, bindGroup
@@ -255,16 +286,19 @@ export class TextureOp {
   async getBufferData() {
     // Get a GPU buffer for reading in an unmapped state.
     const gpuReadBuffer = this.device.createBuffer({
-      size: this.resultMatrixTextureSize,
+      size: this.getBufferSize(),  // Float32Array.BYTES_PER_ELEMENT *
+                                   // (this.shape[0] * this.shape[1]),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
+    console.log('T2B this.getBufferSize()=' + this.getBufferSize());
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[4], this.shape[5], this.format);
-
+            this.shape[0], this.shape[1], this.format);
+    console.log('widthTex = ' + widthTex + '; heightTex = ' + heightTex);
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(
         {
@@ -272,7 +306,7 @@ export class TextureOp {
           mipLevel: 0,
           origin: {x: 0, y: 0, z: 0}
         },
-        {buffer: gpuReadBuffer, bytesPerRow: 256},
+        {buffer: gpuReadBuffer, bytesPerRow: bytesPerRow},
         {width: widthTex, height: heightTex, depth: 1});
     // Submit GPU commands.
     this.device.defaultQueue.submit([commandEncoder.finish()]);

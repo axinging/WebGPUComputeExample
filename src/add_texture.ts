@@ -2,8 +2,10 @@ import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import {TextureOp} from './texture';
 
 export class AddTextureOp extends TextureOp {
-  constructor(device: GPUDevice, glslang: Glslang) {
-    super(device, glslang);
+  constructor(
+      device: GPUDevice, glslang: Glslang, format: GPUTextureFormat,
+      kBytesPerTexel: number) {
+    super(device, glslang, format, kBytesPerTexel);
   }
 
   async execute(

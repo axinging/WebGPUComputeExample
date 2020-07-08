@@ -137,6 +137,63 @@ export class BufferOp {
         computeShaderCode);
   }
 
+  private compile2(
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
+      computeShaderCode: any) {
+    const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
+        this.device.createBufferMapped({
+          size: (firstMatrix as Float32Array).byteLength,
+          usage: GPUBufferUsage.STORAGE
+        });
+    new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
+    gpuBufferFirstMatrix.unmap();
+
+    const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] =
+        this.device.createBufferMapped({
+          size: (secondMatrix as Float32Array).byteLength,
+          usage: GPUBufferUsage.STORAGE
+        });
+    new Float32Array(arrayBufferSecondMatrix).set(secondMatrix);
+    gpuBufferSecondMatrix.unmap();
+    const arrayProduct = (arr: string|any[]) => {
+      let product = 1;
+      for (let i = 0; i < arr.length; i++) {
+        product *= arr[i];
+      }
+      return product;
+    };
+    // Result Matrix
+    const outputShape = [1, 2, 2, 3];
+    this.resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT *
+        (arrayProduct(outputShape));  // (shape[4] * shape[5]);
+    this.resultMatrixBuffer = this.device.createBuffer({
+      size: this.resultMatrixBufferSize,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
+    console.log(this.resultMatrixBufferSize);
+
+    // This works.
+    const [shapeBuffer, shapeMapping] = this.device.createBufferMapped({
+      size: shape.byteLength,
+      usage: GPUBufferUsage.UNIFORM,
+    });
+    new Uint32Array(shapeMapping).set(shape);
+    shapeBuffer.unmap();
+
+    // This works too.
+    /*
+     const shapeBuffer = this.uploadToGPU(
+         shape, shape.byteLength,
+         GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_SRC |
+             GPUBufferUsage.COPY_DST);
+     */
+
+    return this.createLayout(
+        gpuBufferFirstMatrix, gpuBufferSecondMatrix, shapeBuffer,
+        computeShaderCode);
+  }
+
   private createLayout(
       gpuBufferFirstMatrix: GPUBuffer, gpuBufferSecondMatrix: GPUBuffer,
       shapeBuffer: GPUBuffer, computeShaderCode: any) {
@@ -263,6 +320,23 @@ export class BufferOp {
 
     return true;
   }
+
+  // TODO: Float32Array is bad. And buffer is bad.
+  async compileAndRun2(
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
+      dispatch: number[], computeShaderCode: any, mode: number) {
+    // TODO: figure out how to return non const two values.
+    // if (mode == 0) {
+    const {computePipeline, bindGroup} =
+        this.compile2(firstMatrix, secondMatrix, shape, computeShaderCode);
+    await this.dispatchAndSubmit(
+        computePipeline, bindGroup, dispatch[0], dispatch[1]);
+    // }
+
+    return true;
+  }
+
 
   private async dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
