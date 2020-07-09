@@ -279,7 +279,7 @@ export class TextureOp {
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
-    console.log('Texture Fence time: ' + (this.now() - start));
+    console.log((this.now() - start).toFixed(2));
   }
 
   async getBufferData() {

@@ -393,7 +393,7 @@ export class BufferOp {
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
-    console.log('Buffer Fence time: ' + (this.now() - start));
+    console.log((this.now() - start).toFixed(2));
     // return (this.now() - start);
     return true;
   }

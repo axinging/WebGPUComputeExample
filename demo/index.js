@@ -38,12 +38,13 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const oldLog = console.log;
-  let kernels = new Array();
-  compute.startLog(kernels, oldLog);
+
   {
-    const loop = 50;  
-    for (var i = 0; i < loop; i++) {
+    const trials = 50;
+    const oldLog = console.log;
+    let times = new Array();
+    compute.startLog(times, oldLog);
+    for (var i = 0; i < trials; i++) {
       // First Matrix.
       const size_x = 4096;
       const size_y = 256;
@@ -63,13 +64,23 @@ function createUint32Array(w, h) {
       const failItem = compareAddFloat32Array(
           await addBufferOP.data(), firstMatrix, secondMatrix, size_x, size_y);
       if (failItem != -1)
-        console.log('compareAddFloat32Array Item ' + failItem + ' Fail');
+          console.log('Test fail at item ' + failItem);
     }
+    compute.endLog(times, oldLog);
+    console.log(times);
+    const mean = times.reduce((a, b) => a + b, 0) / trials;
+    const min = Math.min(...times);
+    const fmt = (n) => n.toFixed(3);
+    console.log(`Mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
+    console.log(`Min time: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
   }
 
   {
-    const loop = 50;
-    for (var i = 0; i < loop; i++) {
+    const oldLog = console.log;
+    let times = new Array();
+    compute.startLog(times, oldLog);
+    const trials = 50;
+    for (var i = 0; i < trials; i++) {
       // First Matrix.
       const size_x = 4096;
       const size_y = 256;
@@ -90,8 +101,16 @@ function createUint32Array(w, h) {
       const failItem = compareAddFloat32Array(
           await addTextureOP.data(), firstMatrix, secondMatrix, size_x, size_y);
       if (failItem != -1)
-        console.log('compareAddFloat32Array Item ' + failItem + ' Fail');
+        console.log('Test fail at item ' + failItem);
     }
+    compute.endLog(times, oldLog);
+    console.log(times);
+    const mean = times.reduce((a, b) => a + b, 0) / trials;
+    const min = Math.min(...times);
+    const fmt = (n) => n.toFixed(3);
+    console.log(`Mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
+    console.log(`Min time: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
+
   }
-  compute.endLog(kernels, oldLog);
+  
 })();
