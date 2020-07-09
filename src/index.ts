@@ -10,3 +10,4 @@ export {TextureOp} from './texture';
 export {CopyTextureOp} from './copy_texture';
 export {MatmulTextureOp} from './matmul_texture';
 export {MatmulBufferOp} from './matmul_buffer';
+export {startLog, endLog} from './profiler';

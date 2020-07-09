@@ -71,7 +71,7 @@ export class TextureOp {
     // TODO: fix the width height.
     // copyBufferToTexture(source, destination, copySize).
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
-    console.log('bytesPerRow=' + bytesPerRow);
+    // console.log('bytesPerRow=' + bytesPerRow);
     encoder.copyBufferToTexture(
         {buffer: src, bytesPerRow: bytesPerRow},
         {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
@@ -101,7 +101,7 @@ export class TextureOp {
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
-    console.log('B2T this.getBufferSize()=' + this.getBufferSize());
+    // console.log('B2T this.getBufferSize()=' + this.getBufferSize());
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
           size: this.getBufferSize(),  // (firstMatrix as
@@ -109,9 +109,6 @@ export class TextureOp {
           usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
               GPUBufferUsage.COPY_DST
         });
-    console.log(
-        'firstMatrix as Float32Array).byteLength=' +
-        (firstMatrix as Float32Array).byteLength);
     new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
     gpuBufferFirstMatrix.unmap();
     const gpuTextureFirstMatrix = this.copyFromHostBufferToDeviceTexture(
@@ -272,7 +269,7 @@ export class TextureOp {
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
-    console.log(dispatchX + '+' + dispatchY);
+
     passEncoder.dispatch(
         dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
     passEncoder.endPass();
@@ -282,7 +279,7 @@ export class TextureOp {
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
-    console.log('Fence time: ' + (this.now() - start));
+    console.log('Texture Fence time: ' + (this.now() - start));
   }
 
   async getBufferData() {
@@ -292,14 +289,14 @@ export class TextureOp {
                                    // (this.shape[0] * this.shape[1]),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
-    console.log('T2B this.getBufferSize()=' + this.getBufferSize());
+    // console.log('T2B this.getBufferSize()=' + this.getBufferSize());
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
             this.shape[0], this.shape[1], this.format);
-    console.log('widthTex = ' + widthTex + '; heightTex = ' + heightTex);
+    // console.log('widthTex = ' + widthTex + '; heightTex = ' + heightTex);
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(

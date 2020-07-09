@@ -114,7 +114,7 @@ export class BufferOp {
       size: this.resultMatrixBufferSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
-    console.log(this.resultMatrixBufferSize);
+    // console.log(this.resultMatrixBufferSize);
 
     // This works.
     const [shapeBuffer, shapeMapping] = this.device.createBufferMapped({
@@ -310,16 +310,14 @@ export class BufferOp {
     if (mode == 0) {
       const {computePipeline, bindGroup} =
           this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
-      await this.dispatchAndSubmit(
+      return await this.dispatchAndSubmit(
           computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
     } else {
       const {computePipeline, bindGroup} = this.compileStaging(
           firstMatrix, secondMatrix, shape, computeShaderCode);
-      await this.dispatchAndSubmit(
+      return await this.dispatchAndSubmit(
           computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
     }
-
-    return true;
   }
 
   // TODO: Float32Array is bad. And buffer is bad.
@@ -367,13 +365,18 @@ export class BufferOp {
     }
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
+    /*
     console.log(
         'Buffer:' + dispatchX + '+' + dispatchY +
         '; dispatchX / workGroupSize[0]=' + dispatchX / workGroupSize[0] +
         '; dispatchY / workGroupSize[1]=' + dispatchX / workGroupSize[0]);
+    */
     // passEncoder.dispatch(dispatchX, dispatchY);
-    passEncoder.dispatch(
-        dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
+    if (dispatchY / workGroupSize[1] == 1 && dispatchY / workGroupSize[2] == 1)
+      passEncoder.dispatch(dispatchX * dispatchY / workGroupSize[0], 1);
+    else
+      passEncoder.dispatch(
+          dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
     if (this.enableTimeStamp) {
       passEncoder.writeTimestamp(querySet, 1);
     }
@@ -390,7 +393,9 @@ export class BufferOp {
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
-    console.log('Fence time: ' + (this.now() - start));
+    console.log('Buffer Fence time: ' + (this.now() - start));
+    // return (this.now() - start);
+    return true;
   }
 
   async getBufferData() {

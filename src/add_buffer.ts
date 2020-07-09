@@ -5,8 +5,8 @@ export class AddBufferOp extends BufferOp {
   workGroupSize: [number, number, number];
   constructor(device: GPUDevice, glslang: Glslang) {
     super(device, glslang);
-    const TS = 32;
-    this.workGroupSize = [TS, TS, 1];
+    // const TS = 32;
+    this.workGroupSize = [256, 1, 1];
   }
 
   async execute(

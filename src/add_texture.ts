@@ -7,7 +7,7 @@ export class AddTextureOp extends TextureOp {
       device: GPUDevice, glslang: Glslang, format: GPUTextureFormat,
       kBytesPerTexel: number) {
     super(device, glslang, format, kBytesPerTexel);
-    const TS = 32;
+    const TS = 16;
     this.workGroupSize = [TS, TS, 1];
   }
 
