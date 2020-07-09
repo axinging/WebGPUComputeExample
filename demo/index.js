@@ -33,9 +33,69 @@ function createUint32Array(w, h) {
     extensions: ['timestamp-query'],
   });
   */
+ {
+  // First Matrix.
+  const size = 32;
+  const firstMatrixSize = [size , size];
+  const firstMatrix = createFloat32Array(size, size);
+  // Second Matrix.
+  const secondMatrixSize = [size, size];
+  const secondMatrix = createFloat32Array(size, size);
+  const shape = new Uint32Array([
+    firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+    secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+  ]);
+  const addBufferOP = new compute.AddBufferOp(device, glslang);
+  const loop = 1;
+  for (var i = 0; i < loop; i++) {
+    await addBufferOP.execute(firstMatrix, secondMatrix, shape);
+    console.log('addBufferOP: ' + await addBufferOP.data());
+  }
+}
+
+ {
+  // First Matrix.
+  const size = 32;
+  const firstMatrixSize = [size , size];
+  const firstMatrix = createFloat32Array(size, size);
+  // Second Matrix.
+  const secondMatrixSize = [size, size];
+  const secondMatrix = createFloat32Array(size, size);
+  const shape = new Uint32Array([
+    firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+    secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+  ]);
+  const addTextureOP = new compute.AddTextureOp(device, glslang, 'rgba32f', 16);
+  const loop = 1;
+  for (var i = 0; i < loop; i++) {
+    await addTextureOP.execute(firstMatrix, secondMatrix, shape);
+    console.log("addTextureOP: "+await addTextureOP.data());
+   }
+ }
+
+ {
+  // First Matrix.
+  const size = 32;
+  const firstMatrixSize = [size , size];
+  const firstMatrix = createFloat32Array(size, size);
+  // Second Matrix.
+  const secondMatrixSize = [size, size];
+  const secondMatrix = createFloat32Array(size, size);
+  const shape = new Uint32Array([
+    firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+    secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+  ]);
+  const matmulBufferOp = new compute.MatmulBufferOp(device, glslang);
+  const loop = 1;
+  for (var i = 0; i < loop; i++) {
+    await matmulBufferOp.execute(firstMatrix, secondMatrix, shape);
+    console.log("matmulBufferOp: "+await matmulBufferOp.data());
+   }
+ }
+
   {
     // First Matrix.
-    const size = 16;
+    const size = 32;
     const firstMatrixSize = [size , size];
     const firstMatrix = createFloat32Array(size, size);
     // Second Matrix.
@@ -45,11 +105,11 @@ function createUint32Array(w, h) {
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
-    const addTextureOP = new compute.AddTextureOp(device, glslang, 'rgba32f', 16);
+    const matmulTextureOp = new compute.MatmulTextureOp(device, glslang, 'rgba32f', 16);
     const loop = 1;
     for (var i = 0; i < loop; i++) {
-      await addTextureOP.execute(firstMatrix, secondMatrix, shape);
-      console.log("not staging: "+await addTextureOP.data());
+      await matmulTextureOp.execute(firstMatrix, secondMatrix, shape);
+      console.log("MatmulTextureOp: "+await matmulTextureOp.data());
      }
    }
   /*
@@ -85,26 +145,7 @@ function createUint32Array(w, h) {
     }
   }
   */
-/*
-  {
-    // First Matrix.
-    const firstMatrixSize = [4, 8];
-    const firstMatrix = createFloat32Array(4, 8);
-    // Second Matrix.
-    const secondMatrixSize = [4, 8];
-    const secondMatrix = createFloat32Array(4, 8);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
-    const addBufferOP = new compute.AddBufferOp(device, glslang);
-    const loop = 1;
-    for (var i = 0; i < loop; i++) {
-      await addBufferOP.execute(firstMatrix, secondMatrix, shape);
-      console.log('not staging: ' + await addBufferOP.data());
-    }
-  }
-*/
+
 /*
   const arrayProduct = (arr) => {
     let product = 1;
@@ -151,24 +192,4 @@ function createUint32Array(w, h) {
   }
 */
 
-  /*
-   {
-    // First Matrix.
-    const firstMatrixSize = [4, 8];
-    const firstMatrix = createFloat32Array(4, 8);
-    // Second Matrix.
-    const secondMatrixSize = [4, 8];
-    const secondMatrix = createFloat32Array(4, 8);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
-    const addTextureOP = new compute.AddTextureOp(device, glslang);
-    const loop = 1;
-    for (var i = 0; i < loop; i++) {
-      await addTextureOP.execute(firstMatrix, secondMatrix, shape);
-      console.log("not staging: "+await addTextureOP.data());
-     }
-   }
-   */
 })();

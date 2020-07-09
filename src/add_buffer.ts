@@ -2,15 +2,19 @@ import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import {BufferOp} from './buffer';
 
 export class AddBufferOp extends BufferOp {
+  workGroupSize: [number, number, number];
   constructor(device: GPUDevice, glslang: Glslang) {
     super(device, glslang);
+    const TS = 32;
+    this.workGroupSize = [TS, TS, 1];
   }
 
   async execute(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array, mode = 0) {
     const result = await this.compileAndRun(
-        firstMatrix, secondMatrix, shape, this.getShader(), mode);
+        firstMatrix, secondMatrix, shape, this.workGroupSize, this.getShader(),
+        mode);
     return result;
   }
 
@@ -40,7 +44,10 @@ export class AddBufferOp extends BufferOp {
             //vec2 size;
             float numbers[];
         } resultMatrix;
-      
+
+        layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
+        this.workGroupSize[1]}, local_size_z = 1) in;
+
         void main() {
           //resultMatrix.size = vec2(inputWidth, inputHeight);
           ivec2 resultCell = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);

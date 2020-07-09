@@ -250,20 +250,21 @@ export class TextureOp {
   async compileAndRun(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      computeShaderCode: any, mode: number) {
+      workGroupSize: [number, number, number], computeShaderCode: any,
+      mode: number) {
     // TODO: figure out how to return non const two values.
     this.shape = shape;
     const {computePipeline, bindGroup} =
         this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
     await this.dispatchAndSubmit(
-        computePipeline, bindGroup, shape[0], shape[1]);
+        computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
 
     return true;
   }
 
   private async dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
-      dispatchY: number) {
+      dispatchY: number, workGroupSize: [number, number, number]) {
     const start = this.now();
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
@@ -272,7 +273,8 @@ export class TextureOp {
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
     console.log(dispatchX + '+' + dispatchY);
-    passEncoder.dispatch(dispatchX, dispatchY);
+    passEncoder.dispatch(
+        dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
     passEncoder.endPass();
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();

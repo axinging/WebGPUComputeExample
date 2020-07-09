@@ -17,8 +17,12 @@ export class Conv2dBufferOp extends BufferOp {
   xShape = [1, 4, 4, this.inChannels];
   wShape = [this.filterHeight, this.filterWidth, this.inChannels, 3];
   outputShape = [1, 2, 2, 3];  // ouputShape.length must be 4
+  workGroupSize: [number, number, number];
+
   constructor(device: GPUDevice, glslang: Glslang) {
     super(device, glslang);
+    const TS = 32;
+    this.workGroupSize = [TS, TS, 1];
   }
 
   async execute(
@@ -31,8 +35,8 @@ export class Conv2dBufferOp extends BufferOp {
         [this.workPerThread[0], this.workPerThread[1], 1]);
 
     const result = await this.compileAndRun2(
-        firstMatrix, secondMatrix, this.getShape(), dispatch, this.getShader(),
-        mode);
+        firstMatrix, secondMatrix, this.getShape(), dispatch,
+        this.workGroupSize, this.getShader(), mode);
     return result;
   }
 

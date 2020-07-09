@@ -304,18 +304,19 @@ export class BufferOp {
   async compileAndRun(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      computeShaderCode: any, mode: number) {
+      workGroupSize: [number, number, number], computeShaderCode: any,
+      mode: number) {
     // TODO: figure out how to return non const two values.
     if (mode == 0) {
       const {computePipeline, bindGroup} =
           this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
       await this.dispatchAndSubmit(
-          computePipeline, bindGroup, shape[0], shape[1]);
+          computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
     } else {
       const {computePipeline, bindGroup} = this.compileStaging(
           firstMatrix, secondMatrix, shape, computeShaderCode);
       await this.dispatchAndSubmit(
-          computePipeline, bindGroup, shape[0], shape[1]);
+          computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
     }
 
     return true;
@@ -325,13 +326,14 @@ export class BufferOp {
   async compileAndRun2(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      dispatch: number[], computeShaderCode: any, mode: number) {
+      dispatch: number[], workGroupSize: [number, number, number],
+      computeShaderCode: any, mode: number) {
     // TODO: figure out how to return non const two values.
     // if (mode == 0) {
     const {computePipeline, bindGroup} =
         this.compile2(firstMatrix, secondMatrix, shape, computeShaderCode);
     await this.dispatchAndSubmit(
-        computePipeline, bindGroup, dispatch[0], dispatch[1]);
+        computePipeline, bindGroup, dispatch[0], dispatch[1], workGroupSize);
     // }
 
     return true;
@@ -340,7 +342,7 @@ export class BufferOp {
 
   private async dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
-      dispatchY: number) {
+      dispatchY: number, workGroupSize: [number, number, number]) {
     const start = this.now();
     // TIMESTAMP
     // TODO: necessary to destroy querySet?
@@ -365,8 +367,13 @@ export class BufferOp {
     }
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
-    console.log(dispatchX + '+' + dispatchY);
-    passEncoder.dispatch(dispatchX, dispatchY);
+    console.log(
+        'Buffer:' + dispatchX + '+' + dispatchY +
+        '; dispatchX / workGroupSize[0]=' + dispatchX / workGroupSize[0] +
+        '; dispatchY / workGroupSize[1]=' + dispatchX / workGroupSize[0]);
+    // passEncoder.dispatch(dispatchX, dispatchY);
+    passEncoder.dispatch(
+        dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
     if (this.enableTimeStamp) {
       passEncoder.writeTimestamp(querySet, 1);
     }
