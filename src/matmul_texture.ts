@@ -85,7 +85,7 @@ export class MatmulTextureOp extends TextureOp {
           }
           // Store the final result in C
           // C[globalCol*M + globalRow] = acc;
-          imageStore(C, ivec2(globalRow,globalCol), vec4(row, row,row,row));
+          imageStore(C, ivec2(globalRow,globalCol), acc);
           // imageStore(C, ivec2(globalRow,globalCol), vec4(3,80,90,100));
       }   
         `;
