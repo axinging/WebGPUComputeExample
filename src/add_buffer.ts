@@ -3,21 +3,55 @@ import {BufferOp} from './buffer';
 
 export class AddBufferOp extends BufferOp {
   workGroupSize: [number, number, number];
-  constructor(device: GPUDevice, glslang: Glslang) {
-    super(device, glslang);
+  constructor(device: GPUDevice, glslang: Glslang, firstMatrix: Float32Array|Uint32Array,
+    secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
+        // Compute shader code (GLSL)
+        const computeShaderCode = `#version 450
+        layout(set = 0, binding = 0) uniform Uniforms {
+          int inputWidth;
+          int inputHeight;
+          int filterWidth;
+          int filterHeight;
+          int outputWidth;
+          int outputHeight;
+        } uniforms;
+
+        layout(set = 0, binding = 1) readonly buffer FirstMatrix {
+            //vec2 size;
+            float numbers[];
+        } firstMatrix;
+      
+        layout(set = 0, binding = 2) readonly buffer SecondMatrix {
+            //vec2 size;
+            float numbers[];
+        } secondMatrix;
+      
+        layout(set = 0, binding = 3) buffer ResultMatrix {
+            //vec2 size;
+            float numbers[];
+        } resultMatrix;
+
+        layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+        void main() {
+          //resultMatrix.size = vec2(inputWidth, inputHeight);
+          ivec2 resultCell = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
+      
+          // int index = resultCell.y + resultCell.x * int(uniforms.inputHeight);
+          int index = resultCell.x + resultCell.y * int(uniforms.inputWidth);
+          resultMatrix.numbers[index] = firstMatrix.numbers[index]+secondMatrix.numbers[index];
+        }
+        `;
+    super(device, glslang,firstMatrix, secondMatrix,  shape, computeShaderCode);
     // const TS = 32;
     this.workGroupSize = [256, 1, 1];
   }
 
-  async execute(
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array, mode = 0) {
-    const result = await this.compileAndRun(
-        firstMatrix, secondMatrix, shape, this.workGroupSize, this.getShader(),
-        mode);
+  async execute() {
+    const result = await this.compileAndRun(this.workGroupSize);
     return result;
   }
-
+/*
   getShader() {
     // Compute shader code (GLSL)
     const computeShaderCode = `#version 450
@@ -58,4 +92,5 @@ export class AddBufferOp extends BufferOp {
         `;
     return computeShaderCode;
   }
+  */
 }

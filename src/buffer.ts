@@ -10,13 +10,22 @@ export class BufferOp {
   times: [];
   resultMatrixBuffer: GPUBuffer;
   resultMatrixBufferSize: number;
-  enableTimeStamp: boolean;
-  constructor(device: GPUDevice, glslang: Glslang) {
+  shape: Uint32Array;
+  computeShaderCode: string;
+  computePipeline: any;
+  bindGroup: any;
+  // enableTimeStamp: boolean;
+  constructor(device: GPUDevice, glslang: Glslang, firstMatrix: Float32Array|Uint32Array,
+    secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
+    computeShaderCode: any) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
-    this.enableTimeStamp = false;
+    this.shape = shape;
+    this.computeShaderCode = computeShaderCode;
+    this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
+    // this.enableTimeStamp = false;
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -51,6 +60,7 @@ export class BufferOp {
     console.log(x.length);
     this.uploadToGPU(x, 4, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
   */
+  /*
   private uploadToGPU(values: ArrayBufferView, byteSize: number, usage: any) {
     const buffer = this.device.createBuffer({size: byteSize, usage});
 
@@ -60,7 +70,9 @@ export class BufferOp {
     }
     return buffer;
   }
+  */
   // TIMESTAMP
+  /*
   async getQueryTime(dstBuffer: GPUBuffer) {
     const dstStagingBuffer = this.device.createBuffer({
       size: 16,
@@ -86,6 +98,11 @@ export class BufferOp {
     dstBuffer.destroy();
     return timeInMS;
   }
+  */
+ async data() {
+  const arrayBuffer = await this.getBufferData();
+  return new Float32Array(arrayBuffer);
+}
 
   private compile(
       firstMatrix: Float32Array|Uint32Array,
@@ -137,63 +154,6 @@ export class BufferOp {
         computeShaderCode);
   }
 
-  private compile2(
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      computeShaderCode: any) {
-    const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
-        this.device.createBufferMapped({
-          size: (firstMatrix as Float32Array).byteLength,
-          usage: GPUBufferUsage.STORAGE
-        });
-    new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
-    gpuBufferFirstMatrix.unmap();
-
-    const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] =
-        this.device.createBufferMapped({
-          size: (secondMatrix as Float32Array).byteLength,
-          usage: GPUBufferUsage.STORAGE
-        });
-    new Float32Array(arrayBufferSecondMatrix).set(secondMatrix);
-    gpuBufferSecondMatrix.unmap();
-    const arrayProduct = (arr: string|any[]) => {
-      let product = 1;
-      for (let i = 0; i < arr.length; i++) {
-        product *= arr[i];
-      }
-      return product;
-    };
-    // Result Matrix
-    const outputShape = [1, 2, 2, 3];
-    this.resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT *
-        (arrayProduct(outputShape));  // (shape[4] * shape[5]);
-    this.resultMatrixBuffer = this.device.createBuffer({
-      size: this.resultMatrixBufferSize,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
-    });
-    console.log(this.resultMatrixBufferSize);
-
-    // This works.
-    const [shapeBuffer, shapeMapping] = this.device.createBufferMapped({
-      size: shape.byteLength,
-      usage: GPUBufferUsage.UNIFORM,
-    });
-    new Uint32Array(shapeMapping).set(shape);
-    shapeBuffer.unmap();
-
-    // This works too.
-    /*
-     const shapeBuffer = this.uploadToGPU(
-         shape, shape.byteLength,
-         GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_SRC |
-             GPUBufferUsage.COPY_DST);
-     */
-
-    return this.createLayout(
-        gpuBufferFirstMatrix, gpuBufferSecondMatrix, shapeBuffer,
-        computeShaderCode);
-  }
-
   private createLayout(
       gpuBufferFirstMatrix: GPUBuffer, gpuBufferSecondMatrix: GPUBuffer,
       shapeBuffer: GPUBuffer, computeShaderCode: any) {
@@ -220,7 +180,7 @@ export class BufferOp {
       ]
     });
 
-    const bindGroup = this.device.createBindGroup({
+    this.bindGroup = this.device.createBindGroup({
       layout: bindGroupLayout,
       entries: [
         {binding: 0, resource: {buffer: shapeBuffer}},
@@ -237,7 +197,7 @@ export class BufferOp {
     if (result.data.length === 0) {
       throw new Error('Shader compilation failed');
     }
-    const computePipeline = this.device.createComputePipeline({
+    this.computePipeline = this.device.createComputePipeline({
       // For new layout, remove this line.
       layout: this.device.createPipelineLayout(
           {bindGroupLayouts: [bindGroupLayout]}),
@@ -259,84 +219,16 @@ export class BufferOp {
     });
         */
 
-    return {
-      computePipeline, bindGroup
-    }
-  }
-
-  private compileStaging(
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      computeShaderCode: any) {
-    const gpuBufferFirstMatrix = this.uploadToGPU(
-        firstMatrix, (firstMatrix as Float32Array).byteLength,
-        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
-            GPUBufferUsage.COPY_DST);
-    const gpuBufferSecondMatrix = this.uploadToGPU(
-        secondMatrix, (firstMatrix as Float32Array).byteLength,
-        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
-            GPUBufferUsage.COPY_DST);
-
-    // Result Matrix
-    this.resultMatrixBufferSize =
-        Float32Array.BYTES_PER_ELEMENT * (shape[4] * shape[5]);
-    this.resultMatrixBuffer = this.device.createBuffer({
-      size: this.resultMatrixBufferSize,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
-    });
-
-    const shapeBuffer = this.uploadToGPU(
-        shape, shape.byteLength,
-        GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_SRC |
-            GPUBufferUsage.COPY_DST);
-
-    return this.createLayout(
-        gpuBufferFirstMatrix, gpuBufferSecondMatrix, shapeBuffer,
-        computeShaderCode);
-  }
-
-  async data() {
-    const arrayBuffer = await this.getBufferData();
-    return new Float32Array(arrayBuffer);
   }
 
   // TODO: Float32Array is bad. And buffer is bad.
   async compileAndRun(
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      workGroupSize: [number, number, number], computeShaderCode: any,
-      mode: number) {
-    // TODO: figure out how to return non const two values.
-    if (mode == 0) {
-      const {computePipeline, bindGroup} =
-          this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
-      return await this.dispatchAndSubmit(
-          computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
-    } else {
-      const {computePipeline, bindGroup} = this.compileStaging(
-          firstMatrix, secondMatrix, shape, computeShaderCode);
-      return await this.dispatchAndSubmit(
-          computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
-    }
-  }
-
-  // TODO: Float32Array is bad. And buffer is bad.
-  async compileAndRun2(
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      dispatch: number[], workGroupSize: [number, number, number],
-      computeShaderCode: any, mode: number) {
+      workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
     // if (mode == 0) {
-    const {computePipeline, bindGroup} =
-        this.compile2(firstMatrix, secondMatrix, shape, computeShaderCode);
-    await this.dispatchAndSubmit(
-        computePipeline, bindGroup, dispatch[0], dispatch[1], workGroupSize);
-    // }
-
-    return true;
+      return await this.dispatchAndSubmit(
+          this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
   }
-
 
   private async dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
@@ -344,6 +236,7 @@ export class BufferOp {
     const start = this.now();
     // TIMESTAMP
     // TODO: necessary to destroy querySet?
+    /*
     let querySet: any;
     let dstBuffer: GPUBuffer;
     if (this.enableTimeStamp) {
@@ -356,13 +249,16 @@ export class BufferOp {
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       });
     }
+    */
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
 
     const passEncoder = commandEncoder.beginComputePass();
+    /*
     if (this.enableTimeStamp) {
       passEncoder.writeTimestamp(querySet, 0);
     }
+    */
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
     /*
@@ -372,24 +268,36 @@ export class BufferOp {
         '; dispatchY / workGroupSize[1]=' + dispatchX / workGroupSize[0]);
     */
     // passEncoder.dispatch(dispatchX, dispatchY);
-    if (dispatchY / workGroupSize[1] == 1 && dispatchY / workGroupSize[2] == 1)
+    if (workGroupSize[1] == 1 && workGroupSize[2] == 1) {
+      // console.log("dispatchX = "+dispatchX+", dispatchY = "+dispatchY + "; workGroupSize"+workGroupSize);
+      // console.log("dispatchX * dispatchY / workGroupSize[0] = "+dispatchX * dispatchY / workGroupSize[0]);
       passEncoder.dispatch(dispatchX * dispatchY / workGroupSize[0], 1);
-    else
+      // passEncoder.dispatch(dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
+      // console.log("dispatch: X = "+dispatchX / workGroupSize[0]+", Y = "+dispatchY / workGroupSize[1] + "; workGroupSize"+workGroupSize);
+    }
+    else {
       passEncoder.dispatch(
           dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
+    }
+    /*
     if (this.enableTimeStamp) {
       passEncoder.writeTimestamp(querySet, 1);
     }
+    */
     passEncoder.endPass();
+    /*
     if (this.enableTimeStamp) {
       commandEncoder.resolveQuerySet(querySet, 0, 2, dstBuffer, 0);
     }
+    */
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
+    /*
     if (this.enableTimeStamp) {
       await this.getQueryTime(dstBuffer);
     }
+    */
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);

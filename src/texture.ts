@@ -12,17 +12,24 @@ export class TextureOp {
   resultMatrixTexture: GPUTexture;
   resultMatrixTextureSize: number;
   shape: Uint32Array;
+  computeShaderCode: string;
+  computePipeline: any;
+  bindGroup: any;
   format: GPUTextureFormat;
   kBytesPerTexel: number;
   constructor(
-      device: GPUDevice, glslang: Glslang, format: GPUTextureFormat,
+      device: GPUDevice, glslang: Glslang,firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,computeShaderCode: any, format: GPUTextureFormat,
       kBytesPerTexel: number) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
+    this.shape = shape;
+    this.computeShaderCode = computeShaderCode;
     this.format = 'rgba32float';
     this.kBytesPerTexel = kBytesPerTexel;
+    this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -199,7 +206,7 @@ export class TextureOp {
       ]
     });
 
-    const bindGroup = this.device.createBindGroup({
+    this.bindGroup = this.device.createBindGroup({
       layout: bindGroupLayout,
       entries: [
         {binding: 0, resource: {buffer: shapeBuffer}},
@@ -216,7 +223,7 @@ export class TextureOp {
     if (result.data.length === 0) {
       throw new Error('Shader compilation failed');
     }
-    const computePipeline = this.device.createComputePipeline({
+    this.computePipeline = this.device.createComputePipeline({
       // For new layout, remove this line.
       layout: this.device.createPipelineLayout(
           {bindGroupLayouts: [bindGroupLayout]}),
@@ -238,23 +245,16 @@ export class TextureOp {
     });
         */
 
-    return {
-      computePipeline, bindGroup
-    }
+    return;
   }
 
   // TODO: Float32Array is bad. And buffer is bad.
   async compileAndRun(
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      workGroupSize: [number, number, number], computeShaderCode: any,
-      mode: number) {
+      workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
-    this.shape = shape;
-    const {computePipeline, bindGroup} =
-        this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
+        
     await this.dispatchAndSubmit(
-        computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
 
     return true;
   }

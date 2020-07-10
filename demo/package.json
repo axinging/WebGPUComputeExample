@@ -8,9 +8,7 @@
   "engines": {
     "node": ">=8.9.0"
   },
-  "dependencies": {
-    
-  },
+  "dependencies": {},
   "scripts": {
     "watch": "cross-env NODE_ENV=development parcel index.html --no-hmr ",
     "build": "cross-env NODE_ENV=production parcel build index.html --public-url ./",
@@ -21,7 +19,7 @@
     "crypto": false
   },
   "devDependencies": {
-    "@webgpu/compute": "link:../",
+    "@webgpu/compute": "link:..",
     "@webgpu/glslang": "0.0.12",
     "babel-core": "~6.26.3",
     "babel-plugin-transform-runtime": "~6.23.0",
