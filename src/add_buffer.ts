@@ -7,7 +7,6 @@ export class AddBufferOp extends BufferOp {
     secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
         // Compute shader code (GLSL)
         const computeShaderCode = `#version 450
-        /*
         layout(set = 0, binding = 0) uniform Uniforms {
           int inputWidth;
           int inputHeight;
@@ -16,24 +15,21 @@ export class AddBufferOp extends BufferOp {
           int outputWidth;
           int outputHeight;
         } uniforms;
-        */
 
-        layout(set = 0, binding = 1) readonly buffer FirstMatrix {
-            //vec2 size;
+       layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+        layout(std430,set = 1, binding = 0) readonly buffer FirstMatrix {
             float firstMatrix[];
         } ;
       
-        layout(set = 0, binding = 2) readonly buffer SecondMatrix {
-            //vec2 size;
+        layout(std430,set = 2, binding = 1) readonly buffer SecondMatrix {
             float secondMatrix[];
         } ;
       
-        layout(set = 0, binding = 3) buffer ResultMatrix {
-            //vec2 size;
+        layout(std430,set = 3, binding = 2) buffer ResultMatrix {
             float resultMatrix[];
         } ;
 
-        layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
 
         void main() {
           // resultMatrix.size = vec2(inputWidth, inputHeight);

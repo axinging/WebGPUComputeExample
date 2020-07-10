@@ -267,20 +267,10 @@ export class BufferOp {
     }
     */
     passEncoder.setPipeline(computePipeline);
-    passEncoder.setBindGroup(0, bindGroup);
-    /*
-    console.log(
-        'Buffer:' + dispatchX + '+' + dispatchY +
-        '; dispatchX / workGroupSize[0]=' + dispatchX / workGroupSize[0] +
-        '; dispatchY / workGroupSize[1]=' + dispatchX / workGroupSize[0]);
-    */
+
     // passEncoder.dispatch(dispatchX, dispatchY);
     if (workGroupSize[1] == 1 && workGroupSize[2] == 1) {
-      // console.log("dispatchX = "+dispatchX+", dispatchY = "+dispatchY + "; workGroupSize"+workGroupSize);
-      // console.log("dispatchX * dispatchY / workGroupSize[0] = "+dispatchX * dispatchY / workGroupSize[0]);
       passEncoder.dispatch(dispatchX * dispatchY / workGroupSize[0], 1);
-      // passEncoder.dispatch(dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
-      // console.log("dispatch: X = "+dispatchX / workGroupSize[0]+", Y = "+dispatchY / workGroupSize[1] + "; workGroupSize"+workGroupSize);
     }
     else {
       passEncoder.dispatch(
@@ -342,10 +332,6 @@ export class BufferOp {
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
-
-    const fence = this.queue.createFence();
-    this.queue.signal(fence, 2);
-    await fence.onCompletion(2);
     // Read buffer.
     const arrayBuffer = await gpuReadBuffer.mapReadAsync();
     return arrayBuffer;

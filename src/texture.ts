@@ -327,9 +327,11 @@ export class TextureOp {
     // Submit GPU commands.
     this.device.defaultQueue.submit([commandEncoder.finish()]);
     // t.expectContents(dst, data);
+    /*
     const fence = this.queue.createFence();
     this.queue.signal(fence, 2);
     await fence.onCompletion(2);
+    */
     // Read buffer.
     const arrayBuffer = await gpuReadBuffer.mapReadAsync();
     return arrayBuffer;

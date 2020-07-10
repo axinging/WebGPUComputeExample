@@ -37,7 +37,8 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 50;
+  const trials = 10;
+  const reps = 10;
   const resultCheck = false;
 
   {
@@ -55,7 +56,7 @@ function createUint32Array(w, h) {
     ]);
     const addBufferOP = new compute.AddBufferOp(device, glslang, firstMatrix, secondMatrix, shape);
 
-    const reps=10;
+    // const reps=100;
     const times = [];
     const trial = async () => {
       // let result;
@@ -87,6 +88,7 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(3);
+    console.log(times);
     console.log(`Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(`Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
@@ -147,7 +149,6 @@ function createUint32Array(w, h) {
     ]);
     const addTextureOp = new compute.AddTextureOp(device, glslang, firstMatrix, secondMatrix, shape, 'rgba32f', 16);
 
-    const reps=10;
     const times = [];
     const trial = async () => {
       // let result;
@@ -175,7 +176,7 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-
+    console.log(times);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(3);
