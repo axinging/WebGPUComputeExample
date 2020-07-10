@@ -58,10 +58,12 @@ function createUint32Array(w, h) {
       // First Matrix.
       await addBufferOP.execute();
       // console.log(await addBufferOP.data());
+      /*
       const failItem = compareAddFloat32Array(
           await addBufferOP.data(), firstMatrix, secondMatrix, size_x, size_y);
       if (failItem != -1)
           console.log('Test fail at item ' + failItem);
+      */
     }
 
     compute.endLog(times, oldLog);
@@ -70,6 +72,7 @@ function createUint32Array(w, h) {
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(3);
     console.log(`Mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
+    console.log(`Min time: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
 
   }
 
@@ -95,10 +98,12 @@ function createUint32Array(w, h) {
       // First Matrix.
 
       await addTextureOP.execute();
+      /*
       const failItem = compareAddFloat32Array(
           await addTextureOP.data(), firstMatrix, secondMatrix, size_x, size_y);
       if (failItem != -1)
         console.log('Test fail at item ' + failItem);
+      */
     }
     compute.endLog(times, oldLog);
     console.log(times);

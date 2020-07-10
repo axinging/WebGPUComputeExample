@@ -7,6 +7,7 @@ export class AddBufferOp extends BufferOp {
     secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
         // Compute shader code (GLSL)
         const computeShaderCode = `#version 450
+        /*
         layout(set = 0, binding = 0) uniform Uniforms {
           int inputWidth;
           int inputHeight;
@@ -15,36 +16,37 @@ export class AddBufferOp extends BufferOp {
           int outputWidth;
           int outputHeight;
         } uniforms;
+        */
 
         layout(set = 0, binding = 1) readonly buffer FirstMatrix {
             //vec2 size;
-            float numbers[];
-        } firstMatrix;
+            float firstMatrix[];
+        } ;
       
         layout(set = 0, binding = 2) readonly buffer SecondMatrix {
             //vec2 size;
-            float numbers[];
-        } secondMatrix;
+            float secondMatrix[];
+        } ;
       
         layout(set = 0, binding = 3) buffer ResultMatrix {
             //vec2 size;
-            float numbers[];
-        } resultMatrix;
+            float resultMatrix[];
+        } ;
 
-        layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+        layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
         void main() {
-          //resultMatrix.size = vec2(inputWidth, inputHeight);
-          ivec2 resultCell = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
+          // resultMatrix.size = vec2(inputWidth, inputHeight);
+          // ivec2 resultCell = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
       
           // int index = resultCell.y + resultCell.x * int(uniforms.inputHeight);
-          int index = resultCell.x + resultCell.y * int(uniforms.inputWidth);
-          resultMatrix.numbers[index] = firstMatrix.numbers[index]+secondMatrix.numbers[index];
+          uint index = gl_GlobalInvocationID.x;////resultCell.x;// + resultCell.y * int(uniforms.inputWidth);
+          resultMatrix[index] = firstMatrix[index]+secondMatrix[index];
         }
         `;
     super(device, glslang,firstMatrix, secondMatrix,  shape, computeShaderCode);
     // const TS = 32;
-    this.workGroupSize = [256, 1, 1];
+    this.workGroupSize = [128, 1, 1];
   }
 
   async execute() {

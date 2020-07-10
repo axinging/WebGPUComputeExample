@@ -291,6 +291,7 @@ export class BufferOp {
     }
     */
     // Submit GPU commands.
+
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
     /*
