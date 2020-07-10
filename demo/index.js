@@ -38,6 +38,7 @@ function createUint32Array(w, h) {
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
   const trials = 50;
+  const resultCheck = false;
 
   {
 
@@ -62,6 +63,14 @@ function createUint32Array(w, h) {
         addBufferOP.executeSync();
       }
       await addBufferOP.data();
+      if (resultCheck) {
+        const failItem = compareAddFloat32Array(
+            await addBufferOP.data(), firstMatrix, secondMatrix, size_x, size_y);
+        if (failItem != -1) {
+            console.log('Test fail at item ' + failItem);
+            return;
+        }
+      }
     };
 
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
@@ -102,12 +111,14 @@ function createUint32Array(w, h) {
       // First Matrix.
       await addBufferOP.execute();
       // console.log(await addBufferOP.data());
-      /*
+      if (resultCheck) {
       const failItem = compareAddFloat32Array(
           await addBufferOP.data(), firstMatrix, secondMatrix, size_x, size_y);
-      if (failItem != -1)
+      if (failItem != -1) {
           console.log('Test fail at item ' + failItem);
-      */
+          return;
+      }
+    }
     }
 
     compute.endLog(times, oldLog);
@@ -144,6 +155,14 @@ function createUint32Array(w, h) {
         addTextureOp.executeSync();
       }
       await addTextureOp.data();
+      if (resultCheck) {
+        const failItem = compareAddFloat32Array(
+            await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+        if (failItem != -1) {
+            console.log('Test fail at item ' + failItem);
+            return;
+        }
+      }
     };
 
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
@@ -180,18 +199,20 @@ function createUint32Array(w, h) {
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
 
-    const addTextureOP =
+    const addTextureOp =
         new compute.AddTextureOp(device, glslang, firstMatrix, secondMatrix, shape, 'rgba32f', 16);
     for (var i = 0; i < trials; i++) {
       // First Matrix.
 
-      await addTextureOP.execute();
-      /*
-      const failItem = compareAddFloat32Array(
-          await addTextureOP.data(), firstMatrix, secondMatrix, size_x, size_y);
-      if (failItem != -1)
-        console.log('Test fail at item ' + failItem);
-      */
+      await addTextureOp.execute();
+      if (resultCheck) {
+        const failItem = compareAddFloat32Array(
+            await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+        if (failItem != -1) {
+            console.log('Test fail at item ' + failItem);
+            return;
+        }
+      }
     }
     compute.endLog(times, oldLog);
     console.log(times);
