@@ -252,17 +252,24 @@ export class TextureOp {
   async compileAndRun(
       workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
-        
-    await this.dispatchAndSubmit(
+    await this.dispatchAndSubmitWithFence(
         this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
 
     return true;
   }
 
-  private async dispatchAndSubmit(
+  compileAndRunSync(
+    workGroupSize: [number, number, number]) {
+    // TODO: figure out how to return non const two values.
+    this.dispatchAndSubmit(
+      this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+
+    return true;
+  }
+
+  private dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number, workGroupSize: [number, number, number]) {
-    const start = this.now();
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
@@ -276,11 +283,21 @@ export class TextureOp {
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
+  }
+
+  private async dispatchAndSubmitWithFence(
+      computePipeline: any, bindGroup: any, dispatchX: number,
+      dispatchY: number, workGroupSize: [number, number, number]) {
+    const start = this.now();
+    // Commands submission.
+    this.dispatchAndSubmit(
+      this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
     console.log((this.now() - start).toFixed(2));
   }
+
 
   async getBufferData() {
     // Get a GPU buffer for reading in an unmapped state.

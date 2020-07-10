@@ -42,6 +42,12 @@ export class AddTextureOp extends TextureOp {
     const result = await this.compileAndRun(this.workGroupSize);
     return result;
   }
+
+  executeSync() {
+    this.compileAndRunSync(this.workGroupSize);
+    return;
+  }
+
 /*
   private getShader() {
     // Compute shader code (GLSL)

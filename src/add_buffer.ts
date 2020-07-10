@@ -53,6 +53,10 @@ export class AddBufferOp extends BufferOp {
     const result = await this.compileAndRun(this.workGroupSize);
     return result;
   }
+  executeSync() {
+    const result = this.compileAndRunSync(this.workGroupSize);
+    return result;
+  }
 /*
   getShader() {
     // Compute shader code (GLSL)

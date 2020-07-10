@@ -226,14 +226,21 @@ export class BufferOp {
       workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
     // if (mode == 0) {
-      return await this.dispatchAndSubmit(
-          this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+    return await this.dispatchAndSubmitWithFence(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
   }
 
-  private async dispatchAndSubmit(
+  compileAndRunSync(
+    workGroupSize: [number, number, number]) {
+    // TODO: figure out how to return non const two values.
+    // if (mode == 0) {
+    return this.dispatchAndSubmit(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+  }
+
+  private dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number, workGroupSize: [number, number, number]) {
-    const start = this.now();
     // TIMESTAMP
     // TODO: necessary to destroy querySet?
     /*
@@ -299,12 +306,22 @@ export class BufferOp {
       await this.getQueryTime(dstBuffer);
     }
     */
+
+    // return (this.now() - start);
+    return true;
+  }
+
+  private async dispatchAndSubmitWithFence(
+    computePipeline: any, bindGroup: any, dispatchX: number,
+    dispatchY: number, workGroupSize: [number, number, number]) {
+    const start = this.now();
+    this.dispatchAndSubmit(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
     console.log((this.now() - start).toFixed(2));
-    // return (this.now() - start);
-    return true;
+
   }
 
   async getBufferData() {
