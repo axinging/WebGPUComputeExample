@@ -10,13 +10,13 @@ export class BufferOp {
   times: [];
   resultMatrixBuffer: GPUBuffer;
   resultMatrixBufferSize: number;
-  enableTimeStamp: boolean;
+  // enableTimeStamp: boolean;
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
-    this.enableTimeStamp = false;
+    // this.enableTimeStamp = false;
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -61,6 +61,7 @@ export class BufferOp {
     return buffer;
   }
   // TIMESTAMP
+  /*
   async getQueryTime(dstBuffer: GPUBuffer) {
     const dstStagingBuffer = this.device.createBuffer({
       size: 16,
@@ -86,6 +87,7 @@ export class BufferOp {
     dstBuffer.destroy();
     return timeInMS;
   }
+  */
 
   private compile(
       firstMatrix: Float32Array|Uint32Array,
@@ -344,6 +346,7 @@ export class BufferOp {
     const start = this.now();
     // TIMESTAMP
     // TODO: necessary to destroy querySet?
+    /*
     let querySet: any;
     let dstBuffer: GPUBuffer;
     if (this.enableTimeStamp) {
@@ -356,13 +359,16 @@ export class BufferOp {
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       });
     }
+    */
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
 
     const passEncoder = commandEncoder.beginComputePass();
+    /*
     if (this.enableTimeStamp) {
       passEncoder.writeTimestamp(querySet, 0);
     }
+    */
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
     /*
@@ -377,19 +383,25 @@ export class BufferOp {
     else
       passEncoder.dispatch(
           dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
+    /*
     if (this.enableTimeStamp) {
       passEncoder.writeTimestamp(querySet, 1);
     }
+    */
     passEncoder.endPass();
+    /*
     if (this.enableTimeStamp) {
       commandEncoder.resolveQuerySet(querySet, 0, 2, dstBuffer, 0);
     }
+    */
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
+    /*
     if (this.enableTimeStamp) {
       await this.getQueryTime(dstBuffer);
     }
+    */
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
