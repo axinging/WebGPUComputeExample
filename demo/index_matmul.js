@@ -39,11 +39,12 @@ function createUint32Array(w, h) {
   const glslang = await glslangInit();
   const trials = 1;
   const reps = 1;
-  const resultCheck = true;
+  const resultCheck = false;
+  const size_x = 64;
+  const size_y = 64;
 
   {
-    const size_x = 64;
-    const size_y = 64;
+
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
@@ -100,8 +101,6 @@ function createUint32Array(w, h) {
     const oldLog = console.log;
     let times = new Array();
     compute.startLog(times, oldLog);
-    const size_x = 4096;
-    const size_y = 256;
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
@@ -197,8 +196,6 @@ function createUint32Array(w, h) {
     const oldLog = console.log;
     let times = new Array();
     compute.startLog(times, oldLog);
-    const size_x = 64;
-    const size_y = 64;
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.

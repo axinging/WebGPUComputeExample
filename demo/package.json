@@ -14,6 +14,8 @@
     "build": "cross-env NODE_ENV=production parcel build index.html --public-url ./",
     "watchadd": "cross-env NODE_ENV=development parcel index_add.html --no-hmr ",
     "buildadd": "cross-env NODE_ENV=production parcel build index_add.html --public-url ./",
+    "watchmatmul": "cross-env NODE_ENV=development parcel index_matmul.html --no-hmr ",
+    "buildmatmul": "cross-env NODE_ENV=production parcel build index_matmul.html --public-url ./",
     "lint": "eslint .",
     "link-local": "yalc link @webgpu/compute"
   },
