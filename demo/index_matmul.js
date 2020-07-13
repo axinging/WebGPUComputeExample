@@ -115,7 +115,7 @@ function createUint32Array(w, h) {
     for (var i = 0; i < trials; i++) {
       // First Matrix.
       await matmulBufferOp.execute();
-      // console.log(await addBufferOP.data());
+      // console.log(await matmulBufferOP.data());
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await matmulBufferOp.data(), firstMatrix, secondMatrix, size_x,
@@ -160,7 +160,7 @@ function createUint32Array(w, h) {
       for (let r = 0; r < reps; ++r) {
         matmulTextureOp.executeSync();
       }
-      await addTextureOp.data();
+      await matmulTextureOp.data();
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await matmulTextureOp.data(), firstMatrix, secondMatrix, size_x,
@@ -206,7 +206,7 @@ function createUint32Array(w, h) {
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
 
-    const addTextureOp = new compute.MatmulTextureOp(
+    const matmulTextureOp = new compute.MatmulTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32f', 16);
     for (var i = 0; i < trials; i++) {
       // First Matrix.

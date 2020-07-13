@@ -24,6 +24,11 @@ export class MatmulTextureOp extends TextureOp {
     return result;
   }
 
+  executeSync() {
+    this.compileAndRunSync(this.workGroupSize);
+    return;
+  }
+
   private getShader() {
     // Compute shader code (GLSL)
     // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
@@ -73,9 +78,10 @@ export class MatmulTextureOp extends TextureOp {
               // Load one tile of A and B into local memory
               uint tiledRow = TS/4*t + row;
               uint tiledCol = TS*t + col;
-              Asub[col][row] = imageLoad(A, ivec2(tiledCol*M + globalRow));//
-  .r;//A[tiledCol*M + globalRow]; Bsub[col][row] = imageLoad(B,
-  ivec2(globalCol*K + tiledRow));// .r;//B[globalCol*K + tiledRow];
+              Asub[col][row] = imageLoad(A, ivec2(tiledCol*M + globalRow));
+              // A[tiledCol*M + globalRow];
+              Bsub[col][row] = imageLoad(B,  ivec2(globalCol*K + tiledRow));
+              // B[globalCol*K + tiledRow];
 
               // Synchronise to make sure the tile is loaded
               memoryBarrierShared();
