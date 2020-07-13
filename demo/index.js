@@ -87,7 +87,7 @@ function createUint32Array(w, h) {
 
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(3);
+    const fmt = (n) => n.toFixed(2);
     console.log(times);
     console.log(`Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(`Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
@@ -127,7 +127,7 @@ function createUint32Array(w, h) {
     console.log(times);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(3);
+    const fmt = (n) => n.toFixed(2);
     console.log(`Async buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
     console.log(`Async buffer  Min time: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
 
@@ -179,7 +179,7 @@ function createUint32Array(w, h) {
     console.log(times);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(3);
+    const fmt = (n) => n.toFixed(2);
     console.log(`Sync texture Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(`Sync texture Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
@@ -219,7 +219,7 @@ function createUint32Array(w, h) {
     console.log(times);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(3);
+    const fmt = (n) => n.toFixed(2);
     console.log(`Async texture mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
     console.log(`Async texture mime: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
 
