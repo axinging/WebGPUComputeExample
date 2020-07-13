@@ -11,22 +11,19 @@ export class BufferOp {
   resultMatrixBuffer: GPUBuffer;
   resultMatrixBufferSize: number;
   shape: Uint32Array;
-  computeShaderCode: string;
   computePipeline: any;
   bindGroup: any;
   // enableTimeStamp: boolean;
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      computeShaderCode: any) {
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
     this.shape = shape;
-    this.computeShaderCode = computeShaderCode;
-    this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
+
     // this.enableTimeStamp = false;
   }
 
@@ -106,7 +103,7 @@ export class BufferOp {
     return new Float32Array(arrayBuffer);
   }
 
-  private compile(
+  compile(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
@@ -268,6 +265,7 @@ export class BufferOp {
     }
     */
     passEncoder.setPipeline(computePipeline);
+    passEncoder.setBindGroup(0, bindGroup);
 
     // passEncoder.dispatch(dispatchX, dispatchY);
     if (workGroupSize[1] == 1 && workGroupSize[2] == 1) {
