@@ -15,9 +15,11 @@ export class BufferOp {
   computePipeline: any;
   bindGroup: any;
   // enableTimeStamp: boolean;
-  constructor(device: GPUDevice, glslang: Glslang, firstMatrix: Float32Array|Uint32Array,
-    secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-    computeShaderCode: any) {
+  constructor(
+      device: GPUDevice, glslang: Glslang,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
+      computeShaderCode: any) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
@@ -99,10 +101,10 @@ export class BufferOp {
     return timeInMS;
   }
   */
- async data() {
-  const arrayBuffer = await this.getBufferData();
-  return new Float32Array(arrayBuffer);
-}
+  async data() {
+    const arrayBuffer = await this.getBufferData();
+    return new Float32Array(arrayBuffer);
+  }
 
   private compile(
       firstMatrix: Float32Array|Uint32Array,
@@ -218,24 +220,23 @@ export class BufferOp {
       ]
     });
         */
-
   }
 
   // TODO: Float32Array is bad. And buffer is bad.
-  async compileAndRun(
-      workGroupSize: [number, number, number]) {
+  async compileAndRun(workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
     // if (mode == 0) {
     return await this.dispatchAndSubmitWithFence(
-        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
   }
 
-  compileAndRunSync(
-    workGroupSize: [number, number, number]) {
+  compileAndRunSync(workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
     // if (mode == 0) {
     return this.dispatchAndSubmit(
-        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
   }
 
   private dispatchAndSubmit(
@@ -271,8 +272,7 @@ export class BufferOp {
     // passEncoder.dispatch(dispatchX, dispatchY);
     if (workGroupSize[1] == 1 && workGroupSize[2] == 1) {
       passEncoder.dispatch(dispatchX * dispatchY / workGroupSize[0], 1);
-    }
-    else {
+    } else {
       passEncoder.dispatch(
           dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
     }
@@ -302,16 +302,16 @@ export class BufferOp {
   }
 
   private async dispatchAndSubmitWithFence(
-    computePipeline: any, bindGroup: any, dispatchX: number,
-    dispatchY: number, workGroupSize: [number, number, number]) {
+      computePipeline: any, bindGroup: any, dispatchX: number,
+      dispatchY: number, workGroupSize: [number, number, number]) {
     const start = this.now();
     this.dispatchAndSubmit(
-        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
     console.log((this.now() - start).toFixed(2));
-
   }
 
   async getBufferData() {

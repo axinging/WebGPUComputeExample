@@ -18,8 +18,10 @@ export class TextureOp {
   format: GPUTextureFormat;
   kBytesPerTexel: number;
   constructor(
-      device: GPUDevice, glslang: Glslang,firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,computeShaderCode: any, format: GPUTextureFormat,
+      device: GPUDevice, glslang: Glslang,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
+      computeShaderCode: any, format: GPUTextureFormat,
       kBytesPerTexel: number) {
     this.device = device;
     this.queue = device.defaultQueue;
@@ -249,20 +251,20 @@ export class TextureOp {
   }
 
   // TODO: Float32Array is bad. And buffer is bad.
-  async compileAndRun(
-      workGroupSize: [number, number, number]) {
+  async compileAndRun(workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
     await this.dispatchAndSubmitWithFence(
-        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
 
     return true;
   }
 
-  compileAndRunSync(
-    workGroupSize: [number, number, number]) {
+  compileAndRunSync(workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
     this.dispatchAndSubmit(
-      this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
 
     return true;
   }
@@ -291,7 +293,8 @@ export class TextureOp {
     const start = this.now();
     // Commands submission.
     this.dispatchAndSubmit(
-      this.computePipeline, this.bindGroup, this.shape[0], this.shape[1], workGroupSize);
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);

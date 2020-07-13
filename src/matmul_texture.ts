@@ -4,10 +4,11 @@ import {TextureOp} from './texture';
 export class MatmulTextureOp extends TextureOp {
   workGroupSize: [number, number, number];
   constructor(
-    device: GPUDevice, glslang: Glslang, firstMatrix: Float32Array|Uint32Array,
-    secondMatrix: Float32Array|Uint32Array, shape: Uint32Array, format: GPUTextureFormat,
-    kBytesPerTexel: number) {
-            // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
+      device: GPUDevice, glslang: Glslang,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
+      format: GPUTextureFormat, kBytesPerTexel: number) {
+    // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
     const computeShaderCode = `#version 450
     layout(set = 0, binding = 0) uniform Uniforms {
       int inputWidth;
@@ -73,8 +74,11 @@ export class MatmulTextureOp extends TextureOp {
       // imageStore(C, ivec2(globalRow,globalCol), vec4(3,80,90,100));
   }   
     `;
-    /// super(device, glslang, firstMatrix, secondMatrix, shape,computeShaderCode, format, kBytesPerTexel);
-    super(device, glslang, firstMatrix, secondMatrix, shape, computeShaderCode, format, kBytesPerTexel);
+    /// super(device, glslang, firstMatrix, secondMatrix,
+    /// shape,computeShaderCode, format, kBytesPerTexel);
+    super(
+        device, glslang, firstMatrix, secondMatrix, shape, computeShaderCode,
+        format, kBytesPerTexel);
     const TS = 32;
     this.workGroupSize = [TS, TS, 1];
   }
@@ -121,7 +125,7 @@ export class MatmulTextureOp extends TextureOp {
           uint M = uniforms.inputWidth;
           uint N = uniforms.inputWidth;
           uint K = uniforms.inputWidth;
-    
+
           // Thread identifiers
           uint row = gl_LocalInvocationID.x; // Local row ID (max: TS)
           uint col = gl_LocalInvocationID.y; // Local col ID (max: TS)
@@ -136,8 +140,9 @@ export class MatmulTextureOp extends TextureOp {
               // Load one tile of A and B into local memory
               uint tiledRow = TS/4*t + row;
               uint tiledCol = TS*t + col;
-              Asub[col][row] = imageLoad(A, ivec2(tiledCol*M + globalRow));// .r;//A[tiledCol*M + globalRow];
-              Bsub[col][row] = imageLoad(B, ivec2(globalCol*K + tiledRow));// .r;//B[globalCol*K + tiledRow];
+              Asub[col][row] = imageLoad(A, ivec2(tiledCol*M + globalRow));//
+  .r;//A[tiledCol*M + globalRow]; Bsub[col][row] = imageLoad(B,
+  ivec2(globalCol*K + tiledRow));// .r;//B[globalCol*K + tiledRow];
 
               // Synchronise to make sure the tile is loaded
               memoryBarrierShared();
@@ -154,7 +159,7 @@ export class MatmulTextureOp extends TextureOp {
           // C[globalCol*M + globalRow] = acc;
           imageStore(C, ivec2(globalRow,globalCol), acc);
           // imageStore(C, ivec2(globalRow,globalCol), vec4(3,80,90,100));
-      }   
+      }
         `;
     return computeShaderCode;
   }
