@@ -7,7 +7,7 @@ export class MatmulBufferOp extends BufferOp {
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
-    super(device, glslang, firstMatrix, secondMatrix, shape);
+    super(device, glslang);
     const TS = 32;
     this.workGroupSize = [TS, TS, 1];
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());

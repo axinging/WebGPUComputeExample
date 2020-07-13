@@ -12,26 +12,19 @@ export class TextureOp {
   resultMatrixTexture: GPUTexture;
   resultMatrixTextureSize: number;
   shape: Uint32Array;
-  computeShaderCode: string;
   computePipeline: any;
   bindGroup: any;
   format: GPUTextureFormat;
   kBytesPerTexel: number;
   constructor(
-      device: GPUDevice, glslang: Glslang,
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      computeShaderCode: any, format: GPUTextureFormat,
+      device: GPUDevice, glslang: Glslang, format: GPUTextureFormat,
       kBytesPerTexel: number) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
-    this.shape = shape;
-    this.computeShaderCode = computeShaderCode;
     this.format = 'rgba32float';
     this.kBytesPerTexel = kBytesPerTexel;
-    this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -106,10 +99,11 @@ export class TextureOp {
     return sliceSize;
   }
 
-  private compile(
+  compile(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
+    this.shape = shape;
     // console.log('B2T this.getBufferSize()=' + this.getBufferSize());
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({

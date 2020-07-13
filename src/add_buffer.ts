@@ -8,7 +8,7 @@ export class AddBufferOp extends BufferOp {
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
     // Compute shader code (GLSL)
-    super(device, glslang, firstMatrix, secondMatrix, shape);
+    super(device, glslang);
     // const TS = 32;
     this.workGroupSize = [128, 1, 1];
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());

@@ -14,16 +14,11 @@ export class BufferOp {
   computePipeline: any;
   bindGroup: any;
   // enableTimeStamp: boolean;
-  constructor(
-      device: GPUDevice, glslang: Glslang,
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
+  constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
-    this.shape = shape;
-
     // this.enableTimeStamp = false;
   }
 
@@ -107,6 +102,7 @@ export class BufferOp {
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
+    this.shape = shape;
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
           size: (firstMatrix as Float32Array).byteLength,
