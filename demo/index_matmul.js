@@ -40,8 +40,8 @@ function createUint32Array(w, h) {
   const trials = 1;
   const reps = 1;
   const resultCheck = false;
-  const size_x = 64;
-  const size_y = 64;
+  const size_x = 256;
+  const size_y = 256;
 
   {
 
@@ -140,8 +140,8 @@ function createUint32Array(w, h) {
 
 
   {
-    const size_x = 64;
-    const size_y = 64;
+    const size_x = 256;
+    const size_y = 256;
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.

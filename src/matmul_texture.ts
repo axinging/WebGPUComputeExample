@@ -50,7 +50,7 @@ export class MatmulTextureOp extends TextureOp {
         //#define TS 32u
         //layout (local_size_x = TS/4, local_size_y = TS, local_size_z = 1) in;
         layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
-        this.workGroupSize[1]}, local_size_z = 1) in;
+        this.workGroupSize[1] / 4}, local_size_z = 1) in;
         const uint TS =  ${this.workGroupSize[0]};
 
         // uniform uvec3 MNK;
@@ -67,8 +67,10 @@ export class MatmulTextureOp extends TextureOp {
           // Thread identifiers
           uint row = gl_LocalInvocationID.x; // Local row ID (max: TS)
           uint col = gl_LocalInvocationID.y; // Local col ID (max: TS)
-          uint globalRow = TS/4*gl_WorkGroupID.x + row; // Row ID of C (0..M)
-          uint globalCol = TS*gl_WorkGroupID.y + col; // Col ID of C (0..N)
+          uint globalRow = TS*gl_WorkGroupID.x + row; // Row ID of C (0..M)
+          uint globalCol = TS/4*gl_WorkGroupID.y + col; // Col ID of C (0..N)
+          uint globalRow2 = (gl_GlobalInvocationID.x);
+          uint globalCol2 = (gl_GlobalInvocationID.y);
 
           // Initialise the accumulation register
           vec4 acc = vec4(0.0);
@@ -76,8 +78,8 @@ export class MatmulTextureOp extends TextureOp {
           uint numTiles = K/TS; //4
           for (uint t=0u; t < numTiles; t++) {
               // Load one tile of A and B into local memory
-              uint tiledRow = TS/4*t + row;
-              uint tiledCol = TS*t + col;
+              uint tiledRow = TS*t + row;
+              uint tiledCol = TS/4*t + col;
               Asub[col][row] = imageLoad(A, ivec2(tiledCol*M + globalRow));
               // A[tiledCol*M + globalRow];
               Bsub[col][row] = imageLoad(B,  ivec2(globalCol*K + tiledRow));
@@ -96,8 +98,7 @@ export class MatmulTextureOp extends TextureOp {
           }
           // Store the final result in C
           // C[globalCol*M + globalRow] = acc;
-          imageStore(C, ivec2(globalRow,globalCol), acc);
-          // imageStore(C, ivec2(globalRow,globalCol), vec4(3,80,90,100));
+          imageStore(C, ivec2(globalRow2,globalCol2), acc);
       }
         `;
     return computeShaderCode;
