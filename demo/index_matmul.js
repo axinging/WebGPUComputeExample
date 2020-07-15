@@ -123,9 +123,11 @@ function createUint32Array(w, h) {
   console.log(await result.data());
 */
   {
-    const oldLog = console.log;
-    let times = new Array();
-    compute.startLog(times, oldLog);
+    //const oldLog = console.log;
+    //let times = new Array();
+    //compute.startLog(times, oldLog);
+    const size_x = 32;
+    const size_y = 32;
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
@@ -135,15 +137,15 @@ function createUint32Array(w, h) {
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
-    const matmulBufferOp = new compute.MatmulBufferOp(
+    const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
     for (var i = 0; i < trials; i++) {
       // First Matrix.
-      await matmulBufferOp.execute();
-      // console.log(await matmulBufferOP.data());
+      await matmulPackedBufferOp.execute();
+      console.log("MatmulPackedBufferOp :"+await matmulPackedBufferOp.data());
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
-            await matmulBufferOp.data(), firstMatrix, secondMatrix, size_x,
+            await matmulPackedBufferOp.data(), firstMatrix, secondMatrix, size_x,
             size_y);
         if (failItem != -1) {
           console.log('Test fail at item ' + failItem);
@@ -151,7 +153,7 @@ function createUint32Array(w, h) {
         }
       }
     }
-
+    /*
     compute.endLog(times, oldLog);
     console.log(times);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
@@ -161,6 +163,7 @@ function createUint32Array(w, h) {
         `Async buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
     console.log(
         `Async buffer  Min time: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
+    */
   }
 
 
