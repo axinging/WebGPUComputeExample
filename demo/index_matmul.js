@@ -10,6 +10,15 @@ function createFloat32Array(w, h) {
   return matrix;
 }
 
+function createFloat32Array1(w, h) {
+  let matrix = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    matrix[i] = 1;//i;//Math.random();  // tf.randomUniform(shape, 0, 2.5);//0.01*i;
+  }
+  return matrix;
+}
+
+
 function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) {
   // let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
@@ -44,6 +53,8 @@ function createUint32Array(w, h) {
   const size_y = 256;
 
   {
+    const size_x = 32;
+    const size_y = 32;
 
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
@@ -79,7 +90,7 @@ function createUint32Array(w, h) {
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
     // trial, ensuring that no allocations happen when timing a trial (if the
     // backend reuses allocations).
-    await trial();
+    // await trial();
 
     for (let t = 0; t < trials; ++t) {
       const start = performance.now();
@@ -96,7 +107,21 @@ function createUint32Array(w, h) {
     console.log(
         `Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
+/* 
+  // TFJS code:
+  const size_x = 32;
+  const size_y = 32;
+  const firstMatrixSize = [size_x, size_y];
+  const firstMatrix = createFloat32Array(size_x, size_y);
+  // Second Matrix.
+  var secondMatrixSize = [size_x, size_y];
+  var secondMatrix = createFloat32Array(size_x, size_y);
+  var a = tf.tensor2d(firstMatrix, firstMatrixSize);
+  var b = tf.tensor2d(secondMatrix, secondMatrixSize);
 
+  var result = tf.matMul(a, b);
+  console.log(await result.data());
+*/
   {
     const oldLog = console.log;
     let times = new Array();
@@ -146,7 +171,7 @@ function createUint32Array(w, h) {
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
     const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
+    const secondMatrix = createFloat32Array1(size_x, size_y);
     const shape = new Uint32Array([
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
@@ -175,7 +200,7 @@ function createUint32Array(w, h) {
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
     // trial, ensuring that no allocations happen when timing a trial (if the
     // backend reuses allocations).
-    await trial();
+    // await trial();
 
     for (let t = 0; t < trials; ++t) {
       const start = performance.now();
