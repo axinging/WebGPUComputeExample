@@ -23,7 +23,7 @@ export class TextureOp {
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
-    this.format = 'rgba32float';
+    this.format = format;
     this.kBytesPerTexel = kBytesPerTexel;
   }
 

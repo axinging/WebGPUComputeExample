@@ -53,8 +53,8 @@ function createUint32Array(w, h) {
   const size_y = 256;
 
   {
-    const size_x = 32;
-    const size_y = 32;
+    //const size_x = 32;
+    //const size_y = 32;
 
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
@@ -75,7 +75,7 @@ function createUint32Array(w, h) {
       for (let r = 0; r < reps; ++r) {
         matmulBufferOp.executeSync();
       }
-      console.log("Buffer:" +await matmulBufferOp.data());
+      // console.log("Buffer:" +await matmulBufferOp.data());
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await matmulBufferOp.data(), firstMatrix, secondMatrix, size_x,
@@ -126,8 +126,8 @@ function createUint32Array(w, h) {
     //const oldLog = console.log;
     //let times = new Array();
     //compute.startLog(times, oldLog);
-    const size_x = 32;
-    const size_y = 32;
+    //const size_x = 32;
+    //const size_y = 32;
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
@@ -179,8 +179,8 @@ function createUint32Array(w, h) {
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
-    const matmulTextureOp = new compute.MatmulTextureOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32f', 16);
+    const matmulTextureOp = new compute.MatmulTextureR32FOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
 
     const times = [];
     const trial = async () => {
