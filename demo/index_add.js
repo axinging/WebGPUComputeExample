@@ -43,6 +43,7 @@ function createUint32Array(w, h) {
   const size_x = 4096;
   const size_y = 256;
 
+
   {
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
@@ -150,7 +151,7 @@ function createUint32Array(w, h) {
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
     const addTextureOp = new compute.AddTextureOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32f', 16);
+        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
 
     const times = [];
     const trial = async () => {
@@ -158,7 +159,7 @@ function createUint32Array(w, h) {
       for (let r = 0; r < reps; ++r) {
         addTextureOp.executeSync();
       }
-      await addTextureOp.data();
+      console.log("rgba32float:"+await addTextureOp.data());
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await addTextureOp.data(), firstMatrix, secondMatrix, size_x,
@@ -206,7 +207,7 @@ function createUint32Array(w, h) {
     ]);
 
     const addTextureOp = new compute.AddTextureOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32f', 16);
+        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
     for (var i = 0; i < trials; i++) {
       // First Matrix.
       await addTextureOp.execute();
