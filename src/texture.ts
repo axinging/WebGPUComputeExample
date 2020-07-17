@@ -139,7 +139,7 @@ export class TextureOp {
             this.shape[4], this.shape[5], this.format);
     this.resultMatrixTexture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
-      format: 'rgba32float',
+      format: this.format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE
     });
 
@@ -185,19 +185,19 @@ export class TextureOp {
           binding: 1,
           visibility: GPUShaderStage.COMPUTE,
           type: 'writeonly-storage-texture',
-          storageTextureFormat: 'rgba32float'
+          storageTextureFormat: this.format
         },
         {
           binding: 2,
           visibility: GPUShaderStage.COMPUTE,
           type: 'readonly-storage-texture',
-          storageTextureFormat: 'rgba32float'
+          storageTextureFormat: this.format
         },
         {
           binding: 3,
           visibility: GPUShaderStage.COMPUTE,
           type: 'readonly-storage-texture',
-          storageTextureFormat: 'rgba32float'
+          storageTextureFormat: this.format
         }
       ]
     });
