@@ -272,7 +272,10 @@ export class TextureOp {
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
-
+    console.log('dispatchX Y =' + dispatchX + ', ' + dispatchY);
+    console.log(
+        'dispatchX Y/WG =' + dispatchX / workGroupSize[0] + ', ' +
+        dispatchY / workGroupSize[1]);
     passEncoder.dispatch(
         dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
     passEncoder.endPass();

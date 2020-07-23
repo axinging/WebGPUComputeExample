@@ -165,8 +165,7 @@ function createUint32Array(w, h) {
         `Async buffer  Min time: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
     */
   }
-
-
+/*
   {
     const size_x = 256;
     const size_y = 256;
@@ -219,11 +218,13 @@ function createUint32Array(w, h) {
     console.log(
         `Sync texture Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
-
+*/
   {
+    /*
     const oldLog = console.log;
     let times = new Array();
     compute.startLog(times, oldLog);
+    */
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
@@ -239,6 +240,7 @@ function createUint32Array(w, h) {
     for (var i = 0; i < trials; i++) {
       // First Matrix.
       await matmulTextureOp2.execute();
+      console.log(" rgba32float: "+await matmulTextureOp2.data());
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await matmulTextureOp2.data(), firstMatrix, secondMatrix, size_x,
@@ -249,6 +251,7 @@ function createUint32Array(w, h) {
         }
       }
     }
+    /*
     compute.endLog(times, oldLog);
     console.log(times);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
@@ -257,5 +260,6 @@ function createUint32Array(w, h) {
     console.log(
         `Async texture mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
     console.log(`Async texture mime: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
+    */
   }
 })();
