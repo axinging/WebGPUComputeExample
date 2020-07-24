@@ -38,6 +38,7 @@
     "eslint": "~4.19.1",
     "eslint-config-google": "~0.9.1",
     "parcel-bundler": "~1.12.4",
+    "@babel/compat-data": "^7.9.0",
     "yalc": "~1.0.0-pre.23"
   },
   "eslintConfig": {
