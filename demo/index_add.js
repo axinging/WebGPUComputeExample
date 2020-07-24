@@ -37,8 +37,8 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 10;
-  const reps = 10;
+  const trials = 50;
+  const reps = 50;
   const resultCheck = true;
   const size_x = 4096;
   const size_y = 256;
@@ -90,7 +90,10 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log(times);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log(times2);
     console.log(
         `Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(
@@ -129,16 +132,18 @@ function createUint32Array(w, h) {
     }
 
     compute.endLog(times, oldLog);
-    console.log(times);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log(times2);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
     console.log(
-        `Async buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
+        `Async buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(
-        `Async buffer  Min time: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
+        `Async buffer  Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
-
 
   {
     const firstMatrixSize = [size_x, size_y];
@@ -159,7 +164,7 @@ function createUint32Array(w, h) {
       for (let r = 0; r < reps; ++r) {
         addTextureOp.executeSync();
       }
-      console.log("rgba32float:"+await addTextureOp.data());
+      await addTextureOp.data();
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await addTextureOp.data(), firstMatrix, secondMatrix, size_x,
@@ -181,7 +186,10 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    console.log(times);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log(times2);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
@@ -222,12 +230,15 @@ function createUint32Array(w, h) {
       }
     }
     compute.endLog(times, oldLog);
-    console.log(times);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log(times2);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
     console.log(
-        `Async texture mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
-    console.log(`Async texture mime: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
+        `Async texture mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
+    console.log(`Async texture mime: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
 })();

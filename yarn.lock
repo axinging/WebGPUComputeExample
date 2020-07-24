@@ -2,6 +2,26 @@
 # yarn lockfile v1
 
 
+"@tensorflow/tfjs-backend-webgpu@^0.0.1-alpha.0":
+  version "0.0.1-alpha.0"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-backend-webgpu/download/@tensorflow/tfjs-backend-webgpu-0.0.1-alpha.0.tgz#88668f92f4d290d90a315e365189566904399c4a"
+  integrity sha1-iGaPkvTSkNkKMV42UYlWaQQ5nEo=
+  dependencies:
+    "@webgpu/shaderc" "0.0.6"
+    "@webgpu/types" "0.0.6"
+
+"@tensorflow/tfjs-core@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-core/download/@tensorflow/tfjs-core-2.0.1.tgz#c64928423028e9e1821f7205367b1ff1f57ae3af"
+  integrity sha1-xkkoQjAo6eGCH3IFNnsf8fV6468=
+  dependencies:
+    "@types/offscreencanvas" "~2019.3.0"
+    "@types/seedrandom" "2.4.27"
+    "@types/webgl-ext" "0.0.30"
+    "@types/webgl2" "0.0.4"
+    node-fetch "~2.1.2"
+    seedrandom "2.4.3"
+
 "@types/estree@0.0.38":
   version "0.0.38"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.38.tgz#c1be40aa933723c608820a99a373a16d215a1ca2"
@@ -14,13 +34,43 @@
   version "13.7.7"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-13.7.7.tgz#1628e6461ba8cc9b53196dfeaeec7b07fa6eea99"
 
+"@types/offscreencanvas@~2019.3.0":
+  version "2019.3.0"
+  resolved "https://registry.npm.taobao.org/@types/offscreencanvas/download/@types/offscreencanvas-2019.3.0.tgz#3336428ec7e9180cf4566dfea5da04eb586a6553"
+  integrity sha1-MzZCjsfpGAz0Vm3+pdoE61hqZVM=
+
+"@types/seedrandom@2.4.27":
+  version "2.4.27"
+  resolved "https://registry.npm.taobao.org/@types/seedrandom/download/@types/seedrandom-2.4.27.tgz#9db563937dd86915f69092bc43259d2f48578e41"
+  integrity sha1-nbVjk33YaRX2kJK8QyWdL0hXjkE=
+
+"@types/webgl-ext@0.0.30":
+  version "0.0.30"
+  resolved "https://registry.npm.taobao.org/@types/webgl-ext/download/@types/webgl-ext-0.0.30.tgz#0ce498c16a41a23d15289e0b844d945b25f0fb9d"
+  integrity sha1-DOSYwWpBoj0VKJ4LhE2UWyXw+50=
+
+"@types/webgl2@0.0.4":
+  version "0.0.4"
+  resolved "https://registry.npm.taobao.org/@types/webgl2/download/@types/webgl2-0.0.4.tgz#c3b0f9d6b465c66138e84e64cb3bdf8373c2c279"
+  integrity sha1-w7D51rRlxmE46E5kyzvfg3PCwnk=
+
 "@webgpu/glslang@0.0.12":
   version "0.0.12"
   resolved "https://registry.npm.taobao.org/@webgpu/glslang/download/@webgpu/glslang-0.0.12.tgz#ee40e8d38c31436508147feaf0f646fde9bb4da6"
 
+"@webgpu/shaderc@0.0.6":
+  version "0.0.6"
+  resolved "https://registry.npm.taobao.org/@webgpu/shaderc/download/@webgpu/shaderc-0.0.6.tgz#832df2684f3a5b15ad0924049aa55f82ea043020"
+  integrity sha1-gy3yaE86WxWtCSQEmqVfguoEMCA=
+
 "@webgpu/types@0.0.24":
   version "0.0.24"
   resolved "https://registry.npm.taobao.org/@webgpu/types/download/@webgpu/types-0.0.24.tgz#c1952a0f09416b90df10b7abea069a00e4be4452"
+
+"@webgpu/types@0.0.6":
+  version "0.0.6"
+  resolved "https://registry.npm.taobao.org/@webgpu/types/download/@webgpu/types-0.0.6.tgz#c012d4e6a6a1571e0cb6d16e055cfc4791dee16b"
+  integrity sha1-wBLU5qahVx4MttFuBVz8R5He4Ws=
 
 ansi-regex@^2.0.0:
   version "2.1.1"
@@ -321,6 +371,11 @@ mkdirp@^0.5.1:
   dependencies:
     minimist "0.0.8"
 
+node-fetch@~2.1.2:
+  version "2.1.2"
+  resolved "https://registry.npm.taobao.org/node-fetch/download/node-fetch-2.1.2.tgz?cache=0&sync_timestamp=1591866671404&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fnode-fetch%2Fdownload%2Fnode-fetch-2.1.2.tgz#ab884e8e7e57e38a944753cec706f788d1768bb5"
+  integrity sha1-q4hOjn5X44qUR1POxwb3iNF2i7U=
+
 normalize-package-data@^2.3.2:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/normalize-package-data/-/normalize-package-data-2.5.0.tgz#e66db1838b200c1dfc233225d12cb36520e234a8"
@@ -480,6 +535,11 @@ rollup@~0.58.2:
   dependencies:
     "@types/estree" "0.0.38"
     "@types/node" "*"
+
+seedrandom@2.4.3:
+  version "2.4.3"
+  resolved "https://registry.npm.taobao.org/seedrandom/download/seedrandom-2.4.3.tgz#2438504dad33917314bff18ac4d794f16d6aaecc"
+  integrity sha1-JDhQTa0zkXMUv/GKxNeU8W1qrsw=
 
 "semver@2 || 3 || 4 || 5", semver@^5.3.0:
   version "5.7.1"

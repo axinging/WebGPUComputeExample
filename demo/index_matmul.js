@@ -1,6 +1,8 @@
 import * as compute from '@webgpu/compute';
 // import glslangModule from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
+// import * as tfwebgpu from '@tensorflow/tfjs-backend-webgpu';
+// import * as tf from '@tensorflow/tfjs-core';
 
 function createFloat32Array(w, h) {
   let matrix = new Float32Array(w * h);
@@ -26,6 +28,17 @@ function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) {
   for (let i = 0; i < w * h; i++) {
     if (Math.abs(result[i] - (firstMatrix[i] + secondMatrix[i])) > 0.01)
       return i;
+  }
+  return -1;
+}
+
+function compareTwoFloat32Array(a, b, w, h) {
+  // let matrix = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    if (Math.abs(a[i] - b[i]) > 0.01) {
+      console.log('Mismatch at ' + i);
+      return i;
+    }
   }
   return -1;
 }
@@ -67,21 +80,7 @@ function createUint32Array(w, h) {
   const size_y = 256;
   // Result check.
   {
-    /*
-    // TFJS code:
-    const size_x = 32;
-    const size_y = 32;
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    var secondMatrixSize = [size_x, size_y];
-    var secondMatrix = createFloat32Array(size_x, size_y);
-    var a = tf.tensor2d(firstMatrix, firstMatrixSize);
-    var b = tf.tensor2d(secondMatrix, secondMatrixSize);
 
-    var result = tf.matMul(a, b);
-    console.log(await result.data());
-    */
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
@@ -91,6 +90,18 @@ function createUint32Array(w, h) {
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
+    //
+    // TFJS code:
+    /*
+    await tf.ready();
+    var a = tf.tensor2d(firstMatrix, firstMatrixSize);
+    var b = tf.tensor2d(secondMatrix, secondMatrixSize);
+
+    var result = tf.matMul(a, b);
+    */
+    // console.log(await result.data());
+    //
+
     const matmulBufferOp = new compute.MatmulBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
     matmulBufferOp.executeSync();
@@ -117,8 +128,14 @@ function createUint32Array(w, h) {
     const compareResult2 = compareThreeFloat32Array(
         matmulBufferOpData, matmulPackedBufferOpWPT2Data,
         matmulTextureR32FOpData, size_x, size_y);
+
+
     if (compareResult == -1 && compareResult2 == -1) {
       console.log('All results match!');
+    }
+    else 
+    {
+      console.log('Results mismatch!!!');
     }
   }
 
@@ -157,9 +174,11 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log('Sync buffer ' + times);
-    console.log(
-        `Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log('Sync buffer ' + times2);
+    console.log(`Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(
         `Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
@@ -201,7 +220,10 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log('Sync packed buffer ' + times);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log('Sync packed buffer ' + times2);
     console.log(`Sync packed buffer Mean time: ${fmt(mean)} ms -> ${
         fmt(mean / reps)} / rep`);
     console.log(`Sync packed buffer  Min time: ${fmt(min)} ms -> ${
@@ -245,7 +267,10 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log('Sync packed buffer WPT2x2 ' + times);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log('Sync packed buffer WPT2x2 ' + times2);
     console.log(`Sync packed buffer WPT2x2 Mean time: ${fmt(mean)} ms -> ${
         fmt(mean / reps)} / rep`);
     console.log(`Sync packed buffer WPT2x2 Min time: ${fmt(min)} ms -> ${
@@ -286,7 +311,10 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    console.log('Sync r32float  ' + times);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log('Sync r32float  ' + times2);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
