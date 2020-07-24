@@ -3,18 +3,26 @@ import {BufferOp} from './buffer';
 
 export class MatmulBufferOp extends BufferOp {
   workGroupSize: [number, number, number];
-  constructor(device: GPUDevice, glslang: Glslang) {
+  constructor(
+      device: GPUDevice, glslang: Glslang,
+      firstMatrix: Float32Array|Uint32Array,
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
     super(device, glslang);
-    const TS = 32;
-    this.workGroupSize = [TS, TS, 1];
+    const TS = 16;
+    const TS_Y = 16;
+    this.workGroupSize = [TS, TS_Y, 1];
+    this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
   async execute(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array, mode = 0) {
-    const result = await this.compileAndRun(
-        firstMatrix, secondMatrix, shape, this.workGroupSize, this.getShader(),
-        mode);
+    const result = await this.compileAndRun(this.workGroupSize);
+    return result;
+  }
+
+  executeSync() {
+    const result = this.compileAndRunSync(this.workGroupSize);
     return result;
   }
 
@@ -40,7 +48,7 @@ export class MatmulBufferOp extends BufferOp {
           layout (set = 0, binding = 3) writeonly buffer ssbC {
             float C[];
           };
-       
+
         //#define TS 32u
         //layout (local_size_x = TS, local_size_y = TS, local_size_z = 1) in;
         layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
@@ -51,50 +59,72 @@ export class MatmulBufferOp extends BufferOp {
         // const uint TS_Y =  ${this.workGroupSize[1]};
         shared float Asub[TS][TS];  // Local memory to fit a tile of
         shared float Bsub[TS][TS];  // TS*TS elements of A and B
+
+  
+
       void main() {
           //uint M = MNK.x, N = MNK.y, K = MNK.z;
           // TODO: change this to INPUT SIZE.
           uint M = uniforms.inputWidth;
           uint N = uniforms.inputWidth;
           uint K = uniforms.inputWidth;
-      
+
           // Thread identifiers
-          uint row = gl_LocalInvocationID.x; // Local row ID (max: TS)
-          uint col = gl_LocalInvocationID.y; // Local col ID (max: TS)
-          uint globalRow = TS*gl_WorkGroupID.x + row; // Row ID of C (0..M)
-          uint globalCol = TS*gl_WorkGroupID.y + col; // Col ID of C (0..N)
-      
+          uint row = gl_LocalInvocationID.y; // Local row ID (max: TS)
+          uint col = gl_LocalInvocationID.x; // Local col ID (max: TS)
+          uint globalRow = gl_GlobalInvocationID.y;//TS*gl_WorkGroupID.y + row; // Row ID of C (0..M)
+          uint globalCol = gl_GlobalInvocationID.x;//TS*gl_WorkGroupID.x + col; // Col ID of C (0..N)
+
           // Initialise the accumulation register
           float acc = 0.0;
-      
           // Loop over all tiles
           uint numTiles = K/TS;
+          //
           for (uint t=0u; t < numTiles; t++) {
-      
+
               // Load one tile of A and B into local memory
-              uint tiledRow = TS*t + row;
-              uint tiledCol = TS*t + col;
-              Asub[col][row] = A[tiledCol*M + globalRow];
-              Bsub[col][row] = B[globalCol*K + tiledRow];
-      
+              uint tiledACol = TS*t + col;
+              uint tiledBRow = TS*t + row;
+              Asub[row][col] = A[globalRow * M + tiledACol];
+              Bsub[row][col] = B[tiledBRow * M + globalCol];
+
               // Synchronise to make sure the tile is loaded
               memoryBarrierShared();
               barrier();
-      
+
               // Perform the computation for a single tile
               for (uint k=0u; k < TS; k++) {
-                  acc += Asub[k][row] * Bsub[col][k];
+                  acc += Asub[row][k] * Bsub[k][col];
               }
-      
+
               // Synchronise before loading the next tile
               barrier();
           }
+          // When 256x1x1:
+          // col: 0, 0, ... 0;
+          //      0, 0, ... 0;
+          // row: 0, 1, ... 255;
+          //      256,257,. 511;
+
+          // When 32x32x1:
+          // col: 0, 0, ... 0;
+          //      1, 1, ... 1;
+          // row: 0, 1, ... 255;
+          //      0, 1, ... 255;
+          //
+          /*
+          This doesn't work!!!!
+          const uint tmprow = globalRow/K;
+          const uint tmpcol = globalRow%K;
+          for (uint k=0u; k < K; k++) {
+            acc += A[K*tmpcol + k]*B[k*K + tmpcol];
+          }
+          */
+          //
           // Store the final result in C
-          C[globalCol*M + globalRow] = acc;
-          // imageStore(C, ivec2(globalRow,globalCol), acc);
-          // imageStore(C, ivec2(globalRow,globalCol), vec4(3,80,90,100));
+          C[globalRow*M + globalCol] = acc;
       }
-        
+
         `;
     return computeShaderCode;
   }

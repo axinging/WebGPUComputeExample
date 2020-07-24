@@ -9,11 +9,16 @@
     "node": ">=8.9.0"
   },
   "dependencies": {
-    
+    "@tensorflow/tfjs-converter": "^1.3.5",
+    "@tensorflow/tfjs-core": "1.2.1"
   },
   "scripts": {
     "watch": "cross-env NODE_ENV=development parcel index.html --no-hmr ",
     "build": "cross-env NODE_ENV=production parcel build index.html --public-url ./",
+    "watchadd": "cross-env NODE_ENV=development parcel index_add.html --no-hmr ",
+    "buildadd": "cross-env NODE_ENV=production parcel build index_add.html --public-url ./",
+    "watchmatmul": "cross-env NODE_ENV=development parcel index_matmul.html --no-hmr ",
+    "buildmatmul": "cross-env NODE_ENV=production parcel build index_matmul.html --public-url ./",
     "lint": "eslint .",
     "link-local": "yalc link @webgpu/compute"
   },
@@ -21,7 +26,7 @@
     "crypto": false
   },
   "devDependencies": {
-    "@webgpu/compute": "link:../",
+    "@webgpu/compute": "link:..",
     "@webgpu/glslang": "0.0.12",
     "babel-core": "~6.26.3",
     "babel-plugin-transform-runtime": "~6.23.0",

@@ -12,6 +12,8 @@ export class TextureOp {
   resultMatrixTexture: GPUTexture;
   resultMatrixTextureSize: number;
   shape: Uint32Array;
+  computePipeline: any;
+  bindGroup: any;
   format: GPUTextureFormat;
   kBytesPerTexel: number;
   constructor(
@@ -21,7 +23,7 @@ export class TextureOp {
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
-    this.format = 'rgba32float';
+    this.format = format;
     this.kBytesPerTexel = kBytesPerTexel;
   }
 
@@ -97,10 +99,11 @@ export class TextureOp {
     return sliceSize;
   }
 
-  private compile(
+  compile(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
+    this.shape = shape;
     // console.log('B2T this.getBufferSize()=' + this.getBufferSize());
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
@@ -136,7 +139,7 @@ export class TextureOp {
             this.shape[4], this.shape[5], this.format);
     this.resultMatrixTexture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
-      format: 'rgba32float',
+      format: this.format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE
     });
 
@@ -182,24 +185,24 @@ export class TextureOp {
           binding: 1,
           visibility: GPUShaderStage.COMPUTE,
           type: 'writeonly-storage-texture',
-          storageTextureFormat: 'rgba32float'
+          storageTextureFormat: this.format
         },
         {
           binding: 2,
           visibility: GPUShaderStage.COMPUTE,
           type: 'readonly-storage-texture',
-          storageTextureFormat: 'rgba32float'
+          storageTextureFormat: this.format
         },
         {
           binding: 3,
           visibility: GPUShaderStage.COMPUTE,
           type: 'readonly-storage-texture',
-          storageTextureFormat: 'rgba32float'
+          storageTextureFormat: this.format
         }
       ]
     });
 
-    const bindGroup = this.device.createBindGroup({
+    this.bindGroup = this.device.createBindGroup({
       layout: bindGroupLayout,
       entries: [
         {binding: 0, resource: {buffer: shapeBuffer}},
@@ -216,7 +219,7 @@ export class TextureOp {
     if (result.data.length === 0) {
       throw new Error('Shader compilation failed');
     }
-    const computePipeline = this.device.createComputePipeline({
+    this.computePipeline = this.device.createComputePipeline({
       // For new layout, remove this line.
       layout: this.device.createPipelineLayout(
           {bindGroupLayouts: [bindGroupLayout]}),
@@ -238,49 +241,62 @@ export class TextureOp {
     });
         */
 
-    return {
-      computePipeline, bindGroup
-    }
+    return;
   }
 
   // TODO: Float32Array is bad. And buffer is bad.
-  async compileAndRun(
-      firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      workGroupSize: [number, number, number], computeShaderCode: any,
-      mode: number) {
+  async compileAndRun(workGroupSize: [number, number, number]) {
     // TODO: figure out how to return non const two values.
-    this.shape = shape;
-    const {computePipeline, bindGroup} =
-        this.compile(firstMatrix, secondMatrix, shape, computeShaderCode);
-    await this.dispatchAndSubmit(
-        computePipeline, bindGroup, shape[0], shape[1], workGroupSize);
+    await this.dispatchAndSubmitWithFence(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
 
     return true;
   }
 
-  private async dispatchAndSubmit(
+  compileAndRunSync(workGroupSize: [number, number, number]) {
+    // TODO: figure out how to return non const two values.
+    this.dispatchAndSubmit(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
+
+    return true;
+  }
+
+  private dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number, workGroupSize: [number, number, number]) {
-    const start = this.now();
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
-
+    // console.log('dispatchX Y =' + dispatchX + ', ' + dispatchY);
+    // console.log('dispatchX Y/WG =' + dispatchX / workGroupSize[0] + ', ' +
+    // dispatchY / workGroupSize[1]);
     passEncoder.dispatch(
         dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
     passEncoder.endPass();
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
+  }
+
+  private async dispatchAndSubmitWithFence(
+      computePipeline: any, bindGroup: any, dispatchX: number,
+      dispatchY: number, workGroupSize: [number, number, number]) {
+    const start = this.now();
+    // Commands submission.
+    this.dispatchAndSubmit(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
     console.log((this.now() - start).toFixed(2));
   }
+
 
   async getBufferData() {
     // Get a GPU buffer for reading in an unmapped state.
@@ -310,9 +326,11 @@ export class TextureOp {
     // Submit GPU commands.
     this.device.defaultQueue.submit([commandEncoder.finish()]);
     // t.expectContents(dst, data);
+    /*
     const fence = this.queue.createFence();
     this.queue.signal(fence, 2);
     await fence.onCompletion(2);
+    */
     // Read buffer.
     const arrayBuffer = await gpuReadBuffer.mapReadAsync();
     return arrayBuffer;
