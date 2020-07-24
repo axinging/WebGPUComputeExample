@@ -12,7 +12,7 @@ export class MatmulTextureR32FOp extends TextureOp {
     /// super(device, glslang, firstMatrix, secondMatrix,
     /// shape,computeShaderCode, format, kBytesPerTexel);
     super(device, glslang, format, kBytesPerTexel);
-    const TS = 16;
+    const TS = 4;
     this.workGroupSize = [TS, TS, 1];
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
@@ -57,10 +57,7 @@ export class MatmulTextureR32FOp extends TextureOp {
     // readonly
     layout(set = 0, binding = 3, r32f) uniform readonly image2D B;
 
-    void setOutput(int flatIndex, float value) {
-        //result[flatIndex] = value;
-    }
-    // TODO.
+    // TODO. Make thsi works with rectangle.
     int dimAOuter = inputWidth; // aShape[1];
     int dimInner = filterWidth; // aShape[2];
     int dimBOuter = outputWidth;// bShape[2];
@@ -148,7 +145,6 @@ export class MatmulTextureR32FOp extends TextureOp {
   
         barrier();
       }
-      //
       for (int innerRow = 0; innerRow < RowPerThread; innerRow++) {
         for (int innerCol = 0; innerCol < ColPerThread; innerCol++) {
   
@@ -162,7 +158,6 @@ export class MatmulTextureR32FOp extends TextureOp {
       }
     }
     float mm_readA(int row, int col) {
-      // imageLoad(A, ivec2(row, col));
       return imageLoad(A, ivec2(row, col)).r;
     }
   
@@ -171,6 +166,7 @@ export class MatmulTextureR32FOp extends TextureOp {
     }
   
     void mm_write(int row, int col, float value) {
+      // TODO: Figure out why need vec4 here.
       imageStore(result, ivec2(row,col), vec4(value, 0.0, 0.0, 0.0));
     }
   

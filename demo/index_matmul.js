@@ -30,6 +30,18 @@ function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) {
   return -1;
 }
 
+function compareThreeFloat32Array(a, b, c, w, h) {
+  // let matrix = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    if (Math.abs(a[i] - b[i]) > 0.01 || Math.abs(b[i] - c[i]) > 0.01 ||
+        Math.abs(a[i] - c[i]) > 0.01) {
+      console.log('Mismatch at ' + i);
+      return i;
+    }
+  }
+  return -1;
+}
+
 function createUint32Array(w, h) {
   let matrix = new Uint32Array(w * h);
   for (let i = 0; i < w * h; i++) {
@@ -48,11 +60,59 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 10;
-  const reps = 10;
+  const trials = 50;
+  const reps = 50;
   const resultCheck = false;
   const size_x = 256;
   const size_y = 256;
+  // Result check.
+  {
+    /*
+    // TFJS code:
+    const size_x = 32;
+    const size_y = 32;
+    const firstMatrixSize = [size_x, size_y];
+    const firstMatrix = createFloat32Array(size_x, size_y);
+    // Second Matrix.
+    var secondMatrixSize = [size_x, size_y];
+    var secondMatrix = createFloat32Array(size_x, size_y);
+    var a = tf.tensor2d(firstMatrix, firstMatrixSize);
+    var b = tf.tensor2d(secondMatrix, secondMatrixSize);
+
+    var result = tf.matMul(a, b);
+    console.log(await result.data());
+    */
+    const firstMatrixSize = [size_x, size_y];
+    const firstMatrix = createFloat32Array(size_x, size_y);
+    // Second Matrix.
+    const secondMatrixSize = [size_x, size_y];
+    const secondMatrix = createFloat32Array(size_x, size_y);
+    const shape = new Uint32Array([
+      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+    ]);
+    const matmulBufferOp = new compute.MatmulBufferOp(
+        device, glslang, firstMatrix, secondMatrix, shape);
+    matmulBufferOp.executeSync();
+    const matmulBufferOpData = await matmulBufferOp.data();
+
+    const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
+        device, glslang, firstMatrix, secondMatrix, shape);
+    matmulPackedBufferOp.executeSync();
+    const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
+
+    const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
+    matmulTextureR32FOp.executeSync();
+    const matmulTextureR32FOpData = await matmulPackedBufferOp.data();
+
+    const compareResult = compareThreeFloat32Array(
+        matmulBufferOpData, matmulPackedBufferOpData, matmulTextureR32FOpData,
+        size_x, size_y);
+    if (compareResult == -1) {
+      console.log('All results match!');
+    }
+  }
 
   {
     // const size_x = 32;
@@ -78,15 +138,6 @@ function createUint32Array(w, h) {
         matmulBufferOp.executeSync();
       }
       await matmulBufferOp.data();
-      if (resultCheck) {
-        const failItem = compareAddFloat32Array(
-            await matmulBufferOp.data(), firstMatrix, secondMatrix, size_x,
-            size_y);
-        if (failItem != -1) {
-          console.log('Test fail at item ' + failItem);
-          return;
-        }
-      }
     };
 
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
@@ -103,27 +154,13 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log("Sync buffer "+ times);
+    console.log('Sync buffer ' + times);
     console.log(
         `Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(
         `Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
-  /*
-    // TFJS code:
-    const size_x = 32;
-    const size_y = 32;
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    var secondMatrixSize = [size_x, size_y];
-    var secondMatrix = createFloat32Array(size_x, size_y);
-    var a = tf.tensor2d(firstMatrix, firstMatrixSize);
-    var b = tf.tensor2d(secondMatrix, secondMatrixSize);
 
-    var result = tf.matMul(a, b);
-    console.log(await result.data());
-  */
   {
     // const oldLog = console.log;
     // let times = new Array();
@@ -150,16 +187,6 @@ function createUint32Array(w, h) {
         matmulPackedBufferOp.executeSync();
       }
       await matmulPackedBufferOp.data();
-      // console.log("Texture r32float: "+await matmulTextureOp.data());
-      if (resultCheck) {
-        const failItem = compareAddFloat32Array(
-            await matmulPackedBufferOp.data(), firstMatrix, secondMatrix,
-            size_x, size_y);
-        if (failItem != -1) {
-          console.log('Test fail at item ' + failItem);
-          return;
-        }
-      }
     };
 
     for (let t = 0; t < trials; ++t) {
@@ -171,13 +198,13 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log("Sync packed buffer "+ times);
+    console.log('Sync packed buffer ' + times);
     console.log(`Sync packed buffer Mean time: ${fmt(mean)} ms -> ${
         fmt(mean / 1)} / rep`);
     console.log(`Sync packed buffer  Min time: ${fmt(min)} ms -> ${
         fmt(min / 1)} / rep`);
   }
-  //
+
   {
     const size_x = 256;
     const size_y = 256;
@@ -190,26 +217,16 @@ function createUint32Array(w, h) {
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
-    const matmulTextureOp = new compute.MatmulTextureR32FOp(
+    const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
 
     const times = [];
     const trial = async () => {
       // let result;
       for (let r = 0; r < reps; ++r) {
-        matmulTextureOp.executeSync();
+        matmulTextureR32FOp.executeSync();
       }
-      await matmulTextureOp.data();
-      // console.log("Texture r32float: "+await matmulTextureOp.data());
-      if (resultCheck) {
-        const failItem = compareAddFloat32Array(
-            await matmulTextureOp.data(), firstMatrix, secondMatrix, size_x,
-            size_y);
-        if (failItem != -1) {
-          console.log('Test fail at item ' + failItem);
-          return;
-        }
-      }
+      await matmulTextureR32FOp.data();
     };
 
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
@@ -222,7 +239,7 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    console.log("Sync r32float  "+times);
+    console.log('Sync r32float  ' + times);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
@@ -231,7 +248,7 @@ function createUint32Array(w, h) {
     console.log(`Sync r32float texture Min time: ${fmt(min)} ms -> ${
         fmt(min / reps)} / rep`);
   }
-  //
+  // TODO: RGBA32F not work!
   {
     /*
     const oldLog = console.log;
@@ -255,17 +272,6 @@ function createUint32Array(w, h) {
       const start = performance.now();
       matmulTextureOp2.executeSync();
       await matmulTextureOp2.data();
-      // console.log(' MatmulTextureOp Time: ' + (performance.now() - start).toFixed(2));
-      // console.log(' rgba32float: ' + await matmulTextureOp2.data());
-      if (resultCheck) {
-        const failItem = compareAddFloat32Array(
-            await matmulTextureOp2.data(), firstMatrix, secondMatrix, size_x,
-            size_y);
-        if (failItem != -1) {
-          console.log('Test fail at item ' + failItem);
-          return;
-        }
-      }
     }
     /*
     compute.endLog(times, oldLog);
