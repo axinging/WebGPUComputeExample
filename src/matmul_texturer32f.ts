@@ -12,7 +12,7 @@ export class MatmulTextureR32FOp extends TextureOp {
     /// super(device, glslang, firstMatrix, secondMatrix,
     /// shape,computeShaderCode, format, kBytesPerTexel);
     super(device, glslang, format, kBytesPerTexel);
-    const TS = 32;
+    const TS = 16;
     this.workGroupSize = [TS, TS, 1];
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
@@ -160,8 +160,6 @@ export class MatmulTextureR32FOp extends TextureOp {
           }
         }
       }
-      //
-      //mm_write(globalRow, globalCol, vec4(acc[0][0],acc[0][1],acc[1][0],acc[1][1]));
     }
     float mm_readA(int row, int col) {
       // imageLoad(A, ivec2(row, col));
@@ -173,8 +171,7 @@ export class MatmulTextureR32FOp extends TextureOp {
     }
   
     void mm_write(int row, int col, float value) {
-      imageStore(result, ivec2(row,col), vec4(value,0.0, 0.0, 0.0));//vec4(row, 0.0, 0.0, 0.0));
-      // setOutput(row * dimBOuter + col, value);
+      imageStore(result, ivec2(row,col), vec4(value, 0.0, 0.0, 0.0));
     }
   
     void main() {

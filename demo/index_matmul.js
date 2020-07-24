@@ -5,7 +5,8 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 function createFloat32Array(w, h) {
   let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    matrix[i] = i;//Math.random();  // tf.randomUniform(shape, 0, 2.5);//0.01*i;
+    matrix[i] =
+        i;  // Math.random();  // tf.randomUniform(shape, 0, 2.5);//0.01*i;
   }
   return matrix;
 }
@@ -13,7 +14,8 @@ function createFloat32Array(w, h) {
 function createFloat32Array1(w, h) {
   let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    matrix[i] = 1;//i;//Math.random();  // tf.randomUniform(shape, 0, 2.5);//0.01*i;
+    matrix[i] =
+        1;  // i;//Math.random();  // tf.randomUniform(shape, 0, 2.5);//0.01*i;
   }
   return matrix;
 }
@@ -46,15 +48,15 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 1;
-  const reps = 1;
+  const trials = 10;
+  const reps = 10;
   const resultCheck = false;
   const size_x = 256;
   const size_y = 256;
 
   {
-    //const size_x = 32;
-    //const size_y = 32;
+    // const size_x = 32;
+    // const size_y = 32;
 
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
@@ -75,7 +77,7 @@ function createUint32Array(w, h) {
       for (let r = 0; r < reps; ++r) {
         matmulBufferOp.executeSync();
       }
-      // console.log("Buffer:" +await matmulBufferOp.data());
+      await matmulBufferOp.data();
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await matmulBufferOp.data(), firstMatrix, secondMatrix, size_x,
@@ -101,33 +103,33 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log(times);
+    console.log("Sync buffer "+ times);
     console.log(
         `Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(
         `Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
-/* 
-  // TFJS code:
-  const size_x = 32;
-  const size_y = 32;
-  const firstMatrixSize = [size_x, size_y];
-  const firstMatrix = createFloat32Array(size_x, size_y);
-  // Second Matrix.
-  var secondMatrixSize = [size_x, size_y];
-  var secondMatrix = createFloat32Array(size_x, size_y);
-  var a = tf.tensor2d(firstMatrix, firstMatrixSize);
-  var b = tf.tensor2d(secondMatrix, secondMatrixSize);
+  /*
+    // TFJS code:
+    const size_x = 32;
+    const size_y = 32;
+    const firstMatrixSize = [size_x, size_y];
+    const firstMatrix = createFloat32Array(size_x, size_y);
+    // Second Matrix.
+    var secondMatrixSize = [size_x, size_y];
+    var secondMatrix = createFloat32Array(size_x, size_y);
+    var a = tf.tensor2d(firstMatrix, firstMatrixSize);
+    var b = tf.tensor2d(secondMatrix, secondMatrixSize);
 
-  var result = tf.matMul(a, b);
-  console.log(await result.data());
-*/
+    var result = tf.matMul(a, b);
+    console.log(await result.data());
+  */
   {
-    //const oldLog = console.log;
-    //let times = new Array();
-    //compute.startLog(times, oldLog);
-    //const size_x = 32;
-    //const size_y = 32;
+    // const oldLog = console.log;
+    // let times = new Array();
+    // compute.startLog(times, oldLog);
+    const size_x = 256;
+    const size_y = 256;
     const firstMatrixSize = [size_x, size_y];
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
@@ -137,35 +139,45 @@ function createUint32Array(w, h) {
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
     ]);
+
     const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-    for (var i = 0; i < trials; i++) {
-      // First Matrix.
-      await matmulPackedBufferOp.execute();
-      console.log("MatmulPackedBufferOp :"+await matmulPackedBufferOp.data());
+
+    const times = [];
+    const trial = async () => {
+      // let result;
+      for (let r = 0; r < reps; ++r) {
+        matmulPackedBufferOp.executeSync();
+      }
+      await matmulPackedBufferOp.data();
+      // console.log("Texture r32float: "+await matmulTextureOp.data());
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
-            await matmulPackedBufferOp.data(), firstMatrix, secondMatrix, size_x,
-            size_y);
+            await matmulPackedBufferOp.data(), firstMatrix, secondMatrix,
+            size_x, size_y);
         if (failItem != -1) {
           console.log('Test fail at item ' + failItem);
           return;
         }
       }
+    };
+
+    for (let t = 0; t < trials; ++t) {
+      const start = performance.now();
+      await trial();
+      times.push(performance.now() - start);
     }
-    /*
-    compute.endLog(times, oldLog);
-    console.log(times);
+
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log(
-        `Async buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
-    console.log(
-        `Async buffer  Min time: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
-    */
+    console.log("Sync packed buffer "+ times);
+    console.log(`Sync packed buffer Mean time: ${fmt(mean)} ms -> ${
+        fmt(mean / 1)} / rep`);
+    console.log(`Sync packed buffer  Min time: ${fmt(min)} ms -> ${
+        fmt(min / 1)} / rep`);
   }
-/*
+  //
   {
     const size_x = 256;
     const size_y = 256;
@@ -173,7 +185,7 @@ function createUint32Array(w, h) {
     const firstMatrix = createFloat32Array(size_x, size_y);
     // Second Matrix.
     const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array1(size_x, size_y);
+    const secondMatrix = createFloat32Array(size_x, size_y);
     const shape = new Uint32Array([
       firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
       secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
@@ -187,7 +199,8 @@ function createUint32Array(w, h) {
       for (let r = 0; r < reps; ++r) {
         matmulTextureOp.executeSync();
       }
-      console.log("Texture r32float: "+await matmulTextureOp.data());
+      await matmulTextureOp.data();
+      // console.log("Texture r32float: "+await matmulTextureOp.data());
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await matmulTextureOp.data(), firstMatrix, secondMatrix, size_x,
@@ -209,16 +222,16 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    console.log(times);
+    console.log("Sync r32float  "+times);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log(
-        `Sync texture Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
-    console.log(
-        `Sync texture Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+    console.log(`Sync r32float texture Mean time: ${fmt(mean)} ms -> ${
+        fmt(mean / reps)} / rep`);
+    console.log(`Sync r32float texture Min time: ${fmt(min)} ms -> ${
+        fmt(min / reps)} / rep`);
   }
-*/
+  //
   {
     /*
     const oldLog = console.log;
@@ -239,8 +252,11 @@ function createUint32Array(w, h) {
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
     for (var i = 0; i < trials; i++) {
       // First Matrix.
-      await matmulTextureOp2.execute();
-      console.log(" rgba32float: "+await matmulTextureOp2.data());
+      const start = performance.now();
+      matmulTextureOp2.executeSync();
+      await matmulTextureOp2.data();
+      // console.log(' MatmulTextureOp Time: ' + (performance.now() - start).toFixed(2));
+      // console.log(' rgba32float: ' + await matmulTextureOp2.data());
       if (resultCheck) {
         const failItem = compareAddFloat32Array(
             await matmulTextureOp2.data(), firstMatrix, secondMatrix, size_x,
