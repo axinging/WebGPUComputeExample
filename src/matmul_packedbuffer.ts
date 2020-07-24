@@ -3,14 +3,17 @@ import {BufferOp} from './buffer';
 
 export class MatmulPackedBufferOp extends BufferOp {
   workGroupSize: [number, number, number];
+  workPerThread: number;
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
+      workPerThread = 1) {
     super(device, glslang);
     const TS = 16;
     const TS_Y = 16;
     this.workGroupSize = [TS, TS_Y, 1];
+    this.workPerThread = workPerThread;
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
@@ -22,7 +25,8 @@ export class MatmulPackedBufferOp extends BufferOp {
   }
 
   executeSync() {
-    const result = this.compileAndRunSync(this.workGroupSize);
+    const result =
+        this.compileAndRunSync(this.workGroupSize, this.workPerThread);
     return result;
   }
 
@@ -73,8 +77,8 @@ export class MatmulPackedBufferOp extends BufferOp {
     void mm_write(int row, int col, float value);
     void mm_matMul(int dimAOuter, int dimInner, int dimBOuter);
   
-    const int RowPerThread = 1;
-    const int ColPerThread = 1;
+    const int RowPerThread = ${this.workPerThread};
+    const int ColPerThread = ${this.workPerThread};
     const int TileAOuter = int(gl_WorkGroupSize.y) * RowPerThread;
     const int TileBOuter = int(gl_WorkGroupSize.x) * ColPerThread;
     const int TileInner = TileAOuter > TileBOuter ? TileAOuter : TileBOuter;
