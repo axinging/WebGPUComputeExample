@@ -12,7 +12,11 @@ yarn watch
 ## Status
 ```
 add_buffer: Pass
-add_texture: Fail
+add_texture: Pass
+matmul_buffer: Pass
+matmul_packedbuffer: Pass
+matmul_texturer32f: Pass
+matmul_texture: Fail
 ```
 
 
