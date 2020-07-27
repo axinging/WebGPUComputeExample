@@ -230,7 +230,7 @@ export class BufferOp {
     // if (mode == 0) {
     return this.dispatchAndSubmit(
         this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
-        workGroupSize);
+        workGroupSize, workPerThread);
   }
 
   private dispatchAndSubmit(

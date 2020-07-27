@@ -42,11 +42,11 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 10;
-  const reps = 10;
+  const trials = 50;
+  const reps = 50;
   const resultCheck = false;
-  const size_x = 1024;
-  const size_y = 1024;
+  const size_x = 256;
+  const size_y = 256;
 
  
   const firstMatrixSize = [size_x, size_y];
