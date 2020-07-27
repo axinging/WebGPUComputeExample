@@ -84,7 +84,7 @@ function createUint32Array(w, h) {
     const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
 
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
+        device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float', 4);
     matmulTextureR32FOp.executeSync();
     const matmulTextureR32FOpData = await matmulPackedBufferOp.data();
 
@@ -92,7 +92,7 @@ function createUint32Array(w, h) {
         matmulBufferOpData, matmulPackedBufferOpData, matmulTextureR32FOpData,
         size_x, size_y);
     const matmulPackedBufferOpWPT2 = new compute.MatmulPackedBufferOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 2);
+        device, glslang, firstMatrix, secondMatrix, shape, 4);
     matmulPackedBufferOpWPT2.executeSync();
     const matmulPackedBufferOpWPT2Data = await matmulPackedBufferOp.data();
 
@@ -257,7 +257,7 @@ function createUint32Array(w, h) {
 
   {
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
+        device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float', 4);
 
     const times = [];
     const trial = async () => {

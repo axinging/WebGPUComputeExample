@@ -254,29 +254,30 @@ export class TextureOp {
     return true;
   }
 
-  compileAndRunSync(workGroupSize: [number, number, number]) {
+  compileAndRunSync(
+      workGroupSize: [number, number, number], workPerThread = 1) {
     // TODO: figure out how to return non const two values.
     this.dispatchAndSubmit(
         this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
-        workGroupSize);
+        workGroupSize, workPerThread);
 
     return true;
   }
 
   private dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
-      dispatchY: number, workGroupSize: [number, number, number]) {
+      dispatchY: number, workGroupSize: [number, number, number],
+      workPerThread = 1) {
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
-    // console.log('dispatchX Y =' + dispatchX + ', ' + dispatchY);
-    // console.log('dispatchX Y/WG =' + dispatchX / workGroupSize[0] + ', ' +
-    // dispatchY / workGroupSize[1]);
+
     passEncoder.dispatch(
-        dispatchX / workGroupSize[0], dispatchY / workGroupSize[1]);
+        dispatchX / workGroupSize[0] / workPerThread,
+        dispatchY / workGroupSize[1] / workPerThread);
     passEncoder.endPass();
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();

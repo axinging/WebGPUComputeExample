@@ -3,17 +3,19 @@ import {TextureOp} from './texture';
 
 export class MatmulTextureR32FOp extends TextureOp {
   workGroupSize: [number, number, number];
+  workPerThread: number;
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      format: GPUTextureFormat, kBytesPerTexel: number) {
+      workPerThread: number, format: GPUTextureFormat, kBytesPerTexel: number) {
     // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
     /// super(device, glslang, firstMatrix, secondMatrix,
     /// shape,computeShaderCode, format, kBytesPerTexel);
     super(device, glslang, format, kBytesPerTexel);
-    const TS = 4;
+    const TS = 16;
     this.workGroupSize = [TS, TS, 1];
+    this.workPerThread = workPerThread;
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
@@ -25,8 +27,9 @@ export class MatmulTextureR32FOp extends TextureOp {
   }
 
   executeSync() {
-    this.compileAndRunSync(this.workGroupSize);
-    return;
+    const result =
+        this.compileAndRunSync(this.workGroupSize, this.workPerThread);
+    return result;
   }
 
   private getShader() {
@@ -67,8 +70,8 @@ export class MatmulTextureR32FOp extends TextureOp {
     void mm_write(int row, int col, float value);
     void mm_matMul(int dimAOuter, int dimInner, int dimBOuter);
   
-    const int RowPerThread = 1;
-    const int ColPerThread = 1;
+    const int RowPerThread = ${this.workPerThread};
+    const int ColPerThread = ${this.workPerThread};
     const int TileAOuter = int(gl_WorkGroupSize.y) * RowPerThread;
     const int TileBOuter = int(gl_WorkGroupSize.x) * ColPerThread;
     const int TileInner = TileAOuter > TileBOuter ? TileAOuter : TileBOuter;
