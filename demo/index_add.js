@@ -42,18 +42,17 @@ function createUint32Array(w, h) {
   const resultCheck = true;
   const size_x = 4096;
   const size_y = 256;
-
+  const firstMatrixSize = [size_x, size_y];
+  const firstMatrix = createFloat32Array(size_x, size_y);
+  // Second Matrix.
+  const secondMatrixSize = [size_x, size_y];
+  const secondMatrix = createFloat32Array(size_x, size_y);
+  const shape = new Uint32Array([
+    firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+    secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+  ]);
 
   {
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
     const addBufferOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
 
@@ -105,15 +104,6 @@ function createUint32Array(w, h) {
     let times = new Array();
     compute.startLog(times, oldLog);
 
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
     const addBufferOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
     for (var i = 0; i < trials; i++) {
@@ -146,15 +136,6 @@ function createUint32Array(w, h) {
   }
 
   {
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
     const addTextureOp = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
 
@@ -203,17 +184,6 @@ function createUint32Array(w, h) {
     const oldLog = console.log;
     let times = new Array();
     compute.startLog(times, oldLog);
-
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
-
     const addTextureOp = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
     for (var i = 0; i < trials; i++) {

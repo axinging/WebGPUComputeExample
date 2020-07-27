@@ -7,40 +7,9 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 function createFloat32Array(w, h) {
   let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    matrix[i] =
-        i;  // Math.random();  // tf.randomUniform(shape, 0, 2.5);//0.01*i;
+    matrix[i] = Math.random();
   }
   return matrix;
-}
-
-function createFloat32Array1(w, h) {
-  let matrix = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    matrix[i] =
-        1;  // i;//Math.random();  // tf.randomUniform(shape, 0, 2.5);//0.01*i;
-  }
-  return matrix;
-}
-
-
-function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) {
-  // let matrix = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    if (Math.abs(result[i] - (firstMatrix[i] + secondMatrix[i])) > 0.01)
-      return i;
-  }
-  return -1;
-}
-
-function compareTwoFloat32Array(a, b, w, h) {
-  // let matrix = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    if (Math.abs(a[i] - b[i]) > 0.01) {
-      console.log('Mismatch at ' + i);
-      return i;
-    }
-  }
-  return -1;
 }
 
 function compareThreeFloat32Array(a, b, c, w, h) {
@@ -76,20 +45,22 @@ function createUint32Array(w, h) {
   const trials = 50;
   const reps = 50;
   const resultCheck = false;
-  const size_x = 256;
-  const size_y = 256;
+  const size_x = 1024;
+  const size_y = 1024;
+
+ 
+  const firstMatrixSize = [size_x, size_y];
+  const firstMatrix = createFloat32Array(size_x, size_y);
+  // Second Matrix.
+  const secondMatrixSize = [size_x, size_y];
+  const secondMatrix = createFloat32Array(size_x, size_y);
+  const shape = new Uint32Array([
+    firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+    secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
+  ]);
   // Result check.
   {
 
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
     //
     // TFJS code:
     /*
@@ -140,18 +111,6 @@ function createUint32Array(w, h) {
   }
 
   {
-    // const size_x = 32;
-    // const size_y = 32;
-
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
     const matmulBufferOp = new compute.MatmulBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
 
@@ -187,18 +146,6 @@ function createUint32Array(w, h) {
     // const oldLog = console.log;
     // let times = new Array();
     // compute.startLog(times, oldLog);
-    const size_x = 256;
-    const size_y = 256;
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
-
     const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
 
@@ -234,18 +181,6 @@ function createUint32Array(w, h) {
     // const oldLog = console.log;
     // let times = new Array();
     // compute.startLog(times, oldLog);
-    const size_x = 256;
-    const size_y = 256;
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
-
     const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape,2);
 
@@ -278,17 +213,6 @@ function createUint32Array(w, h) {
   }
 
   {
-    const size_x = 256;
-    const size_y = 256;
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
 
@@ -301,10 +225,6 @@ function createUint32Array(w, h) {
       await matmulTextureR32FOp.data();
     };
 
-    // Warm-up. Specifically, this pre-allocates enough memory for an entire
-    // trial, ensuring that no allocations happen when timing a trial (if the
-    // backend reuses allocations).
-    // await trial();
 
     for (let t = 0; t < trials; ++t) {
       const start = performance.now();
@@ -330,16 +250,6 @@ function createUint32Array(w, h) {
     let times = new Array();
     compute.startLog(times, oldLog);
     */
-    const firstMatrixSize = [size_x, size_y];
-    const firstMatrix = createFloat32Array(size_x, size_y);
-    // Second Matrix.
-    const secondMatrixSize = [size_x, size_y];
-    const secondMatrix = createFloat32Array(size_x, size_y);
-    const shape = new Uint32Array([
-      firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
-      secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
-    ]);
-
     const matmulTextureOp2 = new compute.MatmulTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
     for (var i = 0; i < trials; i++) {
