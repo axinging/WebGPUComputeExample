@@ -42,8 +42,8 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 50;
-  const reps = 50;
+  const trials = 10;
+  const reps = 10;
   const resultCheck = false;
   const size_x = 1024;
   const size_y = 1024;
@@ -110,14 +110,13 @@ function createUint32Array(w, h) {
     }
   }
 
+  // Performance test
   {
     const matmulBufferOp = new compute.MatmulBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
 
-    // const reps=100;
     const times = [];
     const trial = async () => {
-      // let result;
       for (let r = 0; r < reps; ++r) {
         matmulBufferOp.executeSync();
       }
@@ -129,6 +128,8 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
+
+    await trial();
 
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
@@ -151,12 +152,13 @@ function createUint32Array(w, h) {
 
     const times = [];
     const trial = async () => {
-      // let result;
       for (let r = 0; r < reps; ++r) {
         matmulPackedBufferOp.executeSync();
       }
       await matmulPackedBufferOp.data();
     };
+
+    await trial();
 
     for (let t = 0; t < trials; ++t) {
       const start = performance.now();
@@ -182,7 +184,7 @@ function createUint32Array(w, h) {
     // let times = new Array();
     // compute.startLog(times, oldLog);
     const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
-        device, glslang, firstMatrix, secondMatrix, shape,2);
+        device, glslang, firstMatrix, secondMatrix, shape, 2);
 
     const times = [];
     const trial = async () => {
@@ -192,6 +194,8 @@ function createUint32Array(w, h) {
       }
       await matmulPackedBufferOp.data();
     };
+
+    await trial();
 
     for (let t = 0; t < trials; ++t) {
       const start = performance.now();
@@ -212,6 +216,45 @@ function createUint32Array(w, h) {
         fmt(min / reps)} / rep`);
   }
 
+
+
+  {
+    // const oldLog = console.log;
+    // let times = new Array();
+    // compute.startLog(times, oldLog);
+    const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 4);
+
+    const times = [];
+    const trial = async () => {
+      // let result;
+      for (let r = 0; r < reps; ++r) {
+        matmulPackedBufferOp.executeSync();
+      }
+      await matmulPackedBufferOp.data();
+    };
+
+    await trial();
+
+    for (let t = 0; t < trials; ++t) {
+      const start = performance.now();
+      await trial();
+      times.push(performance.now() - start);
+    }
+
+    const mean = times.reduce((a, b) => a + b, 0) / trials;
+    const min = Math.min(...times);
+    const fmt = (n) => n.toFixed(2);
+    const times2 = times.map(function(time){
+      return Number(time.toFixed(2));
+    });
+    console.log('Sync packed buffer WPT4x4 ' + times2);
+    console.log(`Sync packed buffer WPT4x4 Mean time: ${fmt(mean)} ms -> ${
+        fmt(mean / reps)} / rep`);
+    console.log(`Sync packed buffer WPT4x4 Min time: ${fmt(min)} ms -> ${
+        fmt(min / reps)} / rep`);
+  }
+
   {
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
@@ -225,6 +268,7 @@ function createUint32Array(w, h) {
       await matmulTextureR32FOp.data();
     };
 
+    await trial();
 
     for (let t = 0; t < trials; ++t) {
       const start = performance.now();
