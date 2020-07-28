@@ -4,6 +4,7 @@ export function hello() {
 
 export {AddBufferOp} from './add_buffer';
 export {AddTextureOp} from './add_texture';
+export {AddTextureR32FOp} from './add_texturer32f';
 export {BufferOp} from './buffer';
 // export {Conv2dBufferOp} from './conv2d_buffer';
 export {TextureOp} from './texture';

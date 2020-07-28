@@ -38,7 +38,7 @@ function createUint32Array(w, h) {
   const glslang = await glslangInit();
   const trials = 50;
   const reps = 50;
-  const resultCheck = true;
+  const resultCheck = false;
   const size_x = 4096;
   const size_y = 256;
   console.log("Input size: "+size_x+","+size_y);
@@ -67,7 +67,7 @@ function createUint32Array(w, h) {
             await addBufferOp.data(), firstMatrix, secondMatrix, size_x,
             size_y);
         if (failItem != -1) {
-          console.log('Test fail at item ' + failItem);
+          console.log('AddBufferOp Test fail at item ' + failItem);
           return;
         }
       }
@@ -97,6 +97,130 @@ function createUint32Array(w, h) {
         `Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
 
+  {
+    const addTextureOp = new compute.AddTextureOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
+
+    const times = [];
+    const trial = async () => {
+      // let result;
+      for (let r = 0; r < reps; ++r) {
+        addTextureOp.executeSync();
+      }
+      await addTextureOp.data();
+      if (resultCheck) {
+        const failItem = compareAddFloat32Array(
+            await addTextureOp.data(), firstMatrix, secondMatrix, size_x,
+            size_y);
+        if (failItem != -1) {
+          console.log('AddTextureOp rgba32float Test fail at item ' + failItem);
+          return;
+        }
+      }
+    };
+
+    // Warm-up. Specifically, this pre-allocates enough memory for an entire
+    // trial, ensuring that no allocations happen when timing a trial (if the
+    // backend reuses allocations).
+    await trial();
+
+    for (let t = 0; t < trials; ++t) {
+      const start = performance.now();
+      await trial();
+      times.push(performance.now() - start);
+    }
+    const times2 = times.map(function(time) {
+      return Number(time.toFixed(2));
+    });
+    console.log(times2);
+    const mean = times.reduce((a, b) => a + b, 0) / trials;
+    const min = Math.min(...times);
+    const fmt = (n) => n.toFixed(2);
+    console.log(
+        `Sync texture rgba32float Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
+    console.log(
+        `Sync texture rgba32float Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+  }
+
+  {
+    const addTextureOp = new compute.AddTextureR32FOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
+
+    const times = [];
+    const trial = async () => {
+      // let result;
+      for (let r = 0; r < reps; ++r) {
+        addTextureOp.executeSync();
+      }
+      await addTextureOp.data();
+      if (resultCheck) {
+        const failItem = compareAddFloat32Array(
+            await addTextureOp.data(), firstMatrix, secondMatrix, size_x,
+            size_y);
+        if (failItem != -1) {
+          console.log('AddTextureR32FOp Test fail at item ' + failItem);
+          return;
+        }
+      }
+    };
+
+    // Warm-up. Specifically, this pre-allocates enough memory for an entire
+    // trial, ensuring that no allocations happen when timing a trial (if the
+    // backend reuses allocations).
+    await trial();
+
+    for (let t = 0; t < trials; ++t) {
+      const start = performance.now();
+      await trial();
+      times.push(performance.now() - start);
+    }
+    const times2 = times.map(function(time) {
+      return Number(time.toFixed(2));
+    });
+    console.log(times2);
+    const mean = times.reduce((a, b) => a + b, 0) / trials;
+    const min = Math.min(...times);
+    const fmt = (n) => n.toFixed(2);
+    console.log(
+        `Sync texture r32float Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
+    console.log(
+        `Sync texture r32float Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+  }
+  /*
+  {
+    const oldLog = console.log;
+    let times = new Array();
+    compute.startLog(times, oldLog);
+    const addTextureOp = new compute.AddTextureOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
+    for (var i = 0; i < trials; i++) {
+      // First Matrix.
+      await addTextureOp.execute();
+      if (resultCheck) {
+        const failItem = compareAddFloat32Array(
+            await addTextureOp.data(), firstMatrix, secondMatrix, size_x,
+            size_y);
+        if (failItem != -1) {
+          console.log('Test fail at item ' + failItem);
+          return;
+        }
+      }
+    }
+    compute.endLog(times, oldLog);
+    const times2 = times.map(function(time) {
+      return Number(time.toFixed(2));
+    });
+    console.log(times2);
+    const mean = times.reduce((a, b) => a + b, 0) / trials;
+    const min = Math.min(...times);
+    const fmt = (n) => n.toFixed(2);
+    console.log(`Async texture mean time: ${fmt(mean)} ms -> ${
+        fmt(mean / reps)} / rep`);
+    console.log(
+        `Async texture mime: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+  }
+  */
+  /*
   {
     const oldLog = console.log;
     let times = new Array();
@@ -132,82 +256,5 @@ function createUint32Array(w, h) {
     console.log(
         `Async buffer  Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
-
-  {
-    const addTextureOp = new compute.AddTextureOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
-
-    const times = [];
-    const trial = async () => {
-      // let result;
-      for (let r = 0; r < reps; ++r) {
-        addTextureOp.executeSync();
-      }
-      await addTextureOp.data();
-      if (resultCheck) {
-        const failItem = compareAddFloat32Array(
-            await addTextureOp.data(), firstMatrix, secondMatrix, size_x,
-            size_y);
-        if (failItem != -1) {
-          console.log('Test fail at item ' + failItem);
-          return;
-        }
-      }
-    };
-
-    // Warm-up. Specifically, this pre-allocates enough memory for an entire
-    // trial, ensuring that no allocations happen when timing a trial (if the
-    // backend reuses allocations).
-    await trial();
-
-    for (let t = 0; t < trials; ++t) {
-      const start = performance.now();
-      await trial();
-      times.push(performance.now() - start);
-    }
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log(times2);
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    console.log(
-        `Sync texture Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
-    console.log(
-        `Sync texture Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
-  }
-
-  {
-    const oldLog = console.log;
-    let times = new Array();
-    compute.startLog(times, oldLog);
-    const addTextureOp = new compute.AddTextureOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
-    for (var i = 0; i < trials; i++) {
-      // First Matrix.
-      await addTextureOp.execute();
-      if (resultCheck) {
-        const failItem = compareAddFloat32Array(
-            await addTextureOp.data(), firstMatrix, secondMatrix, size_x,
-            size_y);
-        if (failItem != -1) {
-          console.log('Test fail at item ' + failItem);
-          return;
-        }
-      }
-    }
-    compute.endLog(times, oldLog);
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log(times2);
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    console.log(`Async texture mean time: ${fmt(mean)} ms -> ${
-        fmt(mean / reps)} / rep`);
-    console.log(
-        `Async texture mime: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
-  }
+  */
 })();
