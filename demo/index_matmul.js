@@ -46,9 +46,8 @@ function createUint32Array(w, h) {
   const reps = 50;
   const resultCheck = false;
   const size_x = 256;
-  const size_y = 256;
+  const size_y = size_x;
 
- 
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = createFloat32Array(size_x, size_y);
   // Second Matrix.
@@ -58,9 +57,8 @@ function createUint32Array(w, h) {
     firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
     secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
   ]);
-  // Result check.
+  // Result check.x
   {
-
     //
     // TFJS code:
     /*
@@ -100,12 +98,9 @@ function createUint32Array(w, h) {
         matmulBufferOpData, matmulPackedBufferOpWPT2Data,
         matmulTextureR32FOpData, size_x, size_y);
 
-
     if (compareResult == -1 && compareResult2 == -1) {
       console.log('All results match!');
-    }
-    else 
-    {
+    } else {
       console.log('Results mismatch!!!');
     }
   }
@@ -134,11 +129,12 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
     console.log('Sync buffer ' + times2);
-    console.log(`Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
+    console.log(
+        `Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
     console.log(
         `Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
@@ -169,7 +165,7 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
     console.log('Sync packed buffer ' + times2);
@@ -206,7 +202,7 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
     console.log('Sync packed buffer WPT2x2 ' + times2);
@@ -245,7 +241,7 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
     console.log('Sync packed buffer WPT4x4 ' + times2);
@@ -275,16 +271,16 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
-    console.log('Sync r32float  ' + times2);
+    console.log('Sync r32float  WPT4x4 ' + times2);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    console.log(`Sync r32float texture Mean time: ${fmt(mean)} ms -> ${
+    console.log(`Sync r32float texture WPT4x4 Mean time: ${fmt(mean)} ms -> ${
         fmt(mean / reps)} / rep`);
-    console.log(`Sync r32float texture Min time: ${fmt(min)} ms -> ${
+    console.log(`Sync r32float texture WPT4x4 Min time: ${fmt(min)} ms -> ${
         fmt(min / reps)} / rep`);
   }
   // TODO: RGBA32F not work!

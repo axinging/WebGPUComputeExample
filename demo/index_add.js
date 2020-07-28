@@ -11,7 +11,6 @@ function createFloat32Array(w, h) {
 }
 
 function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) {
-  // let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
     if (Math.abs(result[i] - (firstMatrix[i] + secondMatrix[i])) > 0.01)
       return i;
@@ -42,6 +41,7 @@ function createUint32Array(w, h) {
   const resultCheck = true;
   const size_x = 4096;
   const size_y = 256;
+  console.log("size "+size_x+","+size_y);
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = createFloat32Array(size_x, size_y);
   // Second Matrix.
@@ -89,7 +89,7 @@ function createUint32Array(w, h) {
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
     console.log(times2);
@@ -122,7 +122,7 @@ function createUint32Array(w, h) {
     }
 
     compute.endLog(times, oldLog);
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
     console.log(times2);
@@ -167,7 +167,7 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
     console.log(times2);
@@ -200,15 +200,16 @@ function createUint32Array(w, h) {
       }
     }
     compute.endLog(times, oldLog);
-    const times2 = times.map(function(time){
+    const times2 = times.map(function(time) {
       return Number(time.toFixed(2));
     });
     console.log(times2);
     const mean = times.reduce((a, b) => a + b, 0) / trials;
     const min = Math.min(...times);
     const fmt = (n) => n.toFixed(2);
+    console.log(`Async texture mean time: ${fmt(mean)} ms -> ${
+        fmt(mean / reps)} / rep`);
     console.log(
-        `Async texture mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
-    console.log(`Async texture mime: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+        `Async texture mime: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
   }
 })();

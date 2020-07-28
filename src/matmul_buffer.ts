@@ -79,7 +79,7 @@ export class MatmulBufferOp extends BufferOp {
           float acc = 0.0;
           // Loop over all tiles
           uint numTiles = K/TS;
-          //
+
           for (uint t=0u; t < numTiles; t++) {
 
               // Load one tile of A and B into local memory
@@ -100,27 +100,6 @@ export class MatmulBufferOp extends BufferOp {
               // Synchronise before loading the next tile
               barrier();
           }
-          // When 256x1x1:
-          // col: 0, 0, ... 0;
-          //      0, 0, ... 0;
-          // row: 0, 1, ... 255;
-          //      256,257,. 511;
-
-          // When 32x32x1:
-          // col: 0, 0, ... 0;
-          //      1, 1, ... 1;
-          // row: 0, 1, ... 255;
-          //      0, 1, ... 255;
-          //
-          /*
-          This doesn't work!!!!
-          const uint tmprow = globalRow/K;
-          const uint tmpcol = globalRow%K;
-          for (uint k=0u; k < K; k++) {
-            acc += A[K*tmpcol + k]*B[k*K + tmpcol];
-          }
-          */
-          //
           // Store the final result in C
           C[globalRow*M + globalCol] = acc;
       }

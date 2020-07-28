@@ -27,36 +27,32 @@ export class AddBufferOp extends BufferOp {
   getShader() {
     // Compute shader code (GLSL)
     const computeShaderCode = `#version 450
-          layout(set = 0, binding = 0) uniform Uniforms {
-            int inputWidth;
-            int inputHeight;
-            int filterWidth;
-            int filterHeight;
-            int outputWidth;
-            int outputHeight;
-          } uniforms;
+        layout(set = 0, binding = 0) uniform Uniforms {
+          int inputWidth;
+          int inputHeight;
+          int filterWidth;
+          int filterHeight;
+          int outputWidth;
+          int outputHeight;
+        } uniforms;
 
-          layout(set = 0, binding = 1) readonly buffer FirstMatrix {
-              float firstMatrix[];
-          } ;
+        layout(set = 0, binding = 1) readonly buffer FirstMatrix {
+            float firstMatrix[];
+        } ;
 
-          layout(set = 0, binding = 2) readonly buffer SecondMatrix {
-              float secondMatrix[];
-          } ;
+        layout(set = 0, binding = 2) readonly buffer SecondMatrix {
+            float secondMatrix[];
+        } ;
 
-          layout(set = 0, binding = 3) buffer ResultMatrix {
-              float resultMatrix[];
-          } ;
+        layout(set = 0, binding = 3) buffer ResultMatrix {
+            float resultMatrix[];
+        } ;
 
-          layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
+        layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
         this.workGroupSize[1]}, local_size_z = 1) in;
 
         void main() {
-          // resultMatrix.size = vec2(inputWidth, inputHeight);
-          // ivec2 resultCell = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
-      
-          // int index = resultCell.y + resultCell.x * int(uniforms.inputHeight);
-          uint index = gl_GlobalInvocationID.x;////resultCell.x;// + resultCell.y * int(uniforms.inputWidth);
+          uint index = gl_GlobalInvocationID.x;
           resultMatrix[index] = firstMatrix[index]+secondMatrix[index];
         }
           `;
