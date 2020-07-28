@@ -47,6 +47,7 @@ function createUint32Array(w, h) {
   const resultCheck = false;
   const size_x = 256;
   const size_y = size_x;
+  console.log("Input size: "+size_x+","+size_y);
 
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = createFloat32Array(size_x, size_y);
@@ -57,7 +58,7 @@ function createUint32Array(w, h) {
     firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
     secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
   ]);
-  // Result check.x
+  // Result check
   {
     //
     // TFJS code:

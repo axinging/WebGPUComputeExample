@@ -67,7 +67,6 @@ export class MatmulTextureOp extends TextureOp {
   
       vec4 getMatrixB(int row, int col) {
         // vec2 uv = (vec2(col, row) + halfCR) / vec2(32.0, 32.0);
-  
         // return texture2D(matrixB, uv);
         return imageLoad(matrixB, ivec2(row, col));
       }

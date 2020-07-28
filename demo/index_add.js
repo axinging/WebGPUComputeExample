@@ -41,7 +41,7 @@ function createUint32Array(w, h) {
   const resultCheck = true;
   const size_x = 4096;
   const size_y = 256;
-  console.log("size "+size_x+","+size_y);
+  console.log("Input size: "+size_x+","+size_y);
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = createFloat32Array(size_x, size_y);
   // Second Matrix.
@@ -56,10 +56,8 @@ function createUint32Array(w, h) {
     const addBufferOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
 
-    // const reps=100;
     const times = [];
     const trial = async () => {
-      // let result;
       for (let r = 0; r < reps; ++r) {
         addBufferOp.executeSync();
       }

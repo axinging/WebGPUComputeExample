@@ -28,7 +28,7 @@ export class MatmulBufferOp extends BufferOp {
 
   private getShader() {
     // Compute shader code (GLSL)
-    // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
+    // https://github.com/tensorflow/tfjs/blob/master/tfjs-backend-webgpu/src/kernels/matmul_webgpu.ts
     const computeShaderCode = `#version 450
         layout(set = 0, binding = 0) uniform Uniforms {
           int inputWidth;
@@ -63,7 +63,7 @@ export class MatmulBufferOp extends BufferOp {
   
 
       void main() {
-          //uint M = MNK.x, N = MNK.y, K = MNK.z;
+          // uint M = MNK.x, N = MNK.y, K = MNK.z;
           // TODO: change this to INPUT SIZE.
           uint M = uniforms.inputWidth;
           uint N = uniforms.inputWidth;

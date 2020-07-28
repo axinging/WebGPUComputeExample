@@ -32,7 +32,7 @@ export class MatmulPackedBufferOp extends BufferOp {
 
   private getShader() {
     // Compute shader code (GLSL)
-    // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
+    // https://github.com/tensorflow/tfjs/blob/master/tfjs-backend-webgpu/src/kernels/matmul_packed_webgpu.ts
     const computeShaderCode = `#version 450
 
     layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${

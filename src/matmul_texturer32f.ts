@@ -34,7 +34,7 @@ export class MatmulTextureR32FOp extends TextureOp {
 
   private getShader() {
     // Compute shader code (GLSL)
-    // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
+    // https://github.com/tensorflow/tfjs/blob/master/tfjs-backend-webgpu/src/kernels/matmul_packed_webgpu.ts
     const computeShaderCode = `#version 450
 
     layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
@@ -60,10 +60,10 @@ export class MatmulTextureR32FOp extends TextureOp {
     // readonly
     layout(set = 0, binding = 3, r32f) uniform readonly image2D B;
 
-    // TODO. Make thsi works with rectangle.
+    // TODO. Make this works with rectangle.
     int dimAOuter = inputWidth; // aShape[1];
     int dimInner = filterWidth; // aShape[2];
-    int dimBOuter = outputWidth;// bShape[2];
+    int dimBOuter = outputWidth; // bShape[2];
       
     float mm_readA(int row, int col);
     float mm_readB(int row, int col);
