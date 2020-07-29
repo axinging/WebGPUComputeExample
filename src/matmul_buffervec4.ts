@@ -73,6 +73,9 @@ export class MatmulBufferVec4Op extends BufferOp {
     int dimAOuter = inputWidth;
     int dimInner = inputHeight / VEC_SIZE;
     int dimBOuter = filterHeight / VEC_SIZE;
+    // TODO: Fix shape.
+    ivec3 aShape = ivec3(inputWidth, inputHeight, inputHeight);
+    ivec3 bShape = ivec3(inputWidth, inputHeight, inputHeight);
     // Consider compiling a different version of the shader that doesn't care
     // about boundary conditions. May slightly improve performance.
     vec4 mm_readA(int row, int col) {
