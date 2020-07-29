@@ -11,6 +11,8 @@ export {TextureOp} from './texture';
 export {CopyTextureOp} from './copy_texture';
 export {MatmulTextureOp} from './matmul_texture';
 export {MatmulBufferOp} from './matmul_buffer';
+export {MatmulBufferVec4Op} from './matmul_buffervec4';
 export {MatmulPackedBufferOp} from './matmul_packedbuffer';
 export {MatmulTextureR32FOp} from './matmul_texturer32f';
+export {MatmulTextureRGBA32FOp} from './matmul_texturergba32f';
 export {startLog, endLog} from './profiler';

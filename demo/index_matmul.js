@@ -42,12 +42,12 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 50;
-  const reps = 50;
+  const trials = 1;
+  const reps = 1;
   const resultCheck = false;
   const size_x = 256;
   const size_y = size_x;
-  console.log("Input size: "+size_x+","+size_y);
+  console.log('Input size: ' + size_x + ',' + size_y);
 
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = createFloat32Array(size_x, size_y);
@@ -82,22 +82,57 @@ function createUint32Array(w, h) {
     matmulPackedBufferOp.executeSync();
     const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
 
+    const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
+        device, glslang, firstMatrix, secondMatrix, shape);
+    matmulBufferVec4Op.executeSync();
+    const matmulBufferVec4OpData = await matmulBufferVec4Op.data();
+
+
+    var compareResult = compareThreeFloat32Array(
+        matmulBufferOpData, matmulPackedBufferOpData, matmulBufferVec4OpData,
+        size_x, size_y);
+
+    if (compareResult == -1) {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOp, matmulBufferVec4Op results match!');
+    } else {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOp, matmulBufferVec4Op results mismatch!!!');
+    }
+
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float', 4);
     matmulTextureR32FOp.executeSync();
     const matmulTextureR32FOpData = await matmulPackedBufferOp.data();
 
-    const compareResult = compareThreeFloat32Array(
+    compareResult = compareThreeFloat32Array(
         matmulBufferOpData, matmulPackedBufferOpData, matmulTextureR32FOpData,
         size_x, size_y);
-    const matmulPackedBufferOpWPT2 = new compute.MatmulPackedBufferOp(
+
+    if (compareResult == -1) {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOp, matmulTextureR32FOp results match!');
+    } else {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOp, matmulTextureR32FOp results mismatch!!!');
+    }
+
+    const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4);
-    matmulPackedBufferOpWPT2.executeSync();
-    const matmulPackedBufferOpWPT2Data = await matmulPackedBufferOp.data();
+    matmulPackedBufferOpWPT4.executeSync();
+    const matmulPackedBufferOpWPT4Data = await matmulPackedBufferOp.data();
 
     const compareResult2 = compareThreeFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpWPT2Data,
+        matmulBufferOpData, matmulPackedBufferOpWPT4Data,
         matmulTextureR32FOpData, size_x, size_y);
+
+    if (compareResult == -1) {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOpWPT4, matmulTextureR32FOp results match!');
+    } else {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOpWPT4, matmulTextureR32FOp results mismatch!!!');
+    }
 
     if (compareResult == -1 && compareResult2 == -1) {
       console.log('All results match!');
