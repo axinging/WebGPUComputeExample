@@ -83,7 +83,7 @@ function createUint32Array(w, h) {
     const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
 
     const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
-        device, glslang, firstMatrix, secondMatrix, shape);
+        device, glslang, firstMatrix, secondMatrix, shape, 8);
     matmulBufferVec4Op.executeSync();
     const matmulBufferVec4OpData = await matmulBufferVec4Op.data();
 

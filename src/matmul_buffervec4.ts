@@ -8,7 +8,7 @@ export class MatmulBufferVec4Op extends BufferOp {
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      workPerThread = 1) {
+      workPerThread = 8) {
     super(device, glslang);
     const TS = 16;
     const TS_Y = 16;
