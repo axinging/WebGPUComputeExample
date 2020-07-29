@@ -14,9 +14,10 @@ yarn watch
 add_buffer: Pass
 add_texture: Pass
 matmul_buffer: Pass
+matmul_buffervec4: Pass
 matmul_packedbuffer: Pass
 matmul_texturer32f: Pass
-matmul_texture: Fail
+matmul_texturergba32f: Fail
 ```
 
 

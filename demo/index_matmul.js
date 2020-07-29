@@ -13,8 +13,10 @@ function createFloat32Array(w, h) {
 }
 
 function compareThreeFloat32Array(a, b, c, w, h) {
-  // let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
+    if (i == 0) {
+      console.log("item 0=" + a[i] + ', ' + b[i] + ',' + c[i]);
+    }
     if (Math.abs(a[i] - b[i]) > 0.01 || Math.abs(b[i] - c[i]) > 0.01 ||
         Math.abs(a[i] - c[i]) > 0.01) {
       console.log('Mismatch at ' + i);
@@ -87,7 +89,6 @@ function createUint32Array(w, h) {
     matmulBufferVec4Op.executeSync();
     const matmulBufferVec4OpData = await matmulBufferVec4Op.data();
 
-
     var compareResult = compareThreeFloat32Array(
         matmulBufferOpData, matmulPackedBufferOpData, matmulBufferVec4OpData,
         size_x, size_y);
@@ -117,6 +118,25 @@ function createUint32Array(w, h) {
           'matmulBufferOp, matmulPackedBufferOp, matmulTextureR32FOp results mismatch!!!');
     }
 
+    const matmulTextureRGBA32FOp = new compute.MatmulTextureRGBA32FOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 4, 'rgba32float',
+        16);
+    matmulTextureRGBA32FOp.executeSync();
+    const matmulTextureRGBA32FOpData = await matmulTextureRGBA32FOp.data();
+
+    compareResult = compareThreeFloat32Array(
+        matmulBufferOpData, matmulPackedBufferOpData,
+        matmulTextureRGBA32FOpData, size_x, size_y);
+
+    if (compareResult == -1) {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FOp results match!');
+    } else {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FOp results mismatch!!!');
+    }
+
+
     const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4);
     matmulPackedBufferOpWPT4.executeSync();
@@ -126,7 +146,7 @@ function createUint32Array(w, h) {
         matmulBufferOpData, matmulPackedBufferOpWPT4Data,
         matmulTextureR32FOpData, size_x, size_y);
 
-    if (compareResult == -1) {
+    if (compareResult2 == -1) {
       console.log(
           'matmulBufferOp, matmulPackedBufferOpWPT4, matmulTextureR32FOp results match!');
     } else {
@@ -353,31 +373,5 @@ function createUint32Array(w, h) {
         fmt(mean / reps)} / rep`);
     console.log(`Sync r32float texture WPT4x4 Min time: ${fmt(min)} ms -> ${
         fmt(min / reps)} / rep`);
-  }
-  // TODO: RGBA32F not work!
-  {
-    /*
-    const oldLog = console.log;
-    let times = new Array();
-    compute.startLog(times, oldLog);
-    */
-    const matmulTextureOp2 = new compute.MatmulTextureOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
-    for (var i = 0; i < trials; i++) {
-      // First Matrix.
-      const start = performance.now();
-      matmulTextureOp2.executeSync();
-      await matmulTextureOp2.data();
-    }
-    /*
-    compute.endLog(times, oldLog);
-    console.log(times);
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    console.log(
-        `Async texture mean time: ${fmt(mean)} ms -> ${fmt(mean / 1)} / rep`);
-    console.log(`Async texture mime: ${fmt(min)} ms -> ${fmt(min / 1)} / rep`);
-    */
   }
 })();

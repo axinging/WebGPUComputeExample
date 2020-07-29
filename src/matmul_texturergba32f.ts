@@ -4,6 +4,8 @@ import {TextureOp} from './texture';
 export class MatmulTextureRGBA32FOp extends TextureOp {
   workGroupSize: [number, number, number];
   workPerThread: number;
+  workPerThread2: [number, number];
+  outputShape: number[];
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
@@ -14,9 +16,18 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
     /// shape,computeShaderCode, format, kBytesPerTexel);
     super(device, glslang, format, kBytesPerTexel);
     const TS = 16;
-    this.workGroupSize = [TS, TS, 1];
-    this.workPerThread = workPerThread;
-    this.compile(firstMatrix, secondMatrix, shape, this.getShader());
+    // const TSK = 16;
+    const WPT = 4;
+    const [TSM, TSN] = [TS, TS];
+    const [WPTM, WPTN] = [WPT, WPT];
+    // const LPTB = TSK * WPTM * WPTN / TSM;
+    const [RTSM, RTSN] = [TSM / WPTM, TSN / WPTN];
+    // this.workGroupSize = [TS, TS, 1];
+    this.workPerThread = WPTN;  // workPerThread;
+    this.workGroupSize = [RTSN, RTSM, 1];
+    this.workPerThread2 = [WPTN, WPTM];
+    this.outputShape = [shape[0], shape[1], shape[1]];
+    this.compile(firstMatrix, secondMatrix, shape, this.getShader(shape));
   }
 
   async execute(
@@ -32,9 +43,29 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
     return result;
   }
 
-  private getShader() {
+  private getShader(shape: Uint32Array) {
     // Compute shader code (GLSL)
     // https://github.com/tensorflow/tfjs/blob/master/tfjs-backend-webgpu/src/kernels/matmul_packed_webgpu.ts
+    const transposeA = false;
+    const transposeB = false;
+    const sharedDim =
+        shape[0];  // const sharedDim = transposeA ? aShape[1] : aShape[2];
+    const sharedDimensionPacked = Math.ceil(sharedDim / 2);
+    const TS = 16;
+    const TSK = 16;
+    const WPT = 4;
+    const [TSM, TSN] = [TS, TS];
+    const [WPTM, WPTN] = [WPT, WPT];
+    const LPTA = TSK * WPTM * WPTN / TSN;
+    // const LPTB = TSK * WPTM * WPTN / TSM;
+    const [RTSM, RTSN] = [TSM / WPTM, TSN / WPTN];
+
+    const aSample = transposeA ? `tiledIndex * 2, (offsetM + row) * 2` :
+                                 `(offsetM + row) * 2, tiledIndex * 2`;
+    const bSample = transposeB ? `(offsetN + row) * 2, tiledIndex * 2` :
+                                 `tiledIndex * 2, (offsetN + row) * 2`;
+    const aSwizzle = transposeA ? ['a.xxyy', 'a.zzww'] : ['a.xxzz', 'a.yyww'];
+    const bSwizzle = transposeB ? ['b.xzxz', 'b.ywyw'] : ['b.xyxy', 'b.zwzw'];
     const computeShaderCode = `#version 450
 
     layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
@@ -54,127 +85,104 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
       int outputHeight;
     };     
   
-    layout(set = 0, binding = 1, r32f) uniform writeonly image2D result;
+    layout(set = 0, binding = 1, rgba32f) uniform writeonly image2D result;
 
-    layout(set = 0, binding = 2, r32f) uniform readonly image2D A;
+    layout(set = 0, binding = 2, rgba32f) uniform readonly image2D A;
     // readonly
-    layout(set = 0, binding = 3, r32f) uniform readonly image2D B;
+    layout(set = 0, binding = 3, rgba32f) uniform readonly image2D B;
 
     // TODO. Make this works with rectangle.
     int dimAOuter = inputWidth; // aShape[1];
     int dimInner = filterWidth; // aShape[2];
     int dimBOuter = outputWidth; // bShape[2];
-      
-    float mm_readA(int row, int col);
-    float mm_readB(int row, int col);
-    void mm_write(int row, int col, float value);
-    void mm_matMul(int dimAOuter, int dimInner, int dimBOuter);
+
+    int imod(int x, int y) {
+        return x - y * (x / y);
+    }
   
-    const int RowPerThread = ${this.workPerThread};
-    const int ColPerThread = ${this.workPerThread};
-    const int TileAOuter = int(gl_WorkGroupSize.y) * RowPerThread;
-    const int TileBOuter = int(gl_WorkGroupSize.x) * ColPerThread;
-    const int TileInner = TileAOuter > TileBOuter ? TileAOuter : TileBOuter;
+    vec4 getMatrixA(int row, int col, int z) {
+      return imageLoad(A, ivec2(col, z));
+    }
   
-    shared float mm_Asub[TileAOuter][TileInner];
-    shared float mm_Bsub[TileInner][TileBOuter];
-  
-    void mm_matMul(int dimAOuter, int dimInner, int dimBOuter) {
-      int tileRow = int(gl_LocalInvocationID.y) * RowPerThread;
-      int tileCol = int(gl_LocalInvocationID.x) * ColPerThread;
-  
-      int globalRow = int(gl_GlobalInvocationID.y) * RowPerThread;
-      int globalCol = int(gl_GlobalInvocationID.x) * ColPerThread;
-  
-      int numTiles = (dimInner - 1) / TileInner + 1;
-  
-      float acc[RowPerThread][ColPerThread];
-      float ACached;
-      float BCached[ColPerThread];
-  
-      // Without this initialization strange values show up in acc.
-      for (int innerRow = 0; innerRow < RowPerThread; innerRow++) {
-        for (int innerCol = 0; innerCol < ColPerThread; innerCol++) {
-          acc[innerRow][innerCol] = 0.0;
+    vec4 getMatrixB(int row, int col, int z) {
+      return imageLoad(B, ivec2(col, z));
+    }
+    ivec3 getOutputCoords() {
+      int tileRow = int(gl_LocalInvocationID.x) * ${WPTN};
+      int tileCol = int(gl_LocalInvocationID.y) * ${WPTM};
+      int globalRow = int(gl_GlobalInvocationID.x) * ${WPTN};
+      int globalCol = int(gl_GlobalInvocationID.y) * ${WPTM};
+      vec2 resTexRC = vec2(globalRow, globalCol);
+      return ivec3(0,globalRow, globalCol);
+    }
+
+    shared vec4 Asub[${TSM}][${TSK}];
+    shared vec4 Bsub[${TSK}][${TSN}];
+    void main() {
+      ivec3 rc = getOutputCoords();
+      int tidm = int(gl_LocalInvocationID.y);
+      int tidn = int(gl_LocalInvocationID.x);
+      int offsetM = ${TSM} * int(gl_WorkGroupID.y);
+      int offsetN = ${TSN} * int(gl_WorkGroupID.x);
+      vec4 Breg[${WPTN}];
+      vec4 acc[${WPTM}][${WPTN}];
+      for (int wm = 0; wm < ${WPTM}; wm++) {
+        for (int wn = 0; wn < ${WPTN}; wn++) {
+          acc[wm][wn] = vec4(0);
         }
       }
-  
-      const int ColPerThreadA = TileInner / int(gl_WorkGroupSize.x);
-      int tileColA = int(gl_LocalInvocationID.x) * ColPerThreadA;
-      const int RowPerThreadB = TileInner / int(gl_WorkGroupSize.y);
-      int tileRowB = int(gl_LocalInvocationID.y) * RowPerThreadB;
-  
-      // Loop over shared dimension.
+      // Loop over all tiles
+      int numTiles = ${Math.ceil(sharedDimensionPacked / TSK)};
       for (int t = 0; t < numTiles; t++) {
-        // Load one tile of A into local memory.
-        //
-        for (int innerRow = 0; innerRow < RowPerThread; innerRow++) {
-          for (int innerCol = 0; innerCol < ColPerThreadA; innerCol++) {
-            int inputRow = tileRow + innerRow;
-            int inputCol = tileColA + innerCol;
-  
-            mm_Asub[inputRow][inputCol] = mm_readA(
-                globalRow + innerRow,
-                t * TileInner + inputCol);
-          }
+        // Load one tile of A and B into local memory
+        for (int i = 0; i < ${LPTA}; i++) {
+          int tid = tidm * ${RTSN} + tidn;
+          int id = i * ${RTSN} * ${RTSM} + tid;
+          int row = id / ${TSK};
+          int col = imod(id, ${TSK});
+          int tiledIndex = ${TSK} * t + col;
+          Asub[row][col] = getMatrixA(rc.x, ${aSample});
+          Bsub[col][row] = getMatrixB(rc.x, ${bSample});
         }
-        // Load one tile of B into local memory.
-        for (int innerRow = 0; innerRow < RowPerThreadB; innerRow++) {
-          for (int innerCol = 0; innerCol < ColPerThread; innerCol++) {
-            int inputRow = tileRowB + innerRow;
-            int inputCol = tileCol + innerCol;
-  
-            mm_Bsub[inputRow][inputCol] = mm_readB(
-              t * TileInner + inputRow,
-              globalCol + innerCol);
-          }
-        }
-  
+        //memoryBarrierShared();
         barrier();
-  
-        // Compute acc values for a single thread.
-        for (int k = 0; k < TileInner; k++) {
-          for (int inner = 0; inner < ColPerThread; inner++) {
-            BCached[inner] = mm_Bsub[k][tileCol + inner];
+        // Loop over the values of a single tile
+        int sizeTS = (t == (numTiles - 1) &&
+                      ${sharedDimensionPacked % TSK} != 0) ?
+                      ${sharedDimensionPacked % TSK} : ${TSK};
+        for (int k = 0; k < sizeTS; k++) {
+          for (int wn = 0; wn < ${WPTN}; wn++) {
+            int col = tidn + wn * ${RTSN};
+            Breg[wn] = Bsub[k][col];
           }
-  
-          for (int innerRow = 0; innerRow < RowPerThread; innerRow++) {
-            ACached = mm_Asub[tileRow + innerRow][k];
-            for (int innerCol = 0; innerCol < ColPerThread; innerCol++) {
-              acc[innerRow][innerCol] += ACached * BCached[innerCol];
+          for (int wm = 0; wm < ${WPTM}; wm++) {
+            int row = tidm + wm * ${RTSM};
+            vec4 a = Asub[row][k];
+            for (int wn = 0; wn < ${WPTN}; wn++) {
+              vec4 b = Breg[wn];
+              acc[wm][wn] += (${aSwizzle[0]} * ${bSwizzle[0]}) +
+                             (${aSwizzle[1]} * ${bSwizzle[1]});
             }
           }
         }
-  
+        // Synchronize before loading the next tile.
         barrier();
       }
-      for (int innerRow = 0; innerRow < RowPerThread; innerRow++) {
-        for (int innerCol = 0; innerCol < ColPerThread; innerCol++) {
-  
-          if ((globalCol + innerCol) < dimBOuter &&
-              (globalRow + innerRow) < dimAOuter) {
-            mm_write(globalRow + innerRow,
-                     globalCol + innerCol,
-                     acc[innerRow][innerCol]);
+      // Store the final result
+      for (int wm = 0; wm < ${WPTM}; wm++) {
+        int globalRow = offsetM + tidm + wm * ${RTSM};
+        if (globalRow >= ${Math.ceil(this.outputShape[1] / 2)}) {
+          continue;
+        }
+        for (int wn = 0; wn < ${WPTN}; wn++) {
+          int globalCol = offsetN + tidn + wn * ${RTSN};
+          if (globalCol >= ${Math.ceil(this.outputShape[2] / 2)}) {
+            continue;
           }
+          imageStore(result, ivec2(globalCol, globalRow),
+                     acc[wm][wn]);
         }
       }
-    }
-    float mm_readA(int row, int col) {
-      return imageLoad(A, ivec2(row, col)).r;
-    }
-  
-    float mm_readB(int row, int col) {
-      return imageLoad(B, ivec2(row, col)).r;
-    }
-  
-    void mm_write(int row, int col, float value) {
-      // TODO: Figure out why need vec4 here.
-      imageStore(result, ivec2(row,col), vec4(value, 0.0, 0.0, 0.0));
-    }
-  
-    void main() {
-      mm_matMul(dimAOuter, dimInner, dimBOuter);
     }
         `;
     return computeShaderCode;
