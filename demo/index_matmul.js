@@ -33,6 +33,21 @@ function createUint32Array(w, h) {
   }
   return matrix;
 }
+const trials = 1;
+const reps = 1;
+function logTimes(name,times) {
+  const times2 = times.map(function(time) {
+    return Number(time.toFixed(2));
+  });
+  console.log(name + times2);
+  const mean = times.reduce((a, b) => a + b, 0) / trials;
+  const min = Math.min(...times);
+  const fmt = (n) => n.toFixed(2);
+  console.log(name + ` Mean time: ${fmt(mean)} ms -> ${
+      fmt(mean / reps)} / rep`);
+  console.log(name + `Min time: ${fmt(min)} ms -> ${
+      fmt(min / reps)} / rep`);
+}
 
 (async () => {
   if (!navigator.gpu) {
@@ -44,8 +59,7 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 0;
-  const reps = 0;
+
   const resultCheck = false;
   const size_x = 256;
   const size_y = size_x;
@@ -173,11 +187,6 @@ function createUint32Array(w, h) {
           'matmulBufferOp, matmulPackedBufferOpWPT4, matmulTextureR32FOp results mismatch!!!');
     }
 
-    if (compareResult == -1 && compareResult2 == -1) {
-      console.log('All results match!');
-    } else {
-      console.log('Results mismatch!!!');
-    }
   }
   if (trials == 0) {
     return;
@@ -203,17 +212,7 @@ function createUint32Array(w, h) {
 
     await trial();
 
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log('Sync buffer ' + times2);
-    console.log(
-        `Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
-    console.log(
-        `Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+    logTimes(" buffer  ", times);
   }
 
   {
@@ -238,18 +237,7 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log('Sync packed buffer ' + times2);
-    console.log(`Sync packed buffer Mean time: ${fmt(mean)} ms -> ${
-        fmt(mean / reps)} / rep`);
-    console.log(`Sync packed buffer  Min time: ${fmt(min)} ms -> ${
-        fmt(min / reps)} / rep`);
+    logTimes(" packed buffer  ", times);
   }
 
   {
@@ -275,18 +263,7 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log('Sync packed buffer WPT2x2 ' + times2);
-    console.log(`Sync packed buffer WPT2x2 Mean time: ${fmt(mean)} ms -> ${
-        fmt(mean / reps)} / rep`);
-    console.log(`Sync packed buffer WPT2x2 Min time: ${fmt(min)} ms -> ${
-        fmt(min / reps)} / rep`);
+    logTimes(" packed buffer WPT2x2  ", times);
   }
 
   {
@@ -298,7 +275,6 @@ function createUint32Array(w, h) {
 
     const times = [];
     const trial = async () => {
-      // let result;
       for (let r = 0; r < reps; ++r) {
         matmulBufferVec4Op.executeSync();
       }
@@ -312,18 +288,7 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log('Sync buffer vec4 ' + times2);
-    console.log(`Sync buffer vec4 Mean time: ${fmt(mean)} ms -> ${
-        fmt(mean / reps)} / rep`);
-    console.log(`Sync buffer vec4 Min time: ${fmt(min)} ms -> ${
-        fmt(min / reps)} / rep`);
+    logTimes(" buffer vec4  ", times);
   }
 
   {
@@ -335,7 +300,6 @@ function createUint32Array(w, h) {
 
     const times = [];
     const trial = async () => {
-      // let result;
       for (let r = 0; r < reps; ++r) {
         matmulPackedBufferOp.executeSync();
       }
@@ -349,27 +313,17 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log('Sync packed buffer WPT4x4 ' + times2);
-    console.log(`Sync packed buffer WPT4x4 Mean time: ${fmt(mean)} ms -> ${
-        fmt(mean / reps)} / rep`);
-    console.log(`Sync packed buffer WPT4x4 Min time: ${fmt(min)} ms -> ${
-        fmt(min / reps)} / rep`);
+    logTimes(" packed buffer WPT4x4  ", times);
   }
 
   {
+    const WPT = 4;
+    const format = 'r32float';
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float', 4);
+        device, glslang, firstMatrix, secondMatrix, shape, WPT, format, 4);
 
     const times = [];
     const trial = async () => {
-      // let result;
       for (let r = 0; r < reps; ++r) {
         matmulTextureR32FOp.executeSync();
       }
@@ -383,16 +337,6 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log('Sync r32float  WPT4x4 ' + times2);
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    console.log(`Sync r32float texture WPT4x4 Mean time: ${fmt(mean)} ms -> ${
-        fmt(mean / reps)} / rep`);
-    console.log(`Sync r32float texture WPT4x4 Min time: ${fmt(min)} ms -> ${
-        fmt(min / reps)} / rep`);
+    logTimes(" r32float texture WPT4x4 ", times);
   }
 })();
