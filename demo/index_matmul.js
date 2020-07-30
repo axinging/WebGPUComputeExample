@@ -7,7 +7,7 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 function createFloat32Array(w, h) {
   let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    matrix[i] = i; //Math.random();
+    matrix[i] = i;  // Math.random();
   }
   return matrix;
 }
@@ -26,6 +26,19 @@ function compareThreeFloat32Array(a, b, c, w, h) {
   return -1;
 }
 
+function compareFloat32Array(a, b, w, h, name) {
+  for (let i = 0; i < w * h; i++) {
+    if (i == 0) {
+      console.log('item 0=' + a[i] + ', ' + b[i]);
+    }
+    if (Math.abs(a[i] - b[i]) > 0.01) {
+      console.error(name + ' mismatch at ' + i);
+      return i;
+    }
+  }
+  return -1;
+}
+
 function createUint32Array(w, h) {
   let matrix = new Uint32Array(w * h);
   for (let i = 0; i < w * h; i++) {
@@ -33,9 +46,9 @@ function createUint32Array(w, h) {
   }
   return matrix;
 }
-const trials = 1;
-const reps = 1;
-function logTimes(name,times) {
+const trials = 0;
+const reps = 0;
+function logTimes(name, times) {
   const times2 = times.map(function(time) {
     return Number(time.toFixed(2));
   });
@@ -43,10 +56,9 @@ function logTimes(name,times) {
   const mean = times.reduce((a, b) => a + b, 0) / trials;
   const min = Math.min(...times);
   const fmt = (n) => n.toFixed(2);
-  console.log(name + ` Mean time: ${fmt(mean)} ms -> ${
-      fmt(mean / reps)} / rep`);
-  console.log(name + `Min time: ${fmt(min)} ms -> ${
-      fmt(min / reps)} / rep`);
+  console.log(
+      name + ` Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
+  console.log(name + `Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
 }
 
 (async () => {
@@ -84,9 +96,8 @@ function logTimes(name,times) {
     var b = tf.tensor2d(secondMatrix, secondMatrixSize);
 
     var result = tf.matMul(a, b);
+    console.log(await result.data());
     */
-    // console.log(await result.data());
-    //
 
     const matmulBufferOp = new compute.MatmulBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
@@ -97,60 +108,40 @@ function logTimes(name,times) {
         device, glslang, firstMatrix, secondMatrix, shape);
     matmulPackedBufferOp.executeSync();
     const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
-    console.log("matmulPackedBufferOpData = "+ matmulPackedBufferOpData);
+    console.log('matmulPackedBufferOpData = ' + matmulPackedBufferOpData);
+    compareFloat32Array(
+        matmulBufferOpData, matmulPackedBufferOpData, size_x, size_y,
+        ' matmulPackedBuffer');
 
     const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape, 8);
     matmulBufferVec4Op.executeSync();
     const matmulBufferVec4OpData = await matmulBufferVec4Op.data();
 
-    var compareResult = compareThreeFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpData, matmulBufferVec4OpData,
-        size_x, size_y);
-
-    if (compareResult == -1) {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOp, matmulBufferVec4Op results match!');
-    } else {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOp, matmulBufferVec4Op results mismatch!!!');
-    }
+    compareFloat32Array(
+        matmulBufferOpData, matmulBufferVec4OpData, size_x, size_y,
+        ' matmulBufferVec4');
 
     const matmulTextureRGBA32FV2Op = new compute.MatmulTextureRGBA32FV2Op(
-      device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float',
-      16);
+        device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float',
+        16);
     matmulTextureRGBA32FV2Op.executeSync();
     const matmulTextureRGBA32FV2OpData = await matmulTextureRGBA32FV2Op.data();
-    console.log("matmulTextureRGBA32FV2OpData = "+ matmulTextureRGBA32FV2OpData);
+    console.log(
+        'matmulTextureRGBA32FV2OpData = ' + matmulTextureRGBA32FV2OpData);
 
-    var compareResult = compareThreeFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpData,
-        matmulTextureRGBA32FV2OpData, size_x, size_y);
-
-    if (compareResult == -1) {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FV2OpData results match!');
-    } else {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FV2OpData results mismatch!!!');
-    }
+    compareFloat32Array(
+        matmulBufferOpData, matmulTextureRGBA32FV2OpData, size_x, size_y,
+        ' matmulTextureRGBA32FV2');
 
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float', 4);
     matmulTextureR32FOp.executeSync();
     const matmulTextureR32FOpData = await matmulPackedBufferOp.data();
 
-    compareResult = compareThreeFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpData, matmulTextureR32FOpData,
-        size_x, size_y);
-
-    if (compareResult == -1) {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOp, matmulTextureR32FOp results match!');
-    } else {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOp, matmulTextureR32FOp results mismatch!!!');
-    }
+    compareFloat32Array(
+        matmulBufferOpData, matmulTextureR32FOpData, size_x, size_y,
+        ' matmulTextureR32FOp');
 
     const matmulTextureRGBA32FOp = new compute.MatmulTextureRGBA32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4, 'rgba32float',
@@ -158,35 +149,18 @@ function logTimes(name,times) {
     matmulTextureRGBA32FOp.executeSync();
     const matmulTextureRGBA32FOpData = await matmulTextureRGBA32FOp.data();
 
-    compareResult = compareThreeFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpData,
-        matmulTextureRGBA32FOpData, size_x, size_y);
-
-    if (compareResult == -1) {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FOp results match!');
-    } else {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FOp results mismatch!!!');
-    }
+    compareFloat32Array(
+        matmulBufferOpData, matmulTextureRGBA32FOpData, size_x, size_y,
+        ' matmulTextureRGBA32FOp');
 
     const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4);
     matmulPackedBufferOpWPT4.executeSync();
     const matmulPackedBufferOpWPT4Data = await matmulPackedBufferOp.data();
 
-    const compareResult2 = compareThreeFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpWPT4Data,
-        matmulTextureR32FOpData, size_x, size_y);
-
-    if (compareResult2 == -1) {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOpWPT4, matmulTextureR32FOp results match!');
-    } else {
-      console.log(
-          'matmulBufferOp, matmulPackedBufferOpWPT4, matmulTextureR32FOp results mismatch!!!');
-    }
-
+    compareFloat32Array(
+        matmulBufferOpData, matmulPackedBufferOpWPT4Data, size_x, size_y,
+        ' matmulPackedBufferOpWPT4Data');
   }
   if (trials == 0) {
     return;
@@ -212,7 +186,7 @@ function logTimes(name,times) {
 
     await trial();
 
-    logTimes(" buffer  ", times);
+    logTimes(' buffer  ', times);
   }
 
   {
@@ -237,7 +211,7 @@ function logTimes(name,times) {
       await trial();
       times.push(performance.now() - start);
     }
-    logTimes(" packed buffer  ", times);
+    logTimes(' packed buffer  ', times);
   }
 
   {
@@ -263,7 +237,7 @@ function logTimes(name,times) {
       await trial();
       times.push(performance.now() - start);
     }
-    logTimes(" packed buffer WPT2x2  ", times);
+    logTimes(' packed buffer WPT2x2  ', times);
   }
 
   {
@@ -288,7 +262,7 @@ function logTimes(name,times) {
       await trial();
       times.push(performance.now() - start);
     }
-    logTimes(" buffer vec4  ", times);
+    logTimes(' buffer vec4  ', times);
   }
 
   {
@@ -313,7 +287,7 @@ function logTimes(name,times) {
       await trial();
       times.push(performance.now() - start);
     }
-    logTimes(" packed buffer WPT4x4  ", times);
+    logTimes(' packed buffer WPT4x4  ', times);
   }
 
   {
@@ -337,6 +311,6 @@ function logTimes(name,times) {
       await trial();
       times.push(performance.now() - start);
     }
-    logTimes(" r32float texture WPT4x4 ", times);
+    logTimes(' r32float texture WPT4x4 ', times);
   }
 })();
