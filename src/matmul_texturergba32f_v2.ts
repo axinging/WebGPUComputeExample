@@ -4,7 +4,6 @@ import {TextureOp} from './texture';
 export class MatmulTextureRGBA32FV2Op extends TextureOp {
   workGroupSize: [number, number, number];
   workPerThread: number;
-  workPerThread2: [number, number];
   outputShape: number[];
   constructor(
       device: GPUDevice, glslang: Glslang,
@@ -19,6 +18,7 @@ export class MatmulTextureRGBA32FV2Op extends TextureOp {
     const TS_Y = 16;
     this.workGroupSize = [TS, TS_Y / 4, 1];
     this.outputShape = [shape[0], shape[1], shape[1]];
+    this.workPerThread = workPerThread;
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 

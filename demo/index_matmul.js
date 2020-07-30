@@ -7,7 +7,7 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 function createFloat32Array(w, h) {
   let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    matrix[i] = Math.random();
+    matrix[i] = i; //Math.random();
   }
   return matrix;
 }
@@ -44,8 +44,8 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 50;
-  const reps = 50;
+  const trials = 0;
+  const reps = 0;
   const resultCheck = false;
   const size_x = 256;
   const size_y = size_x;
