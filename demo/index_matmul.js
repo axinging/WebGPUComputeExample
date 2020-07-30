@@ -15,7 +15,7 @@ function createFloat32Array(w, h) {
 function compareThreeFloat32Array(a, b, c, w, h) {
   for (let i = 0; i < w * h; i++) {
     if (i == 0) {
-      console.log("item 0=" + a[i] + ', ' + b[i] + ',' + c[i]);
+      console.log('item 0=' + a[i] + ', ' + b[i] + ',' + c[i]);
     }
     if (Math.abs(a[i] - b[i]) > 0.01 || Math.abs(b[i] - c[i]) > 0.01 ||
         Math.abs(a[i] - c[i]) > 0.01) {
@@ -83,6 +83,7 @@ function createUint32Array(w, h) {
         device, glslang, firstMatrix, secondMatrix, shape);
     matmulPackedBufferOp.executeSync();
     const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
+    console.log("matmulPackedBufferOpData = "+ matmulPackedBufferOpData);
 
     const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape, 8);
@@ -99,6 +100,25 @@ function createUint32Array(w, h) {
     } else {
       console.log(
           'matmulBufferOp, matmulPackedBufferOp, matmulBufferVec4Op results mismatch!!!');
+    }
+
+    const matmulTextureRGBA32FV2Op = new compute.MatmulTextureRGBA32FV2Op(
+      device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float',
+      16);
+    matmulTextureRGBA32FV2Op.executeSync();
+    const matmulTextureRGBA32FV2OpData = await matmulTextureRGBA32FV2Op.data();
+    console.log("matmulTextureRGBA32FV2OpData = "+ matmulTextureRGBA32FV2OpData);
+
+    var compareResult = compareThreeFloat32Array(
+        matmulBufferOpData, matmulPackedBufferOpData,
+        matmulTextureRGBA32FV2OpData, size_x, size_y);
+
+    if (compareResult == -1) {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FV2OpData results match!');
+    } else {
+      console.log(
+          'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FV2OpData results mismatch!!!');
     }
 
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
@@ -136,7 +156,6 @@ function createUint32Array(w, h) {
           'matmulBufferOp, matmulPackedBufferOp, matmulTextureRGBA32FOp results mismatch!!!');
     }
 
-
     const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4);
     matmulPackedBufferOpWPT4.executeSync();
@@ -160,7 +179,9 @@ function createUint32Array(w, h) {
       console.log('Results mismatch!!!');
     }
   }
-
+  if (trials == 0) {
+    return;
+  }
   // Performance test
   {
     const matmulBufferOp = new compute.MatmulBufferOp(

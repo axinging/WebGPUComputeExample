@@ -45,7 +45,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
 
   private getShader(shape: Uint32Array) {
     // Compute shader code (GLSL)
-    // https://github.com/tensorflow/tfjs/blob/master/tfjs-backend-webgpu/src/kernels/matmul_packed_webgpu.ts
+    // https://github.com/qjia7/tfjs-core/blob/compileAndRunCS/src/kernels/webgl/mulmat_packed_gpu_cs_v4.ts
     const transposeA = false;
     const transposeB = false;
     const sharedDim =

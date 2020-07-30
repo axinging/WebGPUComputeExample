@@ -15,4 +15,5 @@ export {MatmulBufferVec4Op} from './matmul_buffervec4';
 export {MatmulPackedBufferOp} from './matmul_packedbuffer';
 export {MatmulTextureR32FOp} from './matmul_texturer32f';
 export {MatmulTextureRGBA32FOp} from './matmul_texturergba32f';
+export {MatmulTextureRGBA32FV2Op} from './matmul_texturergba32f_v2';
 export {startLog, endLog} from './profiler';
