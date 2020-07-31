@@ -99,7 +99,7 @@ function createUint32Array(w, h) {
 
   {
     const addTextureOp = new compute.AddTextureOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float', 16);
+        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
 
     const times = [];
     const trial = async () => {
@@ -144,7 +144,7 @@ function createUint32Array(w, h) {
 
   {
     const addTextureOp = new compute.AddTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'r32float', 4);
+        device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
 
     const times = [];
     const trial = async () => {

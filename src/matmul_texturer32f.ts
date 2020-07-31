@@ -8,11 +8,11 @@ export class MatmulTextureR32FOp extends TextureOp {
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      workPerThread: number, format: GPUTextureFormat, kBytesPerTexel: number) {
+      workPerThread: number, format: GPUTextureFormat) {
     // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
     /// super(device, glslang, firstMatrix, secondMatrix,
     /// shape,computeShaderCode, format, kBytesPerTexel);
-    super(device, glslang, format, kBytesPerTexel);
+    super(device, glslang, format);
     const TS = 16;
     this.workGroupSize = [TS, TS, 1];
     this.workPerThread = workPerThread;
@@ -34,7 +34,7 @@ export class MatmulTextureR32FOp extends TextureOp {
 
   private getShader() {
     // Compute shader code (GLSL)
-    // https://github.com/qjia7/tfjs-core/blob/compileAndRunCS/src/kernels/webgl/mulmat_packed_gpu_cs_v4.ts
+    // https://github.com/tensorflow/tfjs/blob/master/tfjs-backend-webgpu/src/kernels/matmul_packed_webgpu.ts
     const computeShaderCode = `#version 450
 
     layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${

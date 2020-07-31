@@ -149,3 +149,15 @@ export function getBytesPerRow(width: number, kBytesPerTexel = 16) {
       ((value + (alignment - 1)) & ((~(alignment - 1)) >>> 0)) >>> 0;
   return bytesPerRow;
 }
+
+export function getBytesPerTexel(format: GPUTextureFormat): number {
+  // kBytesPerTexel = 4;
+  if (format == 'rgba32float')
+    return 16;
+  else if (format == 'r32float')
+    return 4;
+  else {
+    console.error('Unsupported format ' + format);
+    return 4;
+  }
+}

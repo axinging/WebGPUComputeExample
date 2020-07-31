@@ -8,11 +8,11 @@ export class MatmulTextureOp extends TextureOp {
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      format: GPUTextureFormat, kBytesPerTexel: number) {
+      format: GPUTextureFormat) {
     // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
     /// super(device, glslang, firstMatrix, secondMatrix,
     /// shape,computeShaderCode, format, kBytesPerTexel);
-    super(device, glslang, format, kBytesPerTexel);
+    super(device, glslang, format);
     const TS = 32;
     this.workPerThread = 4;
     this.workGroupSize = [TS, TS, 1];

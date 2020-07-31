@@ -132,7 +132,7 @@ function logTimes(name, times) {
         ' matmulPackedBufferOpWPT4Data');
 
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float', 4);
+        device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float');
     matmulTextureR32FOp.executeSync();
     const matmulTextureR32FOpData = await matmulPackedBufferOp.data();
 
@@ -141,8 +141,7 @@ function logTimes(name, times) {
         ' matmulTextureR32FOp');
     /*
     const matmulTextureRGBA32FOp = new compute.MatmulTextureRGBA32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4, 'rgba32float',
-        16);
+        device, glslang, firstMatrix, secondMatrix, shape, 4, 'rgba32float');
     matmulTextureRGBA32FOp.executeSync();
     const matmulTextureRGBA32FOpData = await matmulTextureRGBA32FOp.data();
 
@@ -152,8 +151,7 @@ function logTimes(name, times) {
     */
 
     const matmulTextureRGBA32FV2Op = new compute.MatmulTextureRGBA32FV2Op(
-        device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float',
-        16);
+        device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float');
     matmulTextureRGBA32FV2Op.executeSync();
     const matmulTextureRGBA32FV2OpData = await matmulTextureRGBA32FV2Op.data();
     console.log(
@@ -297,7 +295,7 @@ function logTimes(name, times) {
     const WPT = 4;
     const format = 'r32float';
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, WPT, format, 4);
+        device, glslang, firstMatrix, secondMatrix, shape, WPT, format);
 
     const times = [];
     const trial = async () => {

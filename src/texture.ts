@@ -16,15 +16,13 @@ export class TextureOp {
   bindGroup: any;
   format: GPUTextureFormat;
   kBytesPerTexel: number;
-  constructor(
-      device: GPUDevice, glslang: Glslang, format: GPUTextureFormat,
-      kBytesPerTexel: number) {
+  constructor(device: GPUDevice, glslang: Glslang, format: GPUTextureFormat) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
     this.format = format;
-    this.kBytesPerTexel = kBytesPerTexel;
+    this.kBytesPerTexel = tex_util.getBytesPerTexel(format);
   }
 
   createCopyForMapRead(src: any, size: any) {
