@@ -37,7 +37,9 @@ export class MatmulTextureRGBA32FV2Op extends TextureOp {
 
   private getShader() {
     // Compute shader code (GLSL)
+    // https://github.com/tensorflow/tfjs/pull/2048
     // https://github.com/qjia7/tfjs/commit/10ab492faabb031dc56ef2e6d8f789e719edc94e
+    // https://www.ibiblio.org/e-notes/webgl/gpu/mul/slm.htm
     const computeShaderCode = `#version 450
 
     layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
