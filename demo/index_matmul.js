@@ -122,17 +122,14 @@ function logTimes(name, times) {
         matmulBufferOpData, matmulBufferVec4OpData, size_x, size_y,
         ' matmulBufferVec4');
 
-    const matmulTextureRGBA32FV2Op = new compute.MatmulTextureRGBA32FV2Op(
-        device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float',
-        16);
-    matmulTextureRGBA32FV2Op.executeSync();
-    const matmulTextureRGBA32FV2OpData = await matmulTextureRGBA32FV2Op.data();
-    console.log(
-        'matmulTextureRGBA32FV2OpData = ' + matmulTextureRGBA32FV2OpData);
+    const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 4);
+    matmulPackedBufferOpWPT4.executeSync();
+    const matmulPackedBufferOpWPT4Data = await matmulPackedBufferOp.data();
 
     compareFloat32Array(
-        matmulBufferOpData, matmulTextureRGBA32FV2OpData, size_x, size_y,
-        ' matmulTextureRGBA32FV2');
+        matmulBufferOpData, matmulPackedBufferOpWPT4Data, size_x, size_y,
+        ' matmulPackedBufferOpWPT4Data');
 
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float', 4);
@@ -142,7 +139,7 @@ function logTimes(name, times) {
     compareFloat32Array(
         matmulBufferOpData, matmulTextureR32FOpData, size_x, size_y,
         ' matmulTextureR32FOp');
-
+    /*
     const matmulTextureRGBA32FOp = new compute.MatmulTextureRGBA32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4, 'rgba32float',
         16);
@@ -152,15 +149,21 @@ function logTimes(name, times) {
     compareFloat32Array(
         matmulBufferOpData, matmulTextureRGBA32FOpData, size_x, size_y,
         ' matmulTextureRGBA32FOp');
+    */
 
-    const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4);
-    matmulPackedBufferOpWPT4.executeSync();
-    const matmulPackedBufferOpWPT4Data = await matmulPackedBufferOp.data();
-
+    const matmulTextureRGBA32FV2Op = new compute.MatmulTextureRGBA32FV2Op(
+        device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float',
+        16);
+    matmulTextureRGBA32FV2Op.executeSync();
+    const matmulTextureRGBA32FV2OpData = await matmulTextureRGBA32FV2Op.data();
+    console.log(
+        'matmulTextureRGBA32FV2OpData = ' + matmulTextureRGBA32FV2OpData);
+    // TODO: at first, I am trying to use matmulBufferOpData as reference.
+    // Howerver, the first item of matmulBufferOpData turns into 8 after several
+    // test. Possible reason is due to memory pressure so this data is gced.
     compareFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpWPT4Data, size_x, size_y,
-        ' matmulPackedBufferOpWPT4Data');
+        matmulTextureR32FOpData, matmulTextureRGBA32FV2OpData, size_x, size_y,
+        ' matmulTextureRGBA32FV2');
   }
   if (trials == 0) {
     return;
