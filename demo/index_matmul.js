@@ -46,8 +46,8 @@ function createUint32Array(w, h) {
   }
   return matrix;
 }
-const trials = 0;
-const reps = 0;
+const trials = 50;
+const reps = 50;
 function logTimes(name, times) {
   const times2 = times.map(function(time) {
     return Number(time.toFixed(2));
@@ -72,8 +72,8 @@ function logTimes(name, times) {
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
 
-  const resultCheck = false;
-  const size_x = 256;
+  const resultCheck = true;
+  const size_x = 2048;
   const size_y = size_x;
   console.log('Input size: ' + size_x + ',' + size_y);
 
@@ -87,7 +87,7 @@ function logTimes(name, times) {
     secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
   ]);
   // Result check
-  {
+  if (resultCheck) {
     //
     // TFJS code:
     /*
@@ -108,10 +108,9 @@ function logTimes(name, times) {
         device, glslang, firstMatrix, secondMatrix, shape);
     matmulPackedBufferOp.executeSync();
     const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
-    console.log('matmulPackedBufferOpData = ' + matmulPackedBufferOpData);
     compareFloat32Array(
         matmulBufferOpData, matmulPackedBufferOpData, size_x, size_y,
-        ' matmulPackedBuffer');
+        ' matmulPackedBuffer ');
 
     const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape, 8);
@@ -120,7 +119,7 @@ function logTimes(name, times) {
 
     compareFloat32Array(
         matmulBufferOpData, matmulBufferVec4OpData, size_x, size_y,
-        ' matmulBufferVec4');
+        ' matmulBufferVec4 ');
 
     const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4);
@@ -129,7 +128,7 @@ function logTimes(name, times) {
 
     compareFloat32Array(
         matmulBufferOpData, matmulPackedBufferOpWPT4Data, size_x, size_y,
-        ' matmulPackedBufferOpWPT4Data');
+        ' matmulPackedBufferOpWPT4Data ');
 
     const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float');
@@ -138,31 +137,20 @@ function logTimes(name, times) {
 
     compareFloat32Array(
         matmulBufferOpData, matmulTextureR32FOpData, size_x, size_y,
-        ' matmulTextureR32FOp');
-    /*
-    const matmulTextureRGBA32FOp = new compute.MatmulTextureRGBA32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4, 'rgba32float');
-    matmulTextureRGBA32FOp.executeSync();
-    const matmulTextureRGBA32FOpData = await matmulTextureRGBA32FOp.data();
-
-    compareFloat32Array(
-        matmulBufferOpData, matmulTextureRGBA32FOpData, size_x, size_y,
-        ' matmulTextureRGBA32FOp');
-    */
+        ' matmulTextureR32FOp ');
 
     const matmulTextureRGBA32FV2Op = new compute.MatmulTextureRGBA32FV2Op(
         device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float');
     matmulTextureRGBA32FV2Op.executeSync();
     const matmulTextureRGBA32FV2OpData = await matmulTextureRGBA32FV2Op.data();
-    console.log(
-        'matmulTextureRGBA32FV2OpData = ' + matmulTextureRGBA32FV2OpData);
     // TODO: at first, I am trying to use matmulBufferOpData as reference.
     // Howerver, the first item of matmulBufferOpData turns into 8 after several
     // test. Possible reason is due to memory pressure so this data is gced.
     compareFloat32Array(
         matmulTextureR32FOpData, matmulTextureRGBA32FV2OpData, size_x, size_y,
-        ' matmulTextureRGBA32FV2');
+        ' matmulTextureRGBA32FV2 ');
   }
+
   if (trials == 0) {
     return;
   }
@@ -245,31 +233,6 @@ function logTimes(name, times) {
     // const oldLog = console.log;
     // let times = new Array();
     // compute.startLog(times, oldLog);
-    const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
-        device, glslang, firstMatrix, secondMatrix, shape);
-
-    const times = [];
-    const trial = async () => {
-      for (let r = 0; r < reps; ++r) {
-        matmulBufferVec4Op.executeSync();
-      }
-      await matmulBufferVec4Op.data();
-    };
-
-    await trial();
-
-    for (let t = 0; t < trials; ++t) {
-      const start = performance.now();
-      await trial();
-      times.push(performance.now() - start);
-    }
-    logTimes(' buffer vec4  ', times);
-  }
-
-  {
-    // const oldLog = console.log;
-    // let times = new Array();
-    // compute.startLog(times, oldLog);
     const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4);
 
@@ -314,4 +277,55 @@ function logTimes(name, times) {
     }
     logTimes(' r32float texture WPT4x4 ', times);
   }
+
+  {
+    // const oldLog = console.log;
+    // let times = new Array();
+    // compute.startLog(times, oldLog);
+    const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
+        device, glslang, firstMatrix, secondMatrix, shape);
+
+    const times = [];
+    const trial = async () => {
+      for (let r = 0; r < reps; ++r) {
+        matmulBufferVec4Op.executeSync();
+      }
+      await matmulBufferVec4Op.data();
+    };
+
+    await trial();
+
+    for (let t = 0; t < trials; ++t) {
+      const start = performance.now();
+      await trial();
+      times.push(performance.now() - start);
+    }
+    logTimes(' buffer vec4 WPT8x8 ', times);
+  }
+
+  {
+    const WPT = 8;
+    const format = 'rgba32float';
+    const matmulTextureR32FOp = new compute.MatmulTextureRGBA32FV2Op(
+        device, glslang, firstMatrix, secondMatrix, shape, WPT, format);
+
+    const times = [];
+    const trial = async () => {
+      for (let r = 0; r < reps; ++r) {
+        matmulTextureR32FOp.executeSync();
+      }
+      await matmulTextureR32FOp.data();
+    };
+
+    await trial();
+
+    for (let t = 0; t < trials; ++t) {
+      const start = performance.now();
+      await trial();
+      times.push(performance.now() - start);
+    }
+    logTimes(' rgba32float texture WPT8x8 ', times);
+  }
+
+
 })();
