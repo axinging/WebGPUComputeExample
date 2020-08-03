@@ -38,7 +38,7 @@ function createUint32Array(w, h) {
   const glslang = await glslangInit();
   const trials = 50;
   const reps = 50;
-  const resultCheck = false;
+  const resultCheck = true;
   const size_x = 4096;
   const size_y = 256;
   console.log("Input size: "+size_x+","+size_y);

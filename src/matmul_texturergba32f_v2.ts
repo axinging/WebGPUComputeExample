@@ -82,13 +82,13 @@ export class MatmulTextureRGBA32FV2Op extends TextureOp {
     // about boundary conditions. May slightly improve performance.
 
     vec4 mm_readA(int row, int col) {
-        return imageLoad(A, ivec2(row, col));
+        return imageLoad(A, ivec2(col, row));
     }
     vec4 mm_readB(int row, int col) {
-        return imageLoad(B, ivec2(row, col));
+        return imageLoad(B, ivec2(col, row));
     }
     void mm_write(int row, int col, vec4 value) {
-        imageStore(result, ivec2(row,col), value);
+        imageStore(result, ivec2(col, row), value);
     }
     
     void main() {
