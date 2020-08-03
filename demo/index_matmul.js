@@ -168,6 +168,7 @@ function logTimes(name, times) {
         matmulBufferOp.executeSync();
       }
       await matmulBufferOp.data();
+      matmulBufferOp.dispose();
     };
 
     for (let t = 0; t < trials; ++t) {

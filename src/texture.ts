@@ -16,6 +16,8 @@ export class TextureOp {
   bindGroup: any;
   format: GPUTextureFormat;
   kBytesPerTexel: number;
+  bufferID: number;
+  freeBuffers: Map<number, GPUBuffer[]> = new Map();
   constructor(device: GPUDevice, glslang: Glslang, format: GPUTextureFormat) {
     this.device = device;
     this.queue = device.defaultQueue;
@@ -23,6 +25,7 @@ export class TextureOp {
     this.commandQueue = [];
     this.format = format;
     this.kBytesPerTexel = tex_util.getBytesPerTexel(format);
+    this.bufferID = 0;
   }
 
   createCopyForMapRead(src: any, size: any) {
@@ -297,6 +300,41 @@ export class TextureOp {
   }
 
 
+  getBufferKey() {
+    return this.bufferID++;
+  }
+
+  releaseBuffer(buffer: GPUBuffer) {
+    if (this.freeBuffers == null) {
+      return;
+    }
+
+    const key = this.getBufferKey();
+    if (!this.freeBuffers.has(key)) {
+      this.freeBuffers.set(key, []);
+    }
+
+    this.freeBuffers.get(key).push(buffer);
+  }
+  // Call this after execute.
+  disposeReadBackBuffer() {
+    if (this.freeBuffers == null) {
+      return;
+    }
+
+    this.freeBuffers.forEach((buffers, key) => {
+      buffers.forEach(buff => {
+        // console.log(' freeBuffers destroy key = ' + key);
+        buff.unmap();
+        buff.destroy();
+      });
+    });
+  }
+
+  dispose() {
+    this.disposeReadBackBuffer();
+  }
+
   async getBufferData() {
     // Get a GPU buffer for reading in an unmapped state.
     const gpuReadBuffer = this.device.createBuffer({
@@ -332,6 +370,7 @@ export class TextureOp {
     */
     // Read buffer.
     const arrayBuffer = await gpuReadBuffer.mapReadAsync();
+    this.releaseBuffer(gpuReadBuffer);
     return arrayBuffer;
   }
 }

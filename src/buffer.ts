@@ -10,15 +10,20 @@ export class BufferOp {
   times: [];
   resultMatrixBuffer: GPUBuffer;
   resultMatrixBufferSize: number;
+  // TODO; This workaround memory usage. But not work.
+  // gpuReadBuffer: GPUBuffer;
   shape: Uint32Array;
   computePipeline: any;
   bindGroup: any;
+  bufferID: number;
+  freeBuffers: Map<number, GPUBuffer[]> = new Map();
   // enableTimeStamp: boolean;
   constructor(device: GPUDevice, glslang: Glslang) {
     this.device = device;
     this.queue = device.defaultQueue;
     this.glslang = glslang;
     this.commandQueue = [];
+    this.bufferID = 0;
     // this.enableTimeStamp = false;
   }
 
@@ -314,12 +319,48 @@ export class BufferOp {
     console.log((this.now() - start).toFixed(2));
   }
 
+  getBufferKey() {
+    return this.bufferID++;
+  }
+
+  releaseBuffer(buffer: GPUBuffer) {
+    if (this.freeBuffers == null) {
+      return;
+    }
+
+    const key = this.getBufferKey();
+    if (!this.freeBuffers.has(key)) {
+      this.freeBuffers.set(key, []);
+    }
+
+    this.freeBuffers.get(key).push(buffer);
+  }
+  // Call this after execute.
+  disposeReadBackBuffer() {
+    if (this.freeBuffers == null) {
+      return;
+    }
+
+    this.freeBuffers.forEach((buffers, key) => {
+      buffers.forEach(buff => {
+        // console.log(' freeBuffers destroy key = ' + key);
+        buff.unmap();
+        buff.destroy();
+      });
+    });
+  }
+
+  dispose() {
+    this.disposeReadBackBuffer();
+  }
+
   async getBufferData() {
-    // Get a GPU buffer for reading in an unmapped state.
+    // TODO: this is only used in readback.
     const gpuReadBuffer = this.device.createBuffer({
       size: this.resultMatrixBufferSize,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
+
     // Commands submission
     const commandEncoder = this.device.createCommandEncoder();
     // Encode commands for copying buffer to buffer.
@@ -334,6 +375,8 @@ export class BufferOp {
     this.device.defaultQueue.submit([gpuCommands]);
     // Read buffer.
     const arrayBuffer = await gpuReadBuffer.mapReadAsync();
+    this.releaseBuffer(gpuReadBuffer);
+    // this.gpuReadBuffer.unmap();
     return arrayBuffer;
   }
 }
