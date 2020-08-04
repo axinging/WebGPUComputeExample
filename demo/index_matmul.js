@@ -4,6 +4,7 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 // import * as tfwebgpu from '@tensorflow/tfjs-backend-webgpu';
 // import * as tf from '@tensorflow/tfjs-core';
 
+var errorStatus = false;
 function createFloat32Array(w, h) {
   let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
@@ -32,6 +33,7 @@ function compareFloat32Array(a, b, w, h, name) {
       console.log('item 0=' + a[i] + ', ' + b[i]);
     }
     if (Math.abs(a[i] - b[i]) > 0.01) {
+      errorStatus = true;
       console.error(name + ' mismatch at ' + i+", "+a[i]+","+b[i]);
       return i;
     }
@@ -152,6 +154,14 @@ function logTimes(name, times) {
     compareFloat32Array(
         matmulTextureR32FOpData, matmulTextureRGBA32FV2OpData, size_x, size_y,
         ' matmulTextureRGBA32FV2 ');
+  }
+
+  if (errorStatus) {
+    console.error("Error and exit!!!");
+    return;
+  }
+  else {
+    console.log("All test pass!!!");
   }
 
   if (trials == 0) {
