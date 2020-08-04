@@ -51,7 +51,8 @@ const size_y = size_x;
   ]);
   // Result check
   if (resultCheck) {
-    await checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_x, size_y, shape);
+    await checkCorrectness(
+        device, glslang, firstMatrix, secondMatrix, size_x, size_y, shape);
   }
 
   if (trials == 0) {
@@ -114,7 +115,8 @@ const size_y = size_x;
 })();
 
 
-async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_x, size_y,shape) {
+async function checkCorrectness(
+    device, glslang, firstMatrix, secondMatrix, size_x, size_y, shape) {
   //
   // TFJS code:
   /*
@@ -138,6 +140,7 @@ async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_
   compareFloat32Array(
       matmulBufferOpData, matmulPackedBufferOpData, size_x, size_y,
       ' matmulPackedBuffer ');
+  matmulPackedBufferOp.dispose();
 
   const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
       device, glslang, firstMatrix, secondMatrix, shape, 8);
@@ -147,6 +150,7 @@ async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_
   compareFloat32Array(
       matmulBufferOpData, matmulBufferVec4OpData, size_x, size_y,
       ' matmulBufferVec4 ');
+  matmulBufferVec4Op.dispose();
 
   const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
       device, glslang, firstMatrix, secondMatrix, shape, 4);
@@ -156,6 +160,7 @@ async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_
   compareFloat32Array(
       matmulBufferOpData, matmulPackedBufferOpWPT4Data, size_x, size_y,
       ' matmulPackedBufferOpWPT4Data ');
+  matmulPackedBufferOpWPT4.dispose();
 
   const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
       device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float');
@@ -165,6 +170,7 @@ async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_
   compareFloat32Array(
       matmulBufferOpData, matmulTextureR32FOpData, size_x, size_y,
       ' matmulTextureR32FOp ');
+  matmulTextureR32FOp.dispose();
 
   const matmulTextureRGBA32FOp = new compute.MatmulTextureRGBA32FOp(
       device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float');
@@ -174,8 +180,12 @@ async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_
   // Howerver, the first item of matmulBufferOpData turns into 8 after several
   // test. Possible reason is due to memory pressure so this data is gced.
   compareFloat32Array(
-      matmulTextureR32FOpData, matmulTextureRGBA32FOpData, size_x, size_y,
+      matmulBufferOpData, matmulTextureRGBA32FOpData, size_x, size_y,
       ' matmulTextureRGBA32F ');
+  matmulTextureRGBA32FOp.dispose();
+
+  matmulBufferOp.dispose();
+
   if (errorStatus) {
     console.error('Error and exit!!!');
     return;

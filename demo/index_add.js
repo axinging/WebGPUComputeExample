@@ -148,7 +148,18 @@ async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_
     addBufferOp.executeSync();
     compareAddFloat32Array(
         await addBufferOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+    addBufferOp.dispose();
   }
+
+  {
+    const addTextureOp = new compute.AddTextureR32FOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
+    addTextureOp.executeSync();
+    compareAddFloat32Array(
+        await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+    addTextureOp.dispose();
+  }
+
   {
     const addTextureOp = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
@@ -156,14 +167,9 @@ async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_
 
     compareAddFloat32Array(
         await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+    addTextureOp.dispose();
   }
-  {
-    const addTextureOp = new compute.AddTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
-    addTextureOp.executeSync();
-    compareAddFloat32Array(
-        await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
-  }
+
   if (errorStatus) {
     console.error('Error and exit!!!');
     return;
