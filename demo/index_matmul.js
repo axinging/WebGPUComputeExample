@@ -195,6 +195,7 @@ function logTimes(name, times) {
         matmulPackedBufferOp.executeSync();
       }
       await matmulPackedBufferOp.data();
+      matmulPackedBufferOp.dispose();
     };
 
     await trial();
@@ -221,6 +222,7 @@ function logTimes(name, times) {
         matmulPackedBufferOp.executeSync();
       }
       await matmulPackedBufferOp.data();
+      matmulPackedBufferOp.dispose();
     };
 
     await trial();
@@ -246,6 +248,7 @@ function logTimes(name, times) {
         matmulPackedBufferOp.executeSync();
       }
       await matmulPackedBufferOp.data();
+      matmulPackedBufferOp.dispose();
     };
 
     await trial();
@@ -270,6 +273,7 @@ function logTimes(name, times) {
         matmulTextureR32FOp.executeSync();
       }
       await matmulTextureR32FOp.data();
+      matmulTextureR32FOp.dispose();
     };
 
     await trial();
@@ -295,6 +299,7 @@ function logTimes(name, times) {
         matmulBufferVec4Op.executeSync();
       }
       await matmulBufferVec4Op.data();
+      matmulBufferVec4Op.dispose();
     };
 
     await trial();
@@ -319,6 +324,7 @@ function logTimes(name, times) {
         matmulTextureR32FOp.executeSync();
       }
       await matmulTextureR32FOp.data();
+      matmulTextureR32FOp.dispose();
     };
 
     await trial();
