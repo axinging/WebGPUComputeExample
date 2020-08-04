@@ -44,8 +44,8 @@ export class AddTextureOp extends TextureOp {
           layout(set = 0, binding = 3, rgba32f) uniform readonly image2D
     filterValues;
 
-          layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
-        this.workGroupSize[1] / 4}, local_size_z = 1) in;
+          layout(local_size_x = ${this.workGroupSize[0] / 4}, local_size_y = ${
+        this.workGroupSize[1]}, local_size_z = 1) in;
 
           void main() {
             uint row = (gl_GlobalInvocationID.x);

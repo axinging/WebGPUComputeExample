@@ -125,20 +125,10 @@ function createUint32Array(w, h) {
 
     const times = [];
     const trial = async () => {
-      // let result;
       for (let r = 0; r < reps; ++r) {
         addTextureOp.executeSync();
       }
       await addTextureOp.data();
-      if (resultCheck) {
-        const failItem = compareAddFloat32Array(
-            await addTextureOp.data(), firstMatrix, secondMatrix, size_x,
-            size_y);
-        if (failItem != -1) {
-          console.log('AddTextureOp rgba32float Test fail at item ' + failItem);
-          return;
-        }
-      }
       addTextureOp.dispose();
     };
 
