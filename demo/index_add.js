@@ -94,6 +94,16 @@ function createUint32Array(w, h) {
           await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
     }
   }
+
+
+  if (errorStatus) {
+    console.error("Error and exit!!!");
+    return;
+  }
+  else {
+    console.log("All test pass!!!");
+  }
+
   {
     const addBufferOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
@@ -119,41 +129,6 @@ function createUint32Array(w, h) {
     }
 
     logTimes(' buffer  ', times);
-  }
-
-  if (errorStatus) {
-    console.error("Error and exit!!!");
-    return;
-  }
-  else {
-    console.log("All test pass!!!");
-  }
-
-  {
-    const addTextureOp = new compute.AddTextureOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
-
-    const times = [];
-    const trial = async () => {
-      for (let r = 0; r < reps; ++r) {
-        addTextureOp.executeSync();
-      }
-      await addTextureOp.data();
-      addTextureOp.dispose();
-    };
-
-    // Warm-up. Specifically, this pre-allocates enough memory for an entire
-    // trial, ensuring that no allocations happen when timing a trial (if the
-    // backend reuses allocations).
-    await trial();
-
-    for (let t = 0; t < trials; ++t) {
-      const start = performance.now();
-      await trial();
-      times.push(performance.now() - start);
-    }
-
-    logTimes(' texture rgba32float  ', times);
   }
 
   {
@@ -191,6 +166,34 @@ function createUint32Array(w, h) {
     }
     logTimes(' texture r32float  ', times);
   }
+
+  {
+    const addTextureOp = new compute.AddTextureOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
+
+    const times = [];
+    const trial = async () => {
+      for (let r = 0; r < reps; ++r) {
+        addTextureOp.executeSync();
+      }
+      await addTextureOp.data();
+      addTextureOp.dispose();
+    };
+
+    // Warm-up. Specifically, this pre-allocates enough memory for an entire
+    // trial, ensuring that no allocations happen when timing a trial (if the
+    // backend reuses allocations).
+    await trial();
+
+    for (let t = 0; t < trials; ++t) {
+      const start = performance.now();
+      await trial();
+      times.push(performance.now() - start);
+    }
+
+    logTimes(' texture rgba32float  ', times);
+  }
+
   /*
   {
     const oldLog = console.log;

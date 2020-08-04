@@ -1,4 +1,4 @@
 yarn & yarn build-npm && ^
 cd demo && ^
 yarn & yarn buildadd && ^
-yarn watchadd -p 4096
+yarn watchadd -p 2222
