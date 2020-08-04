@@ -23,7 +23,7 @@ matmul_texturergba32f: Pass
 
 
 ## Other usage
-Brach TypeScriptStarter demos how to write a TypeScript application from scratch.
+Branch TypeScriptStarter demos how to write a TypeScript application from scratch.
 
 ## Error fix
 

@@ -45,35 +45,7 @@ const size_y = 256;
   ]);
 
   if (resultCheck) {
-    {
-      const addBufferOp = new compute.AddBufferOp(
-          device, glslang, firstMatrix, secondMatrix, shape);
-      addBufferOp.executeSync();
-      compareAddFloat32Array(
-          await addBufferOp.data(), firstMatrix, secondMatrix, size_x, size_y);
-    }
-    {
-      const addTextureOp = new compute.AddTextureOp(
-          device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
-      addTextureOp.executeSync();
-
-      compareAddFloat32Array(
-          await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
-    }
-    {
-      const addTextureOp = new compute.AddTextureR32FOp(
-          device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
-      addTextureOp.executeSync();
-      compareAddFloat32Array(
-          await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
-    }
-  }
-
-  if (errorStatus) {
-    console.error('Error and exit!!!');
-    return;
-  } else {
-    console.log('All test pass!!!');
+    await checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_x, size_y, shape);
   }
 
   {
@@ -167,3 +139,35 @@ const size_y = 256;
   }
   */
 })();
+
+
+async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_x, size_y, shape) {
+  {
+    const addBufferOp = new compute.AddBufferOp(
+        device, glslang, firstMatrix, secondMatrix, shape);
+    addBufferOp.executeSync();
+    compareAddFloat32Array(
+        await addBufferOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+  }
+  {
+    const addTextureOp = new compute.AddTextureOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
+    addTextureOp.executeSync();
+
+    compareAddFloat32Array(
+        await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+  }
+  {
+    const addTextureOp = new compute.AddTextureR32FOp(
+        device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
+    addTextureOp.executeSync();
+    compareAddFloat32Array(
+        await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+  }
+  if (errorStatus) {
+    console.error('Error and exit!!!');
+    return;
+  } else {
+    console.log('All test pass!!!');
+  }
+}

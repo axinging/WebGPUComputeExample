@@ -51,74 +51,7 @@ const size_y = size_x;
   ]);
   // Result check
   if (resultCheck) {
-    //
-    // TFJS code:
-    /*
-    await tf.ready();
-    var a = tf.tensor2d(firstMatrix, firstMatrixSize);
-    var b = tf.tensor2d(secondMatrix, secondMatrixSize);
-
-    var result = tf.matMul(a, b);
-    console.log(await result.data());
-    */
-
-    const matmulBufferOp = new compute.MatmulBufferOp(
-        device, glslang, firstMatrix, secondMatrix, shape);
-    matmulBufferOp.executeSync();
-    const matmulBufferOpData = await matmulBufferOp.data();
-
-    const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
-        device, glslang, firstMatrix, secondMatrix, shape);
-    matmulPackedBufferOp.executeSync();
-    const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
-    compareFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpData, size_x, size_y,
-        ' matmulPackedBuffer ');
-
-    const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
-        device, glslang, firstMatrix, secondMatrix, shape, 8);
-    matmulBufferVec4Op.executeSync();
-    const matmulBufferVec4OpData = await matmulBufferVec4Op.data();
-
-    compareFloat32Array(
-        matmulBufferOpData, matmulBufferVec4OpData, size_x, size_y,
-        ' matmulBufferVec4 ');
-
-    const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4);
-    matmulPackedBufferOpWPT4.executeSync();
-    const matmulPackedBufferOpWPT4Data = await matmulPackedBufferOp.data();
-
-    compareFloat32Array(
-        matmulBufferOpData, matmulPackedBufferOpWPT4Data, size_x, size_y,
-        ' matmulPackedBufferOpWPT4Data ');
-
-    const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float');
-    matmulTextureR32FOp.executeSync();
-    const matmulTextureR32FOpData = await matmulPackedBufferOp.data();
-
-    compareFloat32Array(
-        matmulBufferOpData, matmulTextureR32FOpData, size_x, size_y,
-        ' matmulTextureR32FOp ');
-
-    const matmulTextureRGBA32FOp = new compute.MatmulTextureRGBA32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float');
-    matmulTextureRGBA32FOp.executeSync();
-    const matmulTextureRGBA32FOpData = await matmulTextureRGBA32FOp.data();
-    // TODO: at first, I am trying to use matmulBufferOpData as reference.
-    // Howerver, the first item of matmulBufferOpData turns into 8 after several
-    // test. Possible reason is due to memory pressure so this data is gced.
-    compareFloat32Array(
-        matmulTextureR32FOpData, matmulTextureRGBA32FOpData, size_x, size_y,
-        ' matmulTextureRGBA32F ');
-  }
-
-  if (errorStatus) {
-    console.error('Error and exit!!!');
-    return;
-  } else {
-    console.log('All test pass!!!');
+    await checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_x, size_y, shape);
   }
 
   if (trials == 0) {
@@ -179,3 +112,74 @@ const size_y = size_x;
         op, utils.executeOp, ' packed buffer WPT2x2 ', trials, reps);
   }
 })();
+
+
+async function checkCorrectness(device,glslang, firstMatrix, secondMatrix, size_x, size_y,shape) {
+  //
+  // TFJS code:
+  /*
+  await tf.ready();
+  var a = tf.tensor2d(firstMatrix, firstMatrixSize);
+  var b = tf.tensor2d(secondMatrix, secondMatrixSize);
+
+  var result = tf.matMul(a, b);
+  console.log(await result.data());
+  */
+
+  const matmulBufferOp = new compute.MatmulBufferOp(
+      device, glslang, firstMatrix, secondMatrix, shape);
+  matmulBufferOp.executeSync();
+  const matmulBufferOpData = await matmulBufferOp.data();
+
+  const matmulPackedBufferOp = new compute.MatmulPackedBufferOp(
+      device, glslang, firstMatrix, secondMatrix, shape);
+  matmulPackedBufferOp.executeSync();
+  const matmulPackedBufferOpData = await matmulPackedBufferOp.data();
+  compareFloat32Array(
+      matmulBufferOpData, matmulPackedBufferOpData, size_x, size_y,
+      ' matmulPackedBuffer ');
+
+  const matmulBufferVec4Op = new compute.MatmulBufferVec4Op(
+      device, glslang, firstMatrix, secondMatrix, shape, 8);
+  matmulBufferVec4Op.executeSync();
+  const matmulBufferVec4OpData = await matmulBufferVec4Op.data();
+
+  compareFloat32Array(
+      matmulBufferOpData, matmulBufferVec4OpData, size_x, size_y,
+      ' matmulBufferVec4 ');
+
+  const matmulPackedBufferOpWPT4 = new compute.MatmulPackedBufferOp(
+      device, glslang, firstMatrix, secondMatrix, shape, 4);
+  matmulPackedBufferOpWPT4.executeSync();
+  const matmulPackedBufferOpWPT4Data = await matmulPackedBufferOp.data();
+
+  compareFloat32Array(
+      matmulBufferOpData, matmulPackedBufferOpWPT4Data, size_x, size_y,
+      ' matmulPackedBufferOpWPT4Data ');
+
+  const matmulTextureR32FOp = new compute.MatmulTextureR32FOp(
+      device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float');
+  matmulTextureR32FOp.executeSync();
+  const matmulTextureR32FOpData = await matmulPackedBufferOp.data();
+
+  compareFloat32Array(
+      matmulBufferOpData, matmulTextureR32FOpData, size_x, size_y,
+      ' matmulTextureR32FOp ');
+
+  const matmulTextureRGBA32FOp = new compute.MatmulTextureRGBA32FOp(
+      device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float');
+  matmulTextureRGBA32FOp.executeSync();
+  const matmulTextureRGBA32FOpData = await matmulTextureRGBA32FOp.data();
+  // TODO: at first, I am trying to use matmulBufferOpData as reference.
+  // Howerver, the first item of matmulBufferOpData turns into 8 after several
+  // test. Possible reason is due to memory pressure so this data is gced.
+  compareFloat32Array(
+      matmulTextureR32FOpData, matmulTextureRGBA32FOpData, size_x, size_y,
+      ' matmulTextureRGBA32F ');
+  if (errorStatus) {
+    console.error('Error and exit!!!');
+    return;
+  } else {
+    console.log('All test pass!!!');
+  }
+}
