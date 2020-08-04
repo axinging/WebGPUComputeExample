@@ -12,10 +12,31 @@ function createFloat32Array(w, h) {
 
 function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) {
   for (let i = 0; i < w * h; i++) {
-    if (Math.abs(result[i] - (firstMatrix[i] + secondMatrix[i])) > 0.01)
+    if (Math.abs(result[i] - (firstMatrix[i] + secondMatrix[i])) > 0.01) {
+      console.error(name + ' mismatch at ' + i);
       return i;
+    }
   }
   return -1;
+}
+
+const trials = 50;
+const reps = 50;
+const resultCheck = true;
+const size_x = 4096;
+const size_y = 256;
+
+function logTimes(name, times) {
+  const times2 = times.map(function(time) {
+    return Number(time.toFixed(2));
+  });
+  console.log(name + times2);
+  const mean = times.reduce((a, b) => a + b, 0) / trials;
+  const min = Math.min(...times);
+  const fmt = (n) => n.toFixed(2);
+  console.log(
+      name + ` Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
+  console.log(name + `Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
 }
 
 function createUint32Array(w, h) {
@@ -36,12 +57,7 @@ function createUint32Array(w, h) {
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 50;
-  const reps = 50;
-  const resultCheck = true;
-  const size_x = 4096;
-  const size_y = 256;
-  console.log("Input size: "+size_x+","+size_y);
+  console.log('Input size: ' + size_x + ',' + size_y);
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = createFloat32Array(size_x, size_y);
   // Second Matrix.
@@ -52,6 +68,30 @@ function createUint32Array(w, h) {
     secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
   ]);
 
+  if (resultCheck) {
+    {
+      const addBufferOp = new compute.AddBufferOp(
+          device, glslang, firstMatrix, secondMatrix, shape);
+      addBufferOp.executeSync();
+      compareAddFloat32Array(
+          await addBufferOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+    }
+    {
+      const addTextureOp = new compute.AddTextureOp(
+          device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
+      addTextureOp.executeSync();
+
+      compareAddFloat32Array(
+          await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+    }
+    {
+      const addTextureOp = new compute.AddTextureR32FOp(
+          device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
+      addTextureOp.executeSync();
+      compareAddFloat32Array(
+          await addTextureOp.data(), firstMatrix, secondMatrix, size_x, size_y);
+    }
+  }
   {
     const addBufferOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
@@ -62,15 +102,7 @@ function createUint32Array(w, h) {
         addBufferOp.executeSync();
       }
       await addBufferOp.data();
-      if (resultCheck) {
-        const failItem = compareAddFloat32Array(
-            await addBufferOp.data(), firstMatrix, secondMatrix, size_x,
-            size_y);
-        if (failItem != -1) {
-          console.log('AddBufferOp Test fail at item ' + failItem);
-          return;
-        }
-      }
+      addBufferOp.dispose();
     };
 
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
@@ -84,17 +116,7 @@ function createUint32Array(w, h) {
       times.push(performance.now() - start);
     }
 
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log(times2);
-    console.log(
-        `Sync buffer Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
-    console.log(
-        `Sync buffer Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+    logTimes(' buffer  ', times);
   }
 
   {
@@ -117,6 +139,7 @@ function createUint32Array(w, h) {
           return;
         }
       }
+      addTextureOp.dispose();
     };
 
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
@@ -129,17 +152,8 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log(times2);
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    console.log(
-        `Sync texture rgba32float Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
-    console.log(
-        `Sync texture rgba32float Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+
+    logTimes(' texture rgba32float  ', times);
   }
 
   {
@@ -162,6 +176,7 @@ function createUint32Array(w, h) {
           return;
         }
       }
+      addTextureOp.dispose();
     };
 
     // Warm-up. Specifically, this pre-allocates enough memory for an entire
@@ -174,17 +189,7 @@ function createUint32Array(w, h) {
       await trial();
       times.push(performance.now() - start);
     }
-    const times2 = times.map(function(time) {
-      return Number(time.toFixed(2));
-    });
-    console.log(times2);
-    const mean = times.reduce((a, b) => a + b, 0) / trials;
-    const min = Math.min(...times);
-    const fmt = (n) => n.toFixed(2);
-    console.log(
-        `Sync texture r32float Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
-    console.log(
-        `Sync texture r32float Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
+    logTimes(' texture r32float  ', times);
   }
   /*
   {

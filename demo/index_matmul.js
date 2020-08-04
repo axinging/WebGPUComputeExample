@@ -171,13 +171,14 @@ function logTimes(name, times) {
       matmulBufferOp.dispose();
     };
 
+    await trial();
+
     for (let t = 0; t < trials; ++t) {
       const start = performance.now();
       await trial();
       times.push(performance.now() - start);
     }
 
-    await trial();
 
     logTimes(' buffer  ', times);
   }

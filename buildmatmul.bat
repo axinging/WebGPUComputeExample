@@ -1,4 +1,4 @@
 yarn & yarn build-npm && ^
 cd demo && ^
 yarn & yarn buildmatmul && ^
-yarn watchmatmul
+yarn watchmatmul -p 4096
