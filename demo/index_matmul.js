@@ -32,7 +32,7 @@ function compareFloat32Array(a, b, w, h, name) {
       console.log('item 0=' + a[i] + ', ' + b[i]);
     }
     if (Math.abs(a[i] - b[i]) > 0.01) {
-      console.error(name + ' mismatch at ' + i);
+      console.error(name + ' mismatch at ' + i+", "+a[i]+","+b[i]);
       return i;
     }
   }
@@ -50,8 +50,8 @@ function createUint32Array(w, h) {
 const trials = 50;
 const reps = 50;
 
-const resultCheck = false;
-const size_x = 2048;
+const resultCheck = true;
+const size_x = 1024;
 const size_y = size_x;
 
 function logTimes(name, times) {
