@@ -97,15 +97,15 @@ export async function checkCorrectnessMatmul(
   var result = tf.matMul(a, b);
   console.log(await result.data());
   */
-  var errorSummary = 0;
 
   /*
   const matmulCPUOp = new compute.MatmulCPUOp(firstMatrix, secondMatrix, shape);
   matmulCPUOp.executeSync();
   const matmulReferenceData = matmulCPUOp.data();
   */
+  let errorSummary = {error: 0};
   const matmulGPUOp = new compute.MatmulBufferOp(
-  device, glslang, firstMatrix, secondMatrix, shape);
+      device, glslang, firstMatrix, secondMatrix, shape);
 
   matmulGPUOp.executeSync();
   const matmulReferenceData = await matmulGPUOp.data();
@@ -113,91 +113,44 @@ export async function checkCorrectnessMatmul(
   {
     const op = new compute.MatmulBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-
-    op.executeSync();
-
-    const error = utils.compareFloat32Array(
-        matmulReferenceData, await op.data(), size_x, size_y,
-        ' ' + op.constructor.name + ' ');
-    errorSummary++;
-    op.dispose();
-    if (error > 0) {
-      console.error(' Error ' + op.constructor.name);
-      return;
-    }
+    await utils.executeCompareAndDispose(
+        op, matmulReferenceData, size_x, size_y, errorSummary);
   }
 
   {
     const op = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-    op.executeSync();
-    const error = utils.compareFloat32Array(
-        matmulReferenceData, await op.data(), size_x, size_y,
-        ' ' + op.constructor.name + ' ');
-    errorSummary++;
-    op.dispose();
-    if (error > 0) {
-      console.error(' Error ' + op.constructor.name);
-      return;
-    }
+    await utils.executeCompareAndDispose(
+        op, matmulReferenceData, size_x, size_y, errorSummary);
   }
 
   {
     const op = new compute.MatmulBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape, 8);
-    op.executeSync();
-    const error = utils.compareFloat32Array(
-        matmulReferenceData, await op.data(), size_x, size_y,
-        ' ' + op.constructor.name + ' ');
-    errorSummary++;
-    op.dispose();
-    if (error > 0) {
-      console.error(' Error ' + op.constructor.name);
-      return;
-    }
+    await utils.executeCompareAndDispose(
+        op, matmulReferenceData, size_x, size_y, errorSummary);
   }
 
   {
     const op = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4);
-    op.executeSync();
-    const error = utils.compareFloat32Array(
-        matmulReferenceData, await op.data(), size_x, size_y,
-        ' ' + op.constructor.name + ' ');
-    errorSummary++;
-    op.dispose();
-    if (error > 0) {
-      console.error(' Error ' + op.constructor.name);
-    }
+    await utils.executeCompareAndDispose(
+        op, matmulReferenceData, size_x, size_y, errorSummary);
   }
 
   {
     const op = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float');
-    op.executeSync();
-    const error = utils.compareFloat32Array(
-        matmulReferenceData, await op.data(), size_x, size_y,
-        ' ' + op.constructor.name + ' ');
-    errorSummary++;
-    op.dispose();
-    if (error > 0) {
-      console.error(' Error ' + op.constructor.name);
-    }
+    await utils.executeCompareAndDispose(
+        op, matmulReferenceData, size_x, size_y, errorSummary);
   }
   {
     const op = new compute.MatmulTextureRGBA32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float');
-    op.executeSync();
-    const error = utils.compareFloat32Array(
-        matmulReferenceData, await op.data(), size_x, size_y,
-        ' ' + op.constructor.name + ' ');
-    errorSummary++;
-    op.dispose();
-    if (error > 0) {
-      console.error(' Error ' + op.constructor.name);
-    }
+    await utils.executeCompareAndDispose(
+        op, matmulReferenceData, size_x, size_y, errorSummary);
   }
-  return errorSummary;
+  return errorSummary.error;
 }
 
 
@@ -224,66 +177,47 @@ export async function runTestAdd(device, glslang) {
   {
     const addOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-    await utils.time(addOp, utils.executeOp, ' buffer ', trials, reps);
+    await utils.time(addOp, utils.executeOp, ' Add buffer ', trials, reps);
   }
 
   {
     const addOp = new compute.AddTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
     await utils.time(
-        addOp, utils.executeOp, ' texture r32float ', trials, reps);
+        addOp, utils.executeOp, ' Add texture r32float ', trials, reps);
   }
 
   {
     const addOp = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
     await utils.time(
-        addOp, utils.executeOp, ' texture rgba32float ', trials, reps);
+        addOp, utils.executeOp, ' Add texture rgba32float ', trials, reps);
   }
 }
 
 export async function checkCorrectnessAdd(
     device, glslang, firstMatrix, secondMatrix, size_x, size_y, shape) {
-  var errorSummary = 0;
+  let errorSummary = {error: 0};
   {
     const op = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-    op.executeSync();
-    errorSummary = errorSummary +
-        utils.compareAddFloat32Array(
-            await op.data(), firstMatrix, secondMatrix, size_x, size_y);
-    op.dispose();
-    if (errorSummary > 0) {
-      console.error(' Error ' + op.constructor.name);
-    }
+    await utils.executeCompareAndDisposeAdd(
+        op, firstMatrix, secondMatrix, size_x, size_y, errorSummary);
   }
 
   {
     const op = new compute.AddTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
-    op.executeSync();
-    errorSummary = errorSummary +
-        utils.compareAddFloat32Array(
-            await op.data(), firstMatrix, secondMatrix, size_x, size_y);
-    op.dispose();
-    if (errorSummary > 0) {
-      console.error(' Error ' + op.constructor.name);
-    }
+    await utils.executeCompareAndDisposeAdd(
+        op, firstMatrix, secondMatrix, size_x, size_y, errorSummary);
   }
 
   {
     const op = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
-    op.executeSync();
-
-    errorSummary = errorSummary +
-        utils.compareAddFloat32Array(
-            await op.data(), firstMatrix, secondMatrix, size_x, size_y);
-    op.dispose();
-    if (errorSummary > 0) {
-      console.error(' Error ' + op.constructor.name);
-    }
+    await utils.executeCompareAndDisposeAdd(
+        op, firstMatrix, secondMatrix, size_x, size_y, errorSummary);
   }
 
-  return errorSummary;
+  return errorSummary.error;
 }

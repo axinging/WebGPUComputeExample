@@ -16,6 +16,6 @@ import * as common from './common.js';
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  await common.runTestAdd(device, glslang);
   await common.runTestMatmul(device, glslang);
+  await common.runTestAdd(device, glslang);
 })();

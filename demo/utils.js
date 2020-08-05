@@ -94,3 +94,31 @@ export function compareFloat32Array(a, b, w, h, name) {
   }
   return 0;
 }
+
+export async function executeCompareAndDisposeAdd(
+  op, firstMatrix, secondMatrix, size_x, size_y, errorSummary) {
+op.executeSync();
+const name = op.constructor.name;
+const error = compareAddFloat32Array(
+    await op.data(), firstMatrix, secondMatrix, size_x, size_y);
+op.dispose();
+if (error > 0) {
+  errorSummary.error ++;
+  console.error(' Error ' + name);
+  return;
+}
+}
+
+export async function executeCompareAndDispose(
+  op, matmulReferenceData, size_x, size_y, errorSummary) {
+op.executeSync();
+const name = op.constructor.name;
+const error = compareFloat32Array(
+    matmulReferenceData, await op.data(), size_x, size_y, ' ' + name + ' ');
+op.dispose();
+if (error > 0) {
+  errorSummary.error ++;
+  console.error(' Error ' + name);
+  return;
+}
+}
