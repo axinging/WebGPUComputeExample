@@ -161,16 +161,16 @@ export class MatmulTextureR32FOp extends TextureOp {
       }
     }
     float mm_readA(int row, int col) {
-      return imageLoad(A, ivec2(row, col)).r;
+      return imageLoad(A, ivec2(col, row)).r;
     }
   
     float mm_readB(int row, int col) {
-      return imageLoad(B, ivec2(row, col)).r;
+      return imageLoad(B, ivec2(col, row)).r;
     }
   
     void mm_write(int row, int col, float value) {
       // TODO: Figure out why need vec4 here.
-      imageStore(result, ivec2(row,col), vec4(value, 0.0, 0.0, 0.0));
+      imageStore(result, ivec2(col, row), vec4(value, 0.0, 0.0, 0.0));
     }
   
     void main() {

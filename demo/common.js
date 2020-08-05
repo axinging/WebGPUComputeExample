@@ -99,9 +99,17 @@ export async function checkCorrectnessMatmul(
   */
   var errorSummary = 0;
 
+  /*
   const matmulCPUOp = new compute.MatmulCPUOp(firstMatrix, secondMatrix, shape);
   matmulCPUOp.executeSync();
   const matmulReferenceData = matmulCPUOp.data();
+  */
+  const matmulGPUOp = new compute.MatmulBufferOp(
+  device, glslang, firstMatrix, secondMatrix, shape);
+
+  matmulGPUOp.executeSync();
+  const matmulReferenceData = await matmulGPUOp.data();
+
   {
     const op = new compute.MatmulBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
