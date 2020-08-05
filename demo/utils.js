@@ -1,7 +1,7 @@
 export function createFloat32Array(w, h) {
   let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    matrix[i] = Math.random();  // tf.randomUniform(shape, 0, 2.5);//0.01*i;
+    matrix[i] = Math.random();
   }
   return matrix;
 }
@@ -85,7 +85,7 @@ export function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) 
 export function compareFloat32Array(a, b, w, h, name) {
   for (let i = 0; i < w * h; i++) {
     if (i == 0) {
-      console.log('item 0=' + a[i] + ', ' + b[i]);
+      console.log(name + 'item 0=' + a[i] + ', ' + b[i]);
     }
     if (Math.abs(a[i] - b[i]) > 0.01) {
       console.error(name + ' mismatch at ' + i + ', ' + a[i] + ',' + b[i]);
