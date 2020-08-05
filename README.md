@@ -1,4 +1,8 @@
 ## Introduction
+This project is used for demo Texture and Buffer difference on WebGPU Compute.
+
+The draft idea is from here: [TFJS Issue](https://github.com/tensorflow/tfjs/issues/3132).
+
 This is the WebGPU version of [VulkanCompute](https://github.com/math3d/VulkanCompute).
 ## Build
 ```
