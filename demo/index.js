@@ -1,6 +1,8 @@
+import * as compute from '@webgpu/compute';
 // import glslangModule from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
-
+// import * as tfwebgpu from '@tensorflow/tfjs-backend-webgpu';
+// import * as tf from '@tensorflow/tfjs-core';
 import * as utils from './utils.js';
 import * as common from './common.js';
 
@@ -15,4 +17,5 @@ import * as common from './common.js';
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
   await common.runTestAdd(device, glslang);
+  await common.runTestMatmul(device, glslang);
 })();

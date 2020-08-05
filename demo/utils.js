@@ -69,3 +69,28 @@ function compareThreeFloat32Array(a, b, c, w, h) {
     }
     return -1;
 }
+
+// Return 0 is error. 
+export function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) {
+  for (let i = 0; i < w * h; i++) {
+    if (Math.abs(result[i] - (firstMatrix[i] + secondMatrix[i])) > 0.01) {
+      console.error(name + ' mismatch at ' + i);
+      return i+1;
+    }
+  }
+  return 0;
+}
+
+// Return 0 is error. 
+export function compareFloat32Array(a, b, w, h, name) {
+  for (let i = 0; i < w * h; i++) {
+    if (i == 0) {
+      console.log('item 0=' + a[i] + ', ' + b[i]);
+    }
+    if (Math.abs(a[i] - b[i]) > 0.01) {
+      console.error(name + ' mismatch at ' + i + ', ' + a[i] + ',' + b[i]);
+      return i+1;
+    }
+  }
+  return 0;
+}
