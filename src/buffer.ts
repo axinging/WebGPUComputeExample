@@ -1,6 +1,6 @@
 // import {Glslang} from '@webgpu/glslang/dist/web-devel-onefile/glslang';
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
-import {expectContents} from './fixture';
+import * as utils from './fixture';
 
 export class BufferOp {
   device: GPUDevice;
@@ -25,31 +25,6 @@ export class BufferOp {
     this.commandQueue = [];
     this.bufferID = 0;
     // this.enableTimeStamp = false;
-  }
-
-  createCopyForMapRead(src: any, size: any) {
-    const dst = this.device.createBuffer(
-        {size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});
-    const c = this.device.createCommandEncoder();
-    c.copyBufferToBuffer(src, 0, dst, 0, size);
-    this.device.defaultQueue.submit([c.finish()]);
-    return dst;
-  }
-
-  async checkContents(src: any, expected: any) {
-    const exp = new Uint8Array(
-        expected.buffer, expected.byteOffset, expected.byteLength);
-    const dst = this.createCopyForMapRead(src, expected.buffer.byteLength);
-    console.log(exp);
-    console.log(dst);
-    const actual = new Uint8Array((await dst.mapReadAsync()));
-    const result = expectContents(actual, exp);
-    console.log(result);
-    dst.destroy();
-  }
-
-  now(): number {
-    return performance.now();
   }
 
   /*
@@ -98,10 +73,6 @@ export class BufferOp {
     return timeInMS;
   }
   */
-  async data() {
-    const arrayBuffer = await this.getBufferData();
-    return new Float32Array(arrayBuffer);
-  }
 
   compile(
       firstMatrix: Float32Array|Uint32Array,
@@ -220,15 +191,6 @@ export class BufferOp {
         */
   }
 
-  // TODO: Float32Array is bad. And buffer is bad.
-  async compileAndRun(workGroupSize: [number, number, number]) {
-    // TODO: figure out how to return non const two values.
-    // if (mode == 0) {
-    return await this.dispatchAndSubmitWithFence(
-        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
-        workGroupSize);
-  }
-
   compileAndRunSync(
       workGroupSize: [number, number, number], workPerThread = 1) {
     // TODO: figure out how to return non const two values.
@@ -306,23 +268,67 @@ export class BufferOp {
     return true;
   }
 
+  async data() {
+    const arrayBuffer = await this.getBufferData();
+    return new Float32Array(arrayBuffer);
+  }
+
+  async getBufferData() {
+    // TODO: this is only used in readback.
+    const gpuReadBuffer = this.device.createBuffer({
+      size: this.resultMatrixBufferSize,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+    });
+
+    // Commands submission
+    const commandEncoder = this.device.createCommandEncoder();
+    // Encode commands for copying buffer to buffer.
+    commandEncoder.copyBufferToBuffer(
+        this.resultMatrixBuffer /* source buffer */, 0 /* source offset */,
+        gpuReadBuffer /* destination buffer */, 0 /* destination offset */,
+        this.resultMatrixBufferSize /* size */
+    );
+
+    // Submit GPU commands.
+    const gpuCommands = commandEncoder.finish();
+    this.device.defaultQueue.submit([gpuCommands]);
+    // Read buffer.
+    const mapped = await gpuReadBuffer.mapReadAsync();
+    const arrayBuffer = mapped.slice(0);
+    gpuReadBuffer.unmap();
+    gpuReadBuffer.destroy();
+    return arrayBuffer;
+  }
+
+  // ---------Below code is not used!-------------------
+  // Do not USE!
   private async dispatchAndSubmitWithFence(
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number, workGroupSize: [number, number, number]) {
-    const start = this.now();
+    const start = utils.now();
     this.dispatchAndSubmit(
         this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
         workGroupSize);
     const fence = this.queue.createFence();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
-    console.log((this.now() - start).toFixed(2));
+    console.log((utils.now() - start).toFixed(2));
+  }
+
+  // TODO: Float32Array is bad. And buffer is bad.
+  async compileAndRun(workGroupSize: [number, number, number]) {
+    // TODO: figure out how to return non const two values.
+    // if (mode == 0) {
+    return await this.dispatchAndSubmitWithFence(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
   }
 
   getBufferKey() {
     return this.bufferID++;
   }
 
+  // Below is not used currently.
   releaseBuffer(buffer: GPUBuffer) {
     if (this.freeBuffers == null) {
       return;
@@ -352,31 +358,5 @@ export class BufferOp {
 
   dispose() {
     this.disposeReadBackBuffer();
-  }
-
-  async getBufferData() {
-    // TODO: this is only used in readback.
-    const gpuReadBuffer = this.device.createBuffer({
-      size: this.resultMatrixBufferSize,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-    });
-
-    // Commands submission
-    const commandEncoder = this.device.createCommandEncoder();
-    // Encode commands for copying buffer to buffer.
-    commandEncoder.copyBufferToBuffer(
-        this.resultMatrixBuffer /* source buffer */, 0 /* source offset */,
-        gpuReadBuffer /* destination buffer */, 0 /* destination offset */,
-        this.resultMatrixBufferSize /* size */
-    );
-
-    // Submit GPU commands.
-    const gpuCommands = commandEncoder.finish();
-    this.device.defaultQueue.submit([gpuCommands]);
-    // Read buffer.
-    const arrayBuffer = await gpuReadBuffer.mapReadAsync();
-    this.releaseBuffer(gpuReadBuffer);
-    // this.gpuReadBuffer.unmap();
-    return arrayBuffer;
   }
 }

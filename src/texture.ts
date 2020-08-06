@@ -1,6 +1,6 @@
 // import {Glslang} from '@webgpu/glslang/dist/web-devel-onefile/glslang';
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
-import {expectContents} from './fixture';
+import * as utils from './fixture';
 import * as tex_util from './tex_util';
 
 export class TextureOp {
@@ -26,36 +26,6 @@ export class TextureOp {
     this.format = format;
     this.kBytesPerTexel = tex_util.getBytesPerTexel(format);
     this.bufferID = 0;
-  }
-
-  createCopyForMapRead(src: any, size: any) {
-    const dst = this.device.createBuffer(
-        {size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});
-    const c = this.device.createCommandEncoder();
-    c.copyBufferToBuffer(src, 0, dst, 0, size);
-    this.device.defaultQueue.submit([c.finish()]);
-    return dst;
-  }
-
-  async checkContents(src: any, expected: any) {
-    const exp = new Uint8Array(
-        expected.buffer, expected.byteOffset, expected.byteLength);
-    const dst = this.createCopyForMapRead(src, expected.buffer.byteLength);
-    console.log(exp);
-    console.log(dst);
-    const actual = new Uint8Array((await dst.mapReadAsync()));
-    const result = expectContents(actual, exp);
-    console.log(result);
-    dst.destroy();
-  }
-
-  now(): number {
-    return performance.now();
-  }
-
-  async data() {
-    const arrayBuffer = await this.getBufferData();
-    return new Float32Array(arrayBuffer);
   }
 
   private copyFromHostBufferToDeviceTexture(
@@ -240,19 +210,8 @@ export class TextureOp {
         {binding: 3, resource: gpuTextureSecondMatrix.createView()},
       ]
     });
-        */
-
+    */
     return;
-  }
-
-  // TODO: Float32Array is bad. And buffer is bad.
-  async compileAndRun(workGroupSize: [number, number, number]) {
-    // TODO: figure out how to return non const two values.
-    await this.dispatchAndSubmitWithFence(
-        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
-        workGroupSize);
-
-    return true;
   }
 
   compileAndRunSync(
@@ -285,54 +244,9 @@ export class TextureOp {
     this.device.defaultQueue.submit([gpuCommands]);
   }
 
-  private async dispatchAndSubmitWithFence(
-      computePipeline: any, bindGroup: any, dispatchX: number,
-      dispatchY: number, workGroupSize: [number, number, number]) {
-    const start = this.now();
-    // Commands submission.
-    this.dispatchAndSubmit(
-        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
-        workGroupSize);
-    const fence = this.queue.createFence();
-    this.queue.signal(fence, 1);
-    await fence.onCompletion(1);
-    console.log((this.now() - start).toFixed(2));
-  }
-
-
-  getBufferKey() {
-    return this.bufferID++;
-  }
-
-  releaseBuffer(buffer: GPUBuffer) {
-    if (this.freeBuffers == null) {
-      return;
-    }
-
-    const key = this.getBufferKey();
-    if (!this.freeBuffers.has(key)) {
-      this.freeBuffers.set(key, []);
-    }
-
-    this.freeBuffers.get(key).push(buffer);
-  }
-  // Call this after execute.
-  disposeReadBackBuffer() {
-    if (this.freeBuffers == null) {
-      return;
-    }
-
-    this.freeBuffers.forEach((buffers, key) => {
-      buffers.forEach(buff => {
-        // console.log(' freeBuffers destroy key = ' + key);
-        buff.unmap();
-        buff.destroy();
-      });
-    });
-  }
-
-  dispose() {
-    this.disposeReadBackBuffer();
+  async data() {
+    const arrayBuffer = await this.getBufferData();
+    return new Float32Array(arrayBuffer);
   }
 
   async getBufferData() {
@@ -369,8 +283,71 @@ export class TextureOp {
     await fence.onCompletion(2);
     */
     // Read buffer.
-    const arrayBuffer = await gpuReadBuffer.mapReadAsync();
-    this.releaseBuffer(gpuReadBuffer);
+    const mapped = await gpuReadBuffer.mapReadAsync();
+    // this.releaseBuffer(gpuReadBuffer);
+    const arrayBuffer = mapped.slice(0);
+    gpuReadBuffer.unmap();
+    gpuReadBuffer.destroy();
     return arrayBuffer;
+  }
+
+  // ---------Below code is not used!-------------------
+  // TODO: Float32Array is bad. And buffer is bad.
+  async compileAndRun(workGroupSize: [number, number, number]) {
+    // TODO: figure out how to return non const two values.
+    await this.dispatchAndSubmitWithFence(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
+
+    return true;
+  }
+
+  private async dispatchAndSubmitWithFence(
+      computePipeline: any, bindGroup: any, dispatchX: number,
+      dispatchY: number, workGroupSize: [number, number, number]) {
+    const start = utils.now();
+    // Commands submission.
+    this.dispatchAndSubmit(
+        this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
+        workGroupSize);
+    const fence = this.queue.createFence();
+    this.queue.signal(fence, 1);
+    await fence.onCompletion(1);
+    console.log((utils.now() - start).toFixed(2));
+  }
+
+  getBufferKey() {
+    return this.bufferID++;
+  }
+
+  releaseBuffer(buffer: GPUBuffer) {
+    if (this.freeBuffers == null) {
+      return;
+    }
+
+    const key = this.getBufferKey();
+    if (!this.freeBuffers.has(key)) {
+      this.freeBuffers.set(key, []);
+    }
+
+    this.freeBuffers.get(key).push(buffer);
+  }
+  // Call this after execute.
+  disposeReadBackBuffer() {
+    if (this.freeBuffers == null) {
+      return;
+    }
+
+    this.freeBuffers.forEach((buffers, key) => {
+      buffers.forEach(buff => {
+        // console.log(' freeBuffers destroy key = ' + key);
+        buff.unmap();
+        buff.destroy();
+      });
+    });
+  }
+
+  dispose() {
+    this.disposeReadBackBuffer();
   }
 }

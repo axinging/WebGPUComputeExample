@@ -1,4 +1,8 @@
 
+export function now(): number {
+  return performance.now();
+}
+
 export function expectContents(actual: any, exp: any) {
   const size = exp.byteLength;
 

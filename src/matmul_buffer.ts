@@ -14,15 +14,16 @@ export class MatmulBufferOp extends BufferOp {
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
+  executeSync() {
+    const result = this.compileAndRunSync(this.workGroupSize);
+    return result;
+  }
+
+  // Experimental. DO not USE!
   async execute(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array, mode = 0) {
     const result = await this.compileAndRun(this.workGroupSize);
-    return result;
-  }
-
-  executeSync() {
-    const result = this.compileAndRunSync(this.workGroupSize);
     return result;
   }
 

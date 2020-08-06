@@ -19,6 +19,12 @@ export class MatmulTextureOp extends TextureOp {
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
+  executeSync() {
+    this.compileAndRunSync(this.workGroupSize);
+    return;
+  }
+
+  // Experimental. DO not USE!
   async execute(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array, mode = 0) {
@@ -26,10 +32,6 @@ export class MatmulTextureOp extends TextureOp {
     return result;
   }
 
-  executeSync() {
-    this.compileAndRunSync(this.workGroupSize);
-    return;
-  }
   private getShader() {
     // Compute shader code (GLSL)
     // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
