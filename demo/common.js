@@ -1,13 +1,9 @@
 import * as compute from '@webgpu/compute';
 import * as utils from './utils.js';
 
-const trials = 50;
-const reps = 50;
 const resultCheck = true;
 
-export async function runTestMatmul(device, glslang) {
-  const size_x = 256;
-  const size_y = size_x;
+export async function runTestMatmul(device, glslang, size_x = 256, size_y = 256, trials = 50, reps = 50) {
   console.log('Input size: ' + size_x + ',' + size_y);
 
   const firstMatrixSize = [size_x, size_y];
@@ -154,9 +150,7 @@ export async function checkCorrectnessMatmul(
 }
 
 
-export async function runTestAdd(device, glslang) {
-  const size_x = 4096;
-  const size_y = 256;
+export async function runTestAdd(device, glslang, size_x = 4096, size_y = 256, trials = 50, reps = 50) {
   console.log('Input size: ' + size_x + ',' + size_y);
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = utils.createFloat32Array(size_x, size_y);

@@ -8,7 +8,6 @@ export {AddTextureR32FOp} from './add_texturer32f';
 export {BufferOp} from './buffer';
 export {TextureOp} from './texture';
 export {CopyTextureOp} from './copy_texture';
-export {MatmulTextureOp} from './matmul_texture';
 export {MatmulBufferOp} from './matmul_buffer';
 export {MatmulBufferVec4Op} from './matmul_buffervec4';
 export {MatmulPackedBufferOp} from './matmul_packedbuffer';
