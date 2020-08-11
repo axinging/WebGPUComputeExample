@@ -22,7 +22,7 @@ export function logTimes(name, times, trials, reps) {
 export function createUint32Array(w, h) {
   let matrix = new Uint32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    matrix[i] = i;
+    matrix[i] = i%3;
   }
   return matrix;
 }
@@ -56,13 +56,14 @@ export function executeOp(op) {
   op.executeSync();
 }
 
+const MAXDIFF = 0.1;
 function compareThreeFloat32Array(a, b, c, w, h) {
     for (let i = 0; i < w * h; i++) {
       if (i == 0) {
         console.log('item 0=' + a[i] + ', ' + b[i] + ',' + c[i]);
       }
-      if (Math.abs(a[i] - b[i]) > 0.01 || Math.abs(b[i] - c[i]) > 0.01 ||
-          Math.abs(a[i] - c[i]) > 0.01) {
+      if (Math.abs(a[i] - b[i]) > MAXDIFF || Math.abs(b[i] - c[i]) > MAXDIFF ||
+          Math.abs(a[i] - c[i]) > MAXDIFF) {
         console.log('Mismatch at ' + i);
         return i;
       }
