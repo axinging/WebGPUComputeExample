@@ -120,7 +120,7 @@ export function getPackedMatrixTextureShapeWidthHeight(
 export function getPackedMatrixTextureShapeWidthHeight(
     rows: number, columns: number, format: GPUTextureFormat): [number, number] {
   // kBytesPerTexel = 4;
-  if (format == 'rgba32float')
+  if (format == 'rgba32float' || format == 'rgba32uint')
     // return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns /
     // 4))];
     return [Math.max(1, Math.ceil(rows / 4)), Math.max(1, Math.ceil(columns))];
@@ -154,12 +154,28 @@ export function getBytesPerRow(width: number, kBytesPerTexel = 16) {
 
 export function getBytesPerTexel(format: GPUTextureFormat): number {
   // kBytesPerTexel = 4;
-  if (format == 'rgba32float')
+  if (format == 'rgba32float' || format == 'rgba32uint')
     return 16;
-  else if (format == 'r32float')
+  else if (format == 'r32float' || format == 'r32uint')
     return 4;
   else {
     console.error('Unsupported format ' + format);
     return 4;
+  }
+}
+
+export function getShaderFormat(format: GPUTextureFormat): string {
+  // kBytesPerTexel = 4;
+  if (format == 'rgba32float')
+    return 'rgba32f';
+  else if (format == 'rgba32uint')
+    return 'rgba32ui';
+  else if (format == 'r32float')
+    return 'r32f';
+  else if (format == 'r32uint')
+    return 'r32ui';
+  else {
+    console.error('Unsupported format ' + format);
+    return 'r32f';
   }
 }

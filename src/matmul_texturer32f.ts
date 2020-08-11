@@ -1,4 +1,6 @@
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
+
+import * as tex_util from './tex_util';
 import {TextureOp} from './texture';
 
 export class MatmulTextureR32FOp extends TextureOp {
@@ -55,11 +57,15 @@ export class MatmulTextureR32FOp extends TextureOp {
       int outputHeight;
     };     
   
-    layout(set = 0, binding = 1, r32f) uniform writeonly image2D result;
+    layout(set = 0, binding = 1, ${
+        tex_util.getShaderFormat(
+            this.format)}) uniform writeonly image2D result;
 
-    layout(set = 0, binding = 2, r32f) uniform readonly image2D A;
+    layout(set = 0, binding = 2, ${
+        tex_util.getShaderFormat(this.format)}) uniform readonly image2D A;
     // readonly
-    layout(set = 0, binding = 3, r32f) uniform readonly image2D B;
+    layout(set = 0, binding = 3, ${
+        tex_util.getShaderFormat(this.format)}) uniform readonly image2D B;
 
     // TODO. Make this works with rectangle.
     int dimAOuter = inputWidth; // aShape[1];

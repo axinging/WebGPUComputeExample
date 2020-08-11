@@ -1,4 +1,6 @@
 import {Glslang} from '@webgpu/glslang/dist/web-devel/glslang.onefile';
+
+import * as tex_util from './tex_util';
 import {TextureOp} from './texture';
 
 export class MatmulTextureRGBA32FOp extends TextureOp {
@@ -61,11 +63,15 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
       int outputHeight;
     };     
   
-    layout(set = 0, binding = 1, rgba32f) uniform writeonly image2D result;
+    layout(set = 0, binding = 1, ${
+        tex_util.getShaderFormat(
+            this.format)}) uniform writeonly image2D result;
 
-    layout(set = 0, binding = 2, rgba32f) uniform readonly image2D A;
+    layout(set = 0, binding = 2, ${
+        tex_util.getShaderFormat(this.format)}) uniform readonly image2D A;
     // readonly
-    layout(set = 0, binding = 3, rgba32f) uniform readonly image2D B;
+    layout(set = 0, binding = 3, ${
+        tex_util.getShaderFormat(this.format)}) uniform readonly image2D B;
 
 
     const int TILE_M = 32;
