@@ -7,6 +7,8 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
   workGroupSize: [number, number, number];
   workPerThread: number;
   outputShape: number[];
+  scalarFormt: string;
+  vectorFormat: string;
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
@@ -21,6 +23,8 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
     this.workGroupSize = [TS, TS_Y / 4, 1];
     this.outputShape = [shape[0], shape[1], shape[1]];
     this.workPerThread = workPerThread;
+    this.scalarFormt = tex_util.getVarType(format);
+    this.vectorFormat = tex_util.getVectorType(format);
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
@@ -64,14 +68,16 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
     };     
   
     layout(set = 0, binding = 1, ${
-        tex_util.getShaderFormat(
-            this.format)}) uniform writeonly image2D result;
+        tex_util.getShaderFormat(this.format)}) uniform writeonly ${
+        tex_util.getShaderImageType(this.format)} result;
 
     layout(set = 0, binding = 2, ${
-        tex_util.getShaderFormat(this.format)}) uniform readonly image2D A;
+        tex_util.getShaderFormat(this.format)}) uniform readonly ${
+        tex_util.getShaderImageType(this.format)} A;
     // readonly
     layout(set = 0, binding = 3, ${
-        tex_util.getShaderFormat(this.format)}) uniform readonly image2D B;
+        tex_util.getShaderFormat(this.format)}) uniform readonly ${
+        tex_util.getShaderImageType(this.format)} B;
 
 
     const int TILE_M = 32;
@@ -79,7 +85,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
     const int TILE_K = 64;
     const int VEC_SIZE = 4;
     const int ROWS_PER_WI = 8;
-    shared vec4 atile[TILE_M * TILE_K / VEC_SIZE];
+    shared ${this.vectorFormat} atile[TILE_M * TILE_K / VEC_SIZE];
     int dimAOuter = inputWidth;
     int dimInner = inputHeight / VEC_SIZE;
     int dimBOuter = filterHeight / VEC_SIZE;
@@ -89,13 +95,13 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
     // Consider compiling a different version of the shader that doesn't care
     // about boundary conditions. May slightly improve performance.
 
-    vec4 mm_readA(int row, int col) {
-        return imageLoad(A, ivec2(col, row));
+    ${this.vectorFormat} mm_readA(int row, int col) {
+        return ${this.vectorFormat}(imageLoad(A, ivec2(col, row)));
     }
-    vec4 mm_readB(int row, int col) {
-        return imageLoad(B, ivec2(col, row));
+    ${this.vectorFormat} mm_readB(int row, int col) {
+        return ${this.vectorFormat}(imageLoad(B, ivec2(col, row)));
     }
-    void mm_write(int row, int col, vec4 value) {
+    void mm_write(int row, int col, ${this.vectorFormat} value) {
         imageStore(result, ivec2(col, row), value);
     }
     
@@ -108,8 +114,8 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
     // M = 32, we have 4 rows of work-items, so we need 32/4 8 results down
     // N = 128, we have 16 columns of work-items, so we need 128/16 = 8
     // results across = 2 float4s across
-    vec4 dot00,dot01,dot02,dot03,dot04,dot05,dot06,dot07;
-    vec4 dot10,dot11,dot12,dot13,dot14,dot15,dot16,dot17;
+    ${this.vectorFormat} dot00,dot01,dot02,dot03,dot04,dot05,dot06,dot07;
+    ${this.vectorFormat} dot10,dot11,dot12,dot13,dot14,dot15,dot16,dot17;
     // Src0 is used to load atile.
     // It starts at the left side of src0 and walks across.
     // atile is M rows x K columns.
@@ -154,15 +160,15 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
       int i = 0;
       do{
           // We get better performance by loading btile first.
-          vec4 brow00 = mm_readB(rowB0, globalCol0); rowB0++;
-          vec4 brow01 = mm_readB(rowB0, globalCol0); rowB0++;
-          vec4 brow02 = mm_readB(rowB0, globalCol0); rowB0++;
-          vec4 brow03 = mm_readB(rowB0, globalCol0); rowB0++;
-          vec4 brow10 = mm_readB(rowB1, globalCol1); rowB1++;
-          vec4 brow11 = mm_readB(rowB1, globalCol1); rowB1++;
-          vec4 brow12 = mm_readB(rowB1, globalCol1); rowB1++;
-          vec4 brow13 = mm_readB(rowB1, globalCol1); rowB1++;
-          vec4 a0 = atile[slm + i + 0 * TILE_K / VEC_SIZE ];
+          ${this.vectorFormat} brow00 = mm_readB(rowB0, globalCol0); rowB0++;
+          ${this.vectorFormat} brow01 = mm_readB(rowB0, globalCol0); rowB0++;
+          ${this.vectorFormat} brow02 = mm_readB(rowB0, globalCol0); rowB0++;
+          ${this.vectorFormat} brow03 = mm_readB(rowB0, globalCol0); rowB0++;
+          ${this.vectorFormat} brow10 = mm_readB(rowB1, globalCol1); rowB1++;
+          ${this.vectorFormat} brow11 = mm_readB(rowB1, globalCol1); rowB1++;
+          ${this.vectorFormat} brow12 = mm_readB(rowB1, globalCol1); rowB1++;
+          ${this.vectorFormat} brow13 = mm_readB(rowB1, globalCol1); rowB1++;
+          ${this.vectorFormat} a0 = atile[slm + i + 0 * TILE_K / VEC_SIZE ];
           dot00 = brow00*a0.x + dot00;
           dot00 = brow01*a0.y + dot00;
           dot00 = brow02*a0.z + dot00;
@@ -171,7 +177,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
           dot10 = brow11*a0.y + dot10;
           dot10 = brow12*a0.z + dot10;
           dot10 = brow13*a0.w + dot10;
-          vec4 a1 = atile[slm + i + 1 * TILE_K / VEC_SIZE ];
+          ${this.vectorFormat} a1 = atile[slm + i + 1 * TILE_K / VEC_SIZE ];
           dot01 = brow00*a1.x + dot01;
           dot01 = brow01*a1.y + dot01;
           dot01 = brow02*a1.z + dot01;
@@ -180,7 +186,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
           dot11 = brow11*a1.y + dot11;
           dot11 = brow12*a1.z + dot11;
           dot11 = brow13*a1.w + dot11;
-          vec4 a2 = atile[slm + i + 2 * TILE_K / VEC_SIZE ];
+          ${this.vectorFormat} a2 = atile[slm + i + 2 * TILE_K / VEC_SIZE ];
           dot02 = brow00*a2.x + dot02;
           dot02 = brow01*a2.y + dot02;
           dot02 = brow02*a2.z + dot02;
@@ -189,7 +195,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
           dot12 = brow11*a2.y + dot12;
           dot12 = brow12*a2.z + dot12;
           dot12 = brow13*a2.w + dot12;
-          vec4 a3 = atile[slm + i + 3 * TILE_K / VEC_SIZE ];
+          ${this.vectorFormat} a3 = atile[slm + i + 3 * TILE_K / VEC_SIZE ];
           dot03 = brow00*a3.x + dot03;
           dot03 = brow01*a3.y + dot03;
           dot03 = brow02*a3.z + dot03;
@@ -198,7 +204,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
           dot13 = brow11*a3.y + dot13;
           dot13 = brow12*a3.z + dot13;
           dot13 = brow13*a3.w + dot13;
-          vec4 a4 = atile[slm + i + 4 * TILE_K / VEC_SIZE ];
+          ${this.vectorFormat} a4 = atile[slm + i + 4 * TILE_K / VEC_SIZE ];
           dot04 = brow00*a4.x + dot04;
           dot04 = brow01*a4.y + dot04;
           dot04 = brow02*a4.z + dot04;
@@ -207,7 +213,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
           dot14 = brow11*a4.y + dot14;
           dot14 = brow12*a4.z + dot14;
           dot14 = brow13*a4.w + dot14;
-          vec4 a5 = atile[slm + i + 5 * TILE_K / VEC_SIZE ];
+          ${this.vectorFormat} a5 = atile[slm + i + 5 * TILE_K / VEC_SIZE ];
           dot05 = brow00*a5.x + dot05;
           dot05 = brow01*a5.y + dot05;
           dot05 = brow02*a5.z + dot05;
@@ -216,7 +222,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
           dot15 = brow11*a5.y + dot15;
           dot15 = brow12*a5.z + dot15;
           dot15 = brow13*a5.w + dot15;
-          vec4 a6 = atile[slm + i + 6 * TILE_K / VEC_SIZE ];
+          ${this.vectorFormat} a6 = atile[slm + i + 6 * TILE_K / VEC_SIZE ];
           dot06 = brow00*a6.x + dot06;
           dot06 = brow01*a6.y + dot06;
           dot06 = brow02*a6.z + dot06;
@@ -225,7 +231,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
           dot16 = brow11*a6.y + dot16;
           dot16 = brow12*a6.z + dot16;
           dot16 = brow13*a6.w + dot16;
-          vec4 a7 = atile[slm + i + 7 * TILE_K / VEC_SIZE ];
+          ${this.vectorFormat} a7 = atile[slm + i + 7 * TILE_K / VEC_SIZE ];
           dot07 = brow00*a7.x + dot07;
           dot07 = brow01*a7.y + dot07;
           dot07 = brow02*a7.z + dot07;

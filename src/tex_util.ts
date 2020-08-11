@@ -179,3 +179,27 @@ export function getShaderFormat(format: GPUTextureFormat): string {
     return 'r32f';
   }
 }
+
+export function getShaderImageType(format: GPUTextureFormat): string {
+  if (format == 'rgba32uint' || format == 'r32uint')
+    return 'uimage2D';
+  else {
+    return 'image2D';
+  }
+}
+
+export function getVarType(format: GPUTextureFormat): string {
+  if (format == 'rgba32uint' || format == 'r32uint')
+    return 'int';
+  else {
+    return 'float';
+  }
+}
+
+export function getVectorType(format: GPUTextureFormat): string {
+  if (format == 'rgba32uint' || format == 'r32uint')
+    return 'ivec4';
+  else {
+    return 'vec4';
+  }
+}

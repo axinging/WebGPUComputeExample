@@ -6,6 +6,14 @@ export function createFloat32Array(w, h) {
   return matrix;
 }
 
+export function createUint32Array(w, h) {
+  let matrix = new Uint32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    matrix[i] = i;
+  }
+  return matrix;
+}
+
 export function logTimes(name, times, trials, reps) {
   const times2 = times.map(function(time) {
     return Number(time.toFixed(2));
@@ -17,14 +25,6 @@ export function logTimes(name, times, trials, reps) {
   console.log(
       name + `Mean time: ${fmt(mean)} ms -> ${fmt(mean / reps)} / rep`);
   console.log(name + `Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
-}
-
-export function createUint32Array(w, h) {
-  let matrix = new Uint32Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    matrix[i] = i%3;
-  }
-  return matrix;
 }
 
 export async function time(op, execute, opName, doRep, trials = 50, reps = 50) {
