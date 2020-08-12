@@ -112,8 +112,22 @@ export class MatmulBufferVec4Op extends BufferOp {
     // M = 32, we have 4 rows of work-items, so we need 32/4 8 results down
     // N = 128, we have 16 columns of work-items, so we need 128/16 = 8
     // results across = 2 float4s across
-    vec4 dot00,dot01,dot02,dot03,dot04,dot05,dot06,dot07;
-    vec4 dot10,dot11,dot12,dot13,dot14,dot15,dot16,dot17;
+    vec4 dot00 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot01 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot02 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot03 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot04 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot05 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot06 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot07 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot10 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot11 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot12 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot13 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot14 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot15 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot16 = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 dot17 = vec4(0.0, 0.0, 0.0, 0.0);
     // Src0 is used to load atile.
     // It starts at the left side of src0 and walks across.
     // atile is M rows x K columns.

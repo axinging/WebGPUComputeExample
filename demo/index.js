@@ -5,7 +5,6 @@ import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 // import * as tf from '@tensorflow/tfjs-core';
 import * as utils from './utils.js';
 import * as common from './common.js';
-import * as commonmac from './common_mac.js';
 
 (async () => {
   if (!navigator.gpu) {
@@ -17,6 +16,18 @@ import * as commonmac from './common_mac.js';
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  await common.runTestMatmul(device, glslang, 256, 256, 50, 50);
-  await common.runTestAdd(device, glslang, 4096, 256, 50, 50);
+
+  const trials = 50, reps = 50;
+  var size = 256;
+  await common.runTestMatmul(device, glslang, size, size, trials, reps);
+  size = 512;
+  await common.runTestMatmul(device, glslang, size, size, trials, reps);
+  size = 1024;
+  await common.runTestMatmul(device, glslang, size, size, trials, reps);
+  size = 2048;
+  await common.runTestMatmul(device, glslang, size, size, trials, reps);
+
+  await common.runTestAdd(device, glslang, 4096, 256, trials, reps);
+  await common.runTestAdd(device, glslang, 4096, 1024, trials, reps);
+
 })();

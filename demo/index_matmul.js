@@ -16,7 +16,7 @@ import * as common from './common.js';
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 0, reps = 0;
+  const trials = 50, reps = 50;
   var size = 256;
   await common.runTestMatmul(device, glslang, size, size, trials, reps);
   size = 384;

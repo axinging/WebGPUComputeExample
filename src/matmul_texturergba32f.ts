@@ -114,8 +114,22 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
     // M = 32, we have 4 rows of work-items, so we need 32/4 8 results down
     // N = 128, we have 16 columns of work-items, so we need 128/16 = 8
     // results across = 2 float4s across
-    ${this.vectorFormat} dot00,dot01,dot02,dot03,dot04,dot05,dot06,dot07;
-    ${this.vectorFormat} dot10,dot11,dot12,dot13,dot14,dot15,dot16,dot17;
+    ${this.vectorFormat} dot00 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot01 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot02 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot03 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot04 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot05 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot06 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot07 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot10 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot11 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot12 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot13 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot14 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot15 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot16 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
+    ${this.vectorFormat} dot17 = ${this.vectorFormat}(0.0, 0.0, 0.0, 0.0);
     // Src0 is used to load atile.
     // It starts at the left side of src0 and walks across.
     // atile is M rows x K columns.

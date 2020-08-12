@@ -18,7 +18,7 @@ export function logTimes(name, times, trials, reps) {
   const times2 = times.map(function(time) {
     return Number(time.toFixed(2));
   });
-  console.log(name + times2);
+  // console.log(name + times2);
   const mean = times.reduce((a, b) => a + b, 0) / trials;
   const min = Math.min(...times);
   const fmt = (n) => n.toFixed(2);
@@ -56,11 +56,11 @@ export function executeOp(op) {
   op.executeSync();
 }
 
-const MAXDIFF = 0.1;
+const MAXDIFF = 0.01;
 function compareThreeFloat32Array(a, b, c, w, h) {
     for (let i = 0; i < w * h; i++) {
       if (i == 0) {
-        console.log('item 0=' + a[i] + ', ' + b[i] + ',' + c[i]);
+        // console.log('item 0=' + a[i] + ', ' + b[i] + ',' + c[i]);
       }
       if (Math.abs(a[i] - b[i]) > MAXDIFF || Math.abs(b[i] - c[i]) > MAXDIFF ||
           Math.abs(a[i] - c[i]) > MAXDIFF) {
@@ -86,7 +86,7 @@ export function compareAddFloat32Array(result, firstMatrix, secondMatrix, w, h) 
 export function compareFloat32Array(a, b, w, h, name) {
   for (let i = 0; i < w * h; i++) {
     if (i == 0) {
-      console.log(name + 'item 0=' + a[i] + ', ' + b[i]);
+      // console.log(name + 'item 0=' + a[i] + ', ' + b[i]);
     }
     if (Math.abs(a[i] - b[i]) > 0.01) {
       console.error(name + ' mismatch at ' + i + ', ' + a[i] + ',' + b[i]);
