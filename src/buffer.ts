@@ -293,8 +293,10 @@ export class BufferOp {
     const gpuCommands = commandEncoder.finish();
     this.device.defaultQueue.submit([gpuCommands]);
     // Read buffer.
-    const mapped = await gpuReadBuffer.mapReadAsync();
-    const arrayBuffer = mapped.slice(0);
+    // const mapped = await gpuReadBuffer.mapReadAsync();
+    // const arrayBuffer = mapped.slice(0);
+    await gpuReadBuffer.mapAsync(GPUMapMode.READ);
+    const arrayBuffer = gpuReadBuffer.getMappedRange().slice(0);
     gpuReadBuffer.unmap();
     gpuReadBuffer.destroy();
     return arrayBuffer;

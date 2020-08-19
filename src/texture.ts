@@ -283,9 +283,16 @@ export class TextureOp {
     await fence.onCompletion(2);
     */
     // Read buffer.
-    const mapped = await gpuReadBuffer.mapReadAsync();
+    // const mapped = await gpuReadBuffer.mapReadAsync();
+    /*
+        const mapped: ArrayBuffer = await staging.mapReadAsync();
+        const values = mapped.slice(0);
+        await staging.mapAsync(GPUMapMode.READ);
+        const values = staging.getMappedRange().slice(0);
+    */
+    await gpuReadBuffer.mapAsync(GPUMapMode.READ);
+    const arrayBuffer = gpuReadBuffer.getMappedRange().slice(0);
     // this.releaseBuffer(gpuReadBuffer);
-    const arrayBuffer = mapped.slice(0);
     gpuReadBuffer.unmap();
     gpuReadBuffer.destroy();
     return arrayBuffer;
