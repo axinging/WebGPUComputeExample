@@ -79,6 +79,7 @@ export class BufferOp {
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
     this.shape = shape;
+    /*
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
           size: (firstMatrix as Float32Array).byteLength,
@@ -86,13 +87,32 @@ export class BufferOp {
         });
     new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
     gpuBufferFirstMatrix.unmap();
+    */
+    const gpuBufferFirstMatrix = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: (firstMatrix as Float32Array).byteLength,
+      usage: GPUBufferUsage.STORAGE
+    });
+    // TODO: turn this into type of firstMatrix.
+    new Float32Array(gpuBufferFirstMatrix.getMappedRange()).set(firstMatrix);
+    gpuBufferFirstMatrix.unmap();
 
+    /*
     const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] =
         this.device.createBufferMapped({
           size: (secondMatrix as Float32Array).byteLength,
           usage: GPUBufferUsage.STORAGE
         });
     new Float32Array(arrayBufferSecondMatrix).set(secondMatrix);
+    gpuBufferSecondMatrix.unmap();
+    */
+    const gpuBufferSecondMatrix = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: (secondMatrix as Float32Array).byteLength,
+      usage: GPUBufferUsage.STORAGE
+    });
+    // TODO: turn this into type of secondMatrix.
+    new Float32Array(gpuBufferSecondMatrix.getMappedRange()).set(secondMatrix);
     gpuBufferSecondMatrix.unmap();
 
     // Result Matrix
@@ -105,11 +125,21 @@ export class BufferOp {
     // console.log(this.resultMatrixBufferSize);
 
     // This works.
+    /*
     const [shapeBuffer, shapeMapping] = this.device.createBufferMapped({
       size: shape.byteLength,
       usage: GPUBufferUsage.UNIFORM,
     });
     new Uint32Array(shapeMapping).set(shape);
+    shapeBuffer.unmap();
+    */
+    const shapeBuffer = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: shape.byteLength,
+      usage: GPUBufferUsage.UNIFORM
+    });
+    // TODO: turn this into type of shape.
+    new Uint32Array(shapeBuffer.getMappedRange()).set(shape);
     shapeBuffer.unmap();
 
     // This works too.

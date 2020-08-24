@@ -76,6 +76,7 @@ export class TextureOp {
       computeShaderCode: any) {
     this.shape = shape;
     // console.log('B2T this.getBufferSize()=' + this.getBufferSize());
+    /*
     const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
         this.device.createBufferMapped({
           size: this.getBufferSize(),  // (firstMatrix as
@@ -84,10 +85,23 @@ export class TextureOp {
               GPUBufferUsage.COPY_DST
         });
     new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
+        gpuBufferFirstMatrix.unmap();
+    */
+    const gpuBufferFirstMatrix = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: this.getBufferSize(),
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
+          GPUBufferUsage.COPY_DST
+    });
+    // TODO: turn this into type of secondMatrix.
+    new Float32Array(gpuBufferFirstMatrix.getMappedRange()).set(firstMatrix);
     gpuBufferFirstMatrix.unmap();
+
+
     const gpuTextureFirstMatrix = this.copyFromHostBufferToDeviceTexture(
         gpuBufferFirstMatrix, this.shape[0], this.shape[1]);
 
+    /*
     const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] =
         this.device.createBufferMapped({
           size: this.getBufferSize(),  //(secondMatrix as
@@ -96,6 +110,16 @@ export class TextureOp {
               GPUBufferUsage.COPY_DST
         });
     new Float32Array(arrayBufferSecondMatrix).set(secondMatrix);
+    gpuBufferSecondMatrix.unmap();
+    */
+    const gpuBufferSecondMatrix = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: this.getBufferSize(),
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
+          GPUBufferUsage.COPY_DST
+    });
+    // TODO: turn this into type of secondMatrix.
+    new Float32Array(gpuBufferSecondMatrix.getMappedRange()).set(secondMatrix);
     gpuBufferSecondMatrix.unmap();
 
     const gpuTextureSecondMatrix = this.copyFromHostBufferToDeviceTexture(
@@ -115,11 +139,21 @@ export class TextureOp {
     });
 
     // This works.
+    /*
     const [shapeBuffer, shapeMapping] = this.device.createBufferMapped({
       size: shape.byteLength,
       usage: GPUBufferUsage.UNIFORM,
     });
     new Uint32Array(shapeMapping).set(shape);
+    shapeBuffer.unmap();
+    */
+    const shapeBuffer = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: shape.byteLength,
+      usage: GPUBufferUsage.UNIFORM
+    });
+    // TODO: turn this into type of shape.
+    new Uint32Array(shapeBuffer.getMappedRange()).set(shape);
     shapeBuffer.unmap();
 
     // This works too.

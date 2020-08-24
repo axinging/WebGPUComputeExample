@@ -15,4 +15,5 @@ import * as common from './common.js';
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
   await common.runTestAdd(device, glslang, 4096, 256, 50,50);
+  await common.runTestAdd(device, glslang, 4096, 1024, 50,50);
 })();
