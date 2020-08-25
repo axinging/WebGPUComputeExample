@@ -1,7 +1,7 @@
 export function createFloat32Array(w, h) {
   let matrix = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
-    matrix[i] = Math.random();
+    matrix[i] = i;// Math.random();
   }
   return matrix;
 }

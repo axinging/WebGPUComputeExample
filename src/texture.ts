@@ -28,34 +28,10 @@ export class TextureOp {
     this.bufferID = 0;
   }
 
-  private copyFromHostBufferToDeviceTexture(
-      src: GPUBuffer, width: number, height: number) {
-    const [widthTex, heightTex] =
-        tex_util.getPackedMatrixTextureShapeWidthHeight(
-            width, height, this.format);
-
-    const texture = this.device.createTexture({
-      size: {width: widthTex, height: heightTex, depth: 1},
-      format: this.format,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC |
-          GPUTextureUsage.STORAGE
-    });
-    const encoder = this.device.createCommandEncoder();
-    // TODO: fix the width height.
-    // copyBufferToTexture(source, destination, copySize).
-    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
-    // console.log('bytesPerRow=' + bytesPerRow);
-    encoder.copyBufferToTexture(
-        {buffer: src, bytesPerRow: bytesPerRow},
-        {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
-        {width: widthTex, height: heightTex, depth: 1});
-    this.device.defaultQueue.submit([encoder.finish()]);
-    return texture;
-  }
-
   // From: Dawn:ComputeTextureCopyBufferSize
   // TODO: Make this works with different input size
   getBufferSize() {
+    /*
     const blockHeight = 1;
     const blockWidth = 1;
 
@@ -67,63 +43,153 @@ export class TextureOp {
 
     const sliceSize = bytesPerRow * (heightTex / blockHeight - 1) +
         (widthTex / blockWidth) * this.kBytesPerTexel;
+    */
+    /*
+    this.shape = 4096, 128, this.kBytesPerTexel=16
+    texture.ts:56  bytesPerRow = 16384, heightTex =128
+    texture.ts:125  this.getBufferSize() =2097152
+
+    */
+
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            this.shape[0], this.shape[1], this.format);
+    /*
+    console.log(
+        ' this.shape = ' + this.shape[0] + ', ' + this.shape[1] +
+        ', this.kBytesPerTexel=' + this.kBytesPerTexel);
+    */
+
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
+    /*
+    console.log(
+        ' bytesPerRow = ' + bytesPerRow + ' widthTex, heightTex =' + widthTex +
+        ', ' + heightTex);
+    */
+    const sliceSize = bytesPerRow * heightTex;
     return sliceSize;
   }
+
+
+  getBufferSizeRead() {
+    return this.getBufferSize();
+  }
+
+
+  /*
+  private writeTexture(
+      data: Float32Array|Uint32Array, width: number, height: number) {
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            width, height, this.format);
+
+    const texture = this.device.createTexture({
+      size: {width: widthTex, height: heightTex, depth: 1},
+      format: this.format,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC |
+          GPUTextureUsage.STORAGE
+    });
+    console.log('xx createTexture ' + width + ',' + height);
+
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
+    console.log(heightTex + ',   start ' + this.format);
+    this.queue.writeTexture(
+        {texture: texture}, data as ArrayBuffer,
+        {bytesPerRow: bytesPerRow},  //, rowsPerImage: 1},  // heightTex
+        {width: widthTex, height: heightTex, depth: 1});
+    console.log('xx writeTexture ' + widthTex + ',' + heightTex);
+    return texture;
+  }
+  */
+
+
+  // This will add padding before uploading to GPU texture.
+  private addTexturePadding(
+      textureData: Float32Array|Uint32Array,
+      width: number,
+      height: number,
+      bytesPerRow: number,
+  ) {
+    let textureDataWithPadding =
+        new Float32Array(bytesPerRow / this.kBytesPerTexel * height);
+
+    for (let y = 0; y < height; ++y) {
+      for (let x = 0; x < width; ++x) {
+        const dst = x + y * bytesPerRow / this.kBytesPerTexel;
+        const src = x + y * width;
+        textureDataWithPadding[dst] = textureData[src];
+      }
+    }
+    return textureDataWithPadding;
+  }
+
+
+  private writeTextureWithCopy(
+      matrixData: Float32Array|Uint32Array, width: number, height: number) {
+    const src = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: this.getBufferSize(),  // 640 * 4,  //
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
+          GPUBufferUsage.COPY_DST
+    });
+    console.log('xx createTexture ' + width + ',' + height);
+
+    const [widthTex, heightTex] =
+        tex_util.getPackedMatrixTextureShapeWidthHeight(
+            width, height, this.format);
+
+    const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
+    console.log(
+        'xx writeTextureWithCopy: widthTex = ' + widthTex +
+        '; heightTex = ' + heightTex + ', bytesPerRow=' + bytesPerRow);
+
+    console.log(
+        'xx writeTextureWithCopy:  this.getBufferSize() =' +
+        this.getBufferSize());
+    // TODO: turn this into type of secondMatrix.
+    const matrixDataWithAlignment =
+        this.addTexturePadding(matrixData, width, height, bytesPerRow);
+
+    new Float32Array(src.getMappedRange()).set(matrixDataWithAlignment);
+    src.unmap();
+
+    const texture = this.device.createTexture({
+      size: {width: widthTex, height: heightTex, depth: 1},
+      format: this.format,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC |
+          GPUTextureUsage.STORAGE
+    });
+    const encoder = this.device.createCommandEncoder();
+    // TODO: fix the width height.
+    // copyBufferToTexture(source, destination, copySize).
+    encoder.copyBufferToTexture(
+        {buffer: src, bytesPerRow: bytesPerRow},
+        {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
+        {width: widthTex, height: heightTex, depth: 1});
+    this.device.defaultQueue.submit([encoder.finish()]);
+    return texture;
+  }
+
+
 
   compile(
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       computeShaderCode: any) {
     this.shape = shape;
-    // console.log('B2T this.getBufferSize()=' + this.getBufferSize());
-    /*
-    const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] =
-        this.device.createBufferMapped({
-          size: this.getBufferSize(),  // (firstMatrix as
-                                       // Float32Array).byteLength,
-          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
-              GPUBufferUsage.COPY_DST
-        });
-    new Float32Array(arrayBufferFirstMatrix).set(firstMatrix);
-        gpuBufferFirstMatrix.unmap();
+
+    const gpuTextureFirstMatrix =
+        this.writeTextureWithCopy(firstMatrix, this.shape[0], this.shape[1]);
+    /* const gpuTextureFirstMatrix =
+      this.writeTexture(firstMatrix, this.shape[2], this.shape[3]);
     */
-    const gpuBufferFirstMatrix = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: this.getBufferSize(),
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
-          GPUBufferUsage.COPY_DST
-    });
-    // TODO: turn this into type of secondMatrix.
-    new Float32Array(gpuBufferFirstMatrix.getMappedRange()).set(firstMatrix);
-    gpuBufferFirstMatrix.unmap();
 
+    const gpuTextureSecondMatrix =
+        this.writeTextureWithCopy(secondMatrix, this.shape[2], this.shape[3]);
 
-    const gpuTextureFirstMatrix = this.copyFromHostBufferToDeviceTexture(
-        gpuBufferFirstMatrix, this.shape[0], this.shape[1]);
-
-    /*
-    const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] =
-        this.device.createBufferMapped({
-          size: this.getBufferSize(),  //(secondMatrix as
-                                       // Float32Array).byteLength,
-          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
-              GPUBufferUsage.COPY_DST
-        });
-    new Float32Array(arrayBufferSecondMatrix).set(secondMatrix);
-    gpuBufferSecondMatrix.unmap();
+    /* const gpuTextureSecondMatrix =
+      this.writeTexture(secondMatrix, this.shape[2], this.shape[3]);
     */
-    const gpuBufferSecondMatrix = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: this.getBufferSize(),
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
-          GPUBufferUsage.COPY_DST
-    });
-    // TODO: turn this into type of secondMatrix.
-    new Float32Array(gpuBufferSecondMatrix.getMappedRange()).set(secondMatrix);
-    gpuBufferSecondMatrix.unmap();
-
-    const gpuTextureSecondMatrix = this.copyFromHostBufferToDeviceTexture(
-        gpuBufferSecondMatrix, this.shape[2], this.shape[3]);
 
     // Result Matrix.
     this.resultMatrixTextureSize =
@@ -132,6 +198,9 @@ export class TextureOp {
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
             this.shape[4], this.shape[5], this.format);
+    console.log(
+        'xx result createTexture w h =' + widthTex + ',' + heightTex +
+        ', this.format=' + this.format);
     this.resultMatrixTexture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
       format: this.format,
@@ -147,6 +216,8 @@ export class TextureOp {
     new Uint32Array(shapeMapping).set(shape);
     shapeBuffer.unmap();
     */
+
+    // TODO: make this buffer.destroy automatically!
     const shapeBuffer = this.device.createBuffer({
       mappedAtCreation: true,
       size: shape.byteLength,
@@ -270,7 +341,10 @@ export class TextureOp {
     passEncoder.setBindGroup(0, bindGroup);
 
     passEncoder.dispatch(
-        dispatchX / workGroupSize[0] / workPerThread,
+        Math.ceil(dispatchX / workGroupSize[0] / workPerThread),
+        Math.ceil(dispatchY / workGroupSize[1] / workPerThread));
+    console.log(
+        'd x y  ' + dispatchX / workGroupSize[0] / workPerThread + ', ' +
         dispatchY / workGroupSize[1] / workPerThread);
     passEncoder.endPass();
     // Submit GPU commands.
@@ -283,13 +357,50 @@ export class TextureOp {
     return new Float32Array(arrayBuffer);
   }
 
+  /*
+      PackTextureData(const RGBA8* srcData,  width,    height,
+      srcTexelsPerRow, RGBA8* dstData,  dstTexelsPerRow) {
+       for (
+     int y = 0; y < height; ++y) { for ( int x = 0; x < width; ++x) {
+        int src = x + y * srcTexelsPerRow;
+         int dst = x + y * dstTexelsPerRow;
+         dstData[dst] =     srcData[src];
+                  }
+              }
+          }
+  */
+
+
+  // This will remove padding for data downloading from GPU texture.
+  private removeTexturePadding(
+      textureDataWithPadding: Float32Array,
+      width: number,
+      height: number,
+      bytesPerRow: number,
+  ) {
+    let textureData = new Float32Array(width * height);
+    console.log(
+        'removeTexturePadding textureDataWithPadding =' +
+        textureDataWithPadding);
+    for (let y = 0; y < height; ++y) {
+      for (let x = 0; x < width; ++x) {
+        const src = x + y * bytesPerRow / this.kBytesPerTexel;
+        const dst = x + y * width;
+        textureData[dst] = textureDataWithPadding[src];
+      }
+    }
+    console.log('removeTexturePadding textureData =' + textureData);
+    return textureData;
+  }
+
   async getBufferData() {
     // Get a GPU buffer for reading in an unmapped state.
     const gpuReadBuffer = this.device.createBuffer({
-      size: this.getBufferSize(),  // Float32Array.BYTES_PER_ELEMENT *
-                                   // (this.shape[0] * this.shape[1]),
+      size: this.getBufferSizeRead(),  // Float32Array.BYTES_PER_ELEMENT *
+                                       // (this.shape[0] * this.shape[1]),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
+    console.log('xx read createBuffer size=' + this.getBufferSizeRead());
     // console.log('T2B this.getBufferSize()=' + this.getBufferSize());
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
@@ -297,8 +408,11 @@ export class TextureOp {
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
             this.shape[0], this.shape[1], this.format);
-    // console.log('widthTex = ' + widthTex + '; heightTex = ' + heightTex);
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
+    console.log(
+        'xx copyTextureToBuffer: widthTex = ' + widthTex +
+        '; heightTex = ' + heightTex + ', bytesPerRow' + bytesPerRow +
+        ', this.getBufferSizeRead()=' + this.getBufferSizeRead());
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(
         {
@@ -306,8 +420,15 @@ export class TextureOp {
           mipLevel: 0,
           origin: {x: 0, y: 0, z: 0}
         },
-        {buffer: gpuReadBuffer, bytesPerRow: bytesPerRow},
+        {
+          buffer: gpuReadBuffer,
+          bytesPerRow: bytesPerRow
+          // rowsPerImage: heightTex
+        },
         {width: widthTex, height: heightTex, depth: 1});
+    console.log(
+        'xx read copyTextureToBuffer widthTex, heightTex=' + widthTex + ', ' +
+        heightTex);
     // Submit GPU commands.
     this.device.defaultQueue.submit([commandEncoder.finish()]);
     // t.expectContents(dst, data);
@@ -329,7 +450,9 @@ export class TextureOp {
     // this.releaseBuffer(gpuReadBuffer);
     gpuReadBuffer.unmap();
     gpuReadBuffer.destroy();
-    return arrayBuffer;
+    return this.removeTexturePadding(
+        new Float32Array(arrayBuffer), widthTex, heightTex, bytesPerRow);
+    // return arrayBuffer;
   }
 
   // ---------Below code is not used!-------------------

@@ -9,7 +9,7 @@ export class AddTextureR32FOp extends TextureOp {
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
       format: GPUTextureFormat) {
     super(device, glslang, format);
-    const TS = 16;
+    const TS = 1;
     this.workGroupSize = [TS, TS, 1];
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }

@@ -167,6 +167,9 @@ export async function runTestAdd(device, glslang, size_x = 4096, size_y = 256, t
         device, glslang, firstMatrix, secondMatrix, size_x, size_y, shape);
     if (error) return;
   }
+  if (trials == 0) {
+    return;
+  }
 
   {
     const addOp = new compute.AddBufferOp(
@@ -187,17 +190,21 @@ export async function runTestAdd(device, glslang, size_x = 4096, size_y = 256, t
     await utils.time(
         addOp, utils.executeOp, ' Add texture rgba32float ', trials, reps);
   }
+
 }
 
 export async function checkCorrectnessAdd(
     device, glslang, firstMatrix, secondMatrix, size_x, size_y, shape) {
   let errorSummary = {error: 0};
+  /*
+
   {
     const op = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
     await utils.executeCompareAndDisposeAdd(
         op, firstMatrix, secondMatrix, size_x, size_y, errorSummary);
   }
+  */
 
   {
     const op = new compute.AddTextureR32FOp(
@@ -205,13 +212,16 @@ export async function checkCorrectnessAdd(
     await utils.executeCompareAndDisposeAdd(
         op, firstMatrix, secondMatrix, size_x, size_y, errorSummary);
   }
+  console.log("-----------------------------------------------------------------");
 
+  /*
   {
     const op = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
     await utils.executeCompareAndDisposeAdd(
         op, firstMatrix, secondMatrix, size_x, size_y, errorSummary);
   }
-
+  */
+  
   return errorSummary.error;
 }
