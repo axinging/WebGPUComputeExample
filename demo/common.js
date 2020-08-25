@@ -167,6 +167,9 @@ export async function runTestAdd(device, glslang, size_x = 4096, size_y = 256, t
         device, glslang, firstMatrix, secondMatrix, size_x, size_y, shape);
     if (error) return;
   }
+  if (trials == 0) {
+    return;
+  }
 
   {
     const addOp = new compute.AddBufferOp(
