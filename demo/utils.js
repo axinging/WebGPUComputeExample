@@ -18,7 +18,7 @@ export function logTimes(name, times, trials, reps) {
   const times2 = times.map(function(time) {
     return Number(time.toFixed(2));
   });
-  // console.log(name + times2);
+  console.log(name + times2);
   const mean = times.reduce((a, b) => a + b, 0) / trials;
   const min = Math.min(...times);
   const fmt = (n) => n.toFixed(2);
@@ -27,7 +27,7 @@ export function logTimes(name, times, trials, reps) {
   console.log(name + `Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
 }
 
-export async function time(op, execute, opName, doRep, trials = 50, reps = 50) {
+export async function time(op, execute, opName, doRep, trials = 50, reps = 50, warmupTrails = 50) {
   const times = [];
 
   const trial = async () => {
@@ -41,7 +41,10 @@ export async function time(op, execute, opName, doRep, trials = 50, reps = 50) {
   // Warm-up. Specifically, this pre-allocates enough memory for an entire
   // trial, ensuring that no allocations happen when timing a trial (if the
   // backend reuses allocations).
-  await trial();
+  for (let t = 0; t < warmupTrails; ++t) {
+    await trial();
+  }
+
 
   for (let t = 0; t < trials; ++t) {
     const start = performance.now();
