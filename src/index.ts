@@ -3,6 +3,7 @@ export function hello() {
 }
 
 export {AddBufferOp} from './add_buffer';
+export {AddBufferVec4Op} from './add_buffervec4';
 export {AddTextureOp} from './add_texture';
 export {AddTextureR32FOp} from './add_texturer32f';
 export {BufferOp} from './buffer';

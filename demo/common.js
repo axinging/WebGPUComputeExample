@@ -182,6 +182,12 @@ export async function runTestAdd(device, glslang, size_x = 4096, size_y = 256, t
   }
 
   {
+    const addOp = new compute.AddBufferVec4Op(
+        device, glslang, firstMatrix, secondMatrix, shape);
+    await utils.time(addOp, utils.executeOp, ' Add bufferVec4 ', trials, reps);
+  }
+
+  {
     const addOp = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
     await utils.time(
@@ -202,6 +208,13 @@ export async function checkCorrectnessAdd(
   {
     const op = new compute.AddTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
+    await utils.executeCompareAndDisposeAdd(
+        op, firstMatrix, secondMatrix, size_x, size_y, errorSummary);
+  }
+
+  {
+    const op = new compute.AddBufferVec4Op(
+        device, glslang, firstMatrix, secondMatrix, shape);
     await utils.executeCompareAndDisposeAdd(
         op, firstMatrix, secondMatrix, size_x, size_y, errorSummary);
   }
