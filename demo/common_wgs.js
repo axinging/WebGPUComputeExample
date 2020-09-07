@@ -182,7 +182,7 @@ export async function runTestAddTextureRGBA32FWGS(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float',
         workgroupsize);
     await utils.time(
-        addOp, utils.executeOp, ' Add texture r32float ', trials, reps,
+        addOp, utils.executeOp, ' Add texture rgba32float ', trials, reps,
         warmupTrials);
   }
 }
