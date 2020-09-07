@@ -7,10 +7,10 @@ export class AddTextureOp extends TextureOp {
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      format: GPUTextureFormat) {
+      format: GPUTextureFormat,
+      workGroupSize: [number, number, number] = [16, 16, 1]) {
     super(device, glslang, format);
-    const TS = 16;
-    this.workGroupSize = [TS, TS, 1];
+    this.workGroupSize = workGroupSize;
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 

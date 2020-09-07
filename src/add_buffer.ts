@@ -6,11 +6,12 @@ export class AddBufferOp extends BufferOp {
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
-      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
+      secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
+      workGroupSize: [number, number, number] = [128, 1, 1]) {
     // Compute shader code (GLSL)
     super(device, glslang);
     // const TS = 32;
-    this.workGroupSize = [128, 1, 1];
+    this.workGroupSize = workGroupSize;
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
