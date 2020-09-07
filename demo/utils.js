@@ -18,7 +18,7 @@ export function logTimes(name, times, trials, reps) {
   const times2 = times.map(function(time) {
     return Number(time.toFixed(2));
   });
-  console.log(name + times2);
+  console.log("------BEGIN of a single test: "+name + times2);
   const mean = times.reduce((a, b) => a + b, 0) / trials;
   const min = Math.min(...times);
   const fmt = (n) => n.toFixed(2);
