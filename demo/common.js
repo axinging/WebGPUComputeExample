@@ -153,7 +153,7 @@ export async function checkCorrectnessMatmul(
 
 
 export async function runTestAdd(
-    device, glslang, size_x = 4096, size_y = 256, trials = 50, reps = 50) {
+    device, glslang, size_x = 4096, size_y = 256, trials = 50, reps = 50, warmupTrails = 50) {
   console.log('Input size: ' + size_x + ',' + size_y+'---------------------------------------------------------');
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = utils.createFloat32Array(size_x, size_y);
@@ -174,27 +174,27 @@ export async function runTestAdd(
   {
     const addOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-    await utils.time(addOp, utils.executeOp, ' Add buffer ', trials, reps);
+    await utils.time(addOp, utils.executeOp, ' Add buffer ', trials, reps, warmupTrails);
   }
 
   {
     const addOp = new compute.AddTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
     await utils.time(
-        addOp, utils.executeOp, ' Add texture r32float ', trials, reps);
+        addOp, utils.executeOp, ' Add texture r32float ', trials, reps, warmupTrails);
   }
 
   {
     const addOp = new compute.AddBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape);
-    await utils.time(addOp, utils.executeOp, ' Add bufferVec4 ', trials, reps);
+    await utils.time(addOp, utils.executeOp, ' Add bufferVec4 ', trials, reps, warmupTrails);
   }
 
   {
     const addOp = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
     await utils.time(
-        addOp, utils.executeOp, ' Add texture rgba32float ', trials, reps);
+        addOp, utils.executeOp, ' Add texture rgba32float ', trials, reps, warmupTrails);
   }
 }
 

@@ -27,7 +27,7 @@ export function logTimes(name, times, trials, reps) {
   console.log(name + `Min time: ${fmt(min)} ms -> ${fmt(min / reps)} / rep`);
 }
 
-export async function time(op, execute, opName, doRep, trials = 50, reps = 50, warmupTrails = 50) {
+export async function time(op, execute, opName, trials = 50, reps = 50, warmupTrails = 50) {
   const times = [];
 
   const trial = async () => {
