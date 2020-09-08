@@ -387,7 +387,7 @@ export class BufferOp {
     this.freeBuffers.forEach((buffers, key) => {
       buffers.forEach(buff => {
         // console.log(' freeBuffers destroy key = ' + key);
-        buff.unmap();
+        // buff.unmap();
         buff.destroy();
       });
     });

@@ -35,7 +35,6 @@ export async function time(op, execute, opName, doRep, trials = 50, reps = 50, w
       execute(op);
     }
     await op.data();
-    op.dispose();
   };
 
   // Warm-up. Specifically, this pre-allocates enough memory for an entire
@@ -51,6 +50,7 @@ export async function time(op, execute, opName, doRep, trials = 50, reps = 50, w
     await trial();
     times.push(performance.now() - start);
   }
+  op.dispose();
 
   logTimes(opName, times, trials, reps);
 }
