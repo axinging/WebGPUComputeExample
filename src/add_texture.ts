@@ -3,6 +3,7 @@ import {TextureOp} from './texture';
 
 export class AddTextureOp extends TextureOp {
   workGroupSize: [number, number, number];
+  workPerThread: [number, number, number];
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
@@ -11,6 +12,7 @@ export class AddTextureOp extends TextureOp {
       workGroupSize: [number, number, number] = [16, 16, 1]) {
     super(device, glslang, format);
     this.workGroupSize = workGroupSize;
+    this.workPerThread = [4, 1, 1];
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
@@ -20,7 +22,7 @@ export class AddTextureOp extends TextureOp {
   }
 
   executeSync() {
-    this.compileAndRunSync(this.workGroupSize);
+    this.compileAndRunSync(this.workGroupSize, this.workPerThread);
     return;
   }
 
@@ -44,7 +46,7 @@ export class AddTextureOp extends TextureOp {
           layout(set = 0, binding = 3, rgba32f) uniform readonly image2D
     filterValues;
 
-          layout(local_size_x = ${this.workGroupSize[0] / 4}, local_size_y = ${
+          layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
         this.workGroupSize[1]}, local_size_z = 1) in;
 
           void main() {

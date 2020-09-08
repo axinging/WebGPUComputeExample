@@ -5,7 +5,7 @@ import {TextureOp} from './texture';
 
 export class MatmulTextureRGBA32FOp extends TextureOp {
   workGroupSize: [number, number, number];
-  workPerThread: number;
+  workPerThread: [number, number, number];
   outputShape: number[];
   scalarFormt: string;
   vectorFormat: string;
@@ -13,7 +13,7 @@ export class MatmulTextureRGBA32FOp extends TextureOp {
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      workPerThread: number, format: GPUTextureFormat) {
+      workPerThread: [number, number, number], format: GPUTextureFormat) {
     // view-source:https://www.ibiblio.org/e-notes/webgl/gpu/mul/sgemm2.htm
     /// super(device, glslang, firstMatrix, secondMatrix,
     /// shape,computeShaderCode, format, kBytesPerTexel);

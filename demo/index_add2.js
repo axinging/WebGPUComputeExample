@@ -11,7 +11,11 @@ import * as utils from './utils.js';
         'WebGPU is not supported. Enable chrome://flags/#enable-unsafe-webgpu flag.');
     return;
   }
-  const adapter = await navigator.gpu.requestAdapter();
+   const adapter = await navigator.gpu.requestAdapter();
+  // GPURequestAdapterOptions can be: 'low-power' or 'high-performance'
+  // Below code is not tested. And will fail on Windows.
+  // const gpuOptions = {'high-performance'};
+  // const adapter = await navigator.gpu.requestAdapter(gpuOptions);
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();

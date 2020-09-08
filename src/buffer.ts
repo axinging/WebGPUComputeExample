@@ -222,7 +222,12 @@ export class BufferOp {
   }
 
   compileAndRunSync(
-      workGroupSize: [number, number, number], workPerThread = 1) {
+      workGroupSize: [number, number, number],
+      workPerThread: [number, number, number] = [
+        1,
+        1,
+        1,
+      ]) {
     // TODO: figure out how to return non const two values.
     // if (mode == 0) {
     return this.dispatchAndSubmit(
@@ -233,7 +238,7 @@ export class BufferOp {
   private dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number, workGroupSize: [number, number, number],
-      workPerThread = 1) {
+      workPerThread: [number, number, number] = [1, 1, 1]) {
     // TIMESTAMP
     // TODO: necessary to destroy querySet?
     /*
@@ -265,13 +270,13 @@ export class BufferOp {
     // passEncoder.dispatch(dispatchX, dispatchY);
     if (workGroupSize[1] == 1 && workGroupSize[2] == 1) {
       passEncoder.dispatch(
-          dispatchX * dispatchY / workGroupSize[0] / workPerThread /
-              workPerThread,
+          dispatchX * dispatchY / workGroupSize[0] / workPerThread[0] /
+              workPerThread[1],
           1);
     } else {
       passEncoder.dispatch(
-          dispatchX / workGroupSize[0] / workPerThread,
-          dispatchY / workGroupSize[1] / workPerThread);
+          dispatchX / workGroupSize[0] / workPerThread[0],
+          dispatchY / workGroupSize[1] / workPerThread[1]);
     }
     /*
     if (this.enableTimeStamp) {

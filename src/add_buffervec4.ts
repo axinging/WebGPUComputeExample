@@ -3,6 +3,7 @@ import {BufferOp} from './buffer';
 
 export class AddBufferVec4Op extends BufferOp {
   workGroupSize: [number, number, number];
+  workPerThread: [number, number, number];
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
@@ -12,6 +13,8 @@ export class AddBufferVec4Op extends BufferOp {
     super(device, glslang);
     // const TS = 32;
     this.workGroupSize = workGroupSize;
+    this.workPerThread = [4, 1, 1];
+
     this.compile(firstMatrix, secondMatrix, shape, this.getShader());
   }
 
@@ -21,7 +24,8 @@ export class AddBufferVec4Op extends BufferOp {
   }
 
   executeSync() {
-    const result = this.compileAndRunSync(this.workGroupSize);
+    const result =
+        this.compileAndRunSync(this.workGroupSize, this.workPerThread);
     return result;
   }
 
@@ -49,7 +53,7 @@ export class AddBufferVec4Op extends BufferOp {
             vec4 resultMatrix[];
         } ;
 
-        layout(local_size_x = ${this.workGroupSize[0] / 4}, local_size_y = ${
+        layout(local_size_x = ${this.workGroupSize[0]}, local_size_y = ${
         this.workGroupSize[1]}, local_size_z = 1) in;
 
         void main() {

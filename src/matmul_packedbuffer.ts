@@ -3,12 +3,12 @@ import {BufferOp} from './buffer';
 
 export class MatmulPackedBufferOp extends BufferOp {
   workGroupSize: [number, number, number];
-  workPerThread: number;
+  workPerThread: [number, number, number];
   constructor(
       device: GPUDevice, glslang: Glslang,
       firstMatrix: Float32Array|Uint32Array,
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array,
-      workPerThread = 1) {
+      workPerThread: [number, number, number] = [1, 1, 1]) {
     super(device, glslang);
     const TS = 16;
     const TS_Y = 16;

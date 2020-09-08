@@ -248,8 +248,9 @@ export class TextureOp {
     return;
   }
 
-  compileAndRunSync(
-      workGroupSize: [number, number, number], workPerThread = 1) {
+  compileAndRunSync(workGroupSize: [number, number, number], workPerThread: [
+    number, number, number
+  ] = [1, 1, 1]) {
     // TODO: figure out how to return non const two values.
     this.dispatchAndSubmit(
         this.computePipeline, this.bindGroup, this.shape[0], this.shape[1],
@@ -261,7 +262,7 @@ export class TextureOp {
   private dispatchAndSubmit(
       computePipeline: any, bindGroup: any, dispatchX: number,
       dispatchY: number, workGroupSize: [number, number, number],
-      workPerThread = 1) {
+      workPerThread: [number, number, number] = [1, 1, 1]) {
     // Commands submission.
     const commandEncoder = this.device.createCommandEncoder();
 
@@ -270,8 +271,8 @@ export class TextureOp {
     passEncoder.setBindGroup(0, bindGroup);
 
     passEncoder.dispatch(
-        dispatchX / workGroupSize[0] / workPerThread,
-        dispatchY / workGroupSize[1] / workPerThread);
+        dispatchX / workGroupSize[0] / workPerThread[0],
+        dispatchY / workGroupSize[1] / workPerThread[1]);
     passEncoder.endPass();
     // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
