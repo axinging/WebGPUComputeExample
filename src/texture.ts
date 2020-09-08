@@ -17,7 +17,9 @@ export class TextureOp {
   format: GPUTextureFormat;
   kBytesPerTexel: number;
   bufferID: number;
+  textureID: number;
   freeBuffers: Map<number, GPUBuffer[]> = new Map();
+  freeTextures: Map<number, GPUTexture[]> = new Map();
   constructor(device: GPUDevice, glslang: Glslang, format: GPUTextureFormat) {
     this.device = device;
     this.queue = device.defaultQueue;
@@ -164,9 +166,18 @@ export class TextureOp {
              GPUBufferUsage.COPY_DST);
      */
 
-    return this.createLayout(
+    this.createLayout(
         gpuTextureFirstMatrix, gpuTextureSecondMatrix, shapeBuffer,
         computeShaderCode);
+    // TODO: destroy first second immediately.
+    this.releaseBuffer(gpuBufferFirstMatrix);
+    this.releaseBuffer(gpuBufferSecondMatrix);
+    this.releaseBuffer(shapeBuffer);
+
+    this.releaseTexture(gpuTextureFirstMatrix);
+    this.releaseTexture(gpuTextureSecondMatrix);
+    this.releaseTexture(this.resultMatrixTexture);
+    return;
   }
 
   private createLayout(
@@ -362,6 +373,10 @@ export class TextureOp {
     return this.bufferID++;
   }
 
+  getTextureKey() {
+    return this.textureID++;
+  }
+
   releaseBuffer(buffer: GPUBuffer) {
     if (this.freeBuffers == null) {
       return;
@@ -374,19 +389,39 @@ export class TextureOp {
 
     this.freeBuffers.get(key).push(buffer);
   }
-  // Call this after execute.
-  disposeReadBackBuffer() {
-    if (this.freeBuffers == null) {
+
+  releaseTexture(texture: GPUTexture) {
+    if (this.freeTextures == null) {
       return;
     }
 
-    this.freeBuffers.forEach((buffers, key) => {
-      buffers.forEach(buff => {
-        // console.log(' freeBuffers destroy key = ' + key);
-        buff.unmap();
-        buff.destroy();
+    const key = this.getBufferKey();
+    if (!this.freeTextures.has(key)) {
+      this.freeTextures.set(key, []);
+    }
+
+    this.freeTextures.get(key).push(texture);
+  }
+
+  // Call this after execute.
+  disposeReadBackBuffer() {
+    if (this.freeBuffers != null)
+      this.freeBuffers.forEach((buffers, key) => {
+        buffers.forEach(buff => {
+          // console.log(' freeBuffers destroy key = ' + key);
+          buff.unmap();
+          buff.destroy();
+        });
       });
-    });
+
+    if (this.freeTextures != null)
+      this.freeTextures.forEach((textures, key) => {
+        textures.forEach(texture => {
+          // console.log(' freeTextures destroy key = ' + key);
+          // texture.unmap();
+          texture.destroy();
+        });
+      });
   }
 
   dispose() {

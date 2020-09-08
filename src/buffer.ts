@@ -149,10 +149,14 @@ export class BufferOp {
          GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_SRC |
              GPUBufferUsage.COPY_DST);
      */
-
-    return this.createLayout(
+    this.createLayout(
         gpuBufferFirstMatrix, gpuBufferSecondMatrix, shapeBuffer,
         computeShaderCode);
+    this.releaseBuffer(gpuBufferFirstMatrix);
+    this.releaseBuffer(gpuBufferSecondMatrix);
+    this.releaseBuffer(this.resultMatrixBuffer);
+    this.releaseBuffer(shapeBuffer);
+    return;
   }
 
   private createLayout(
