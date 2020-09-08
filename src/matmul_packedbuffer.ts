@@ -78,8 +78,8 @@ export class MatmulPackedBufferOp extends BufferOp {
     void mm_write(int row, int col, float value);
     void mm_matMul(int dimAOuter, int dimInner, int dimBOuter);
   
-    const int RowPerThread = ${this.workPerThread};
-    const int ColPerThread = ${this.workPerThread};
+    const int RowPerThread = ${this.workPerThread[0]};
+    const int ColPerThread = ${this.workPerThread[1]};
     const int TileAOuter = int(gl_WorkGroupSize.y) * RowPerThread;
     const int TileBOuter = int(gl_WorkGroupSize.x) * ColPerThread;
     const int TileInner = TileAOuter > TileBOuter ? TileAOuter : TileBOuter;

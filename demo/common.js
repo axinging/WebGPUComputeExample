@@ -47,8 +47,9 @@ export async function runTestMatmul(
   }
 
   {
+    const WPT = 8;
     const op = new compute.MatmulBufferVec4Op(
-        device, glslang, firstMatrix, secondMatrix, shape);
+        device, glslang, firstMatrix, secondMatrix, shape,[WPT, WPT,1]);
     await utils.time(op, utils.executeOp, ' buffer vec4 WPT8x8 ', trials, reps);
   }
 
@@ -123,27 +124,27 @@ export async function checkCorrectnessMatmul(
 
   {
     const op = new compute.MatmulBufferVec4Op(
-        device, glslang, firstMatrix, secondMatrix, shape, 8);
+        device, glslang, firstMatrix, secondMatrix, shape, [8, 8,1]);
     await utils.executeCompareAndDispose(
         op, matmulReferenceData, size_x, size_y, errorSummary);
   }
 
   {
     const op = new compute.MatmulPackedBufferOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4);
+        device, glslang, firstMatrix, secondMatrix, shape, [4,4,1]);
     await utils.executeCompareAndDispose(
         op, matmulReferenceData, size_x, size_y, errorSummary);
   }
 
   {
     const op = new compute.MatmulTextureR32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 4, 'r32float');
+        device, glslang, firstMatrix, secondMatrix, shape, [4,4,1], 'r32float');
     await utils.executeCompareAndDispose(
         op, matmulReferenceData, size_x, size_y, errorSummary);
   }
   {
     const op = new compute.MatmulTextureRGBA32FOp(
-        device, glslang, firstMatrix, secondMatrix, shape, 8, 'rgba32float');
+        device, glslang, firstMatrix, secondMatrix, shape, [8,8,1], 'rgba32float');
     await utils.executeCompareAndDispose(
         op, matmulReferenceData, size_x, size_y, errorSummary);
   }

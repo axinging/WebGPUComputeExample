@@ -221,13 +221,9 @@ export class BufferOp {
         */
   }
 
-  compileAndRunSync(
-      workGroupSize: [number, number, number],
-      workPerThread: [number, number, number] = [
-        1,
-        1,
-        1,
-      ]) {
+  compileAndRunSync(workGroupSize: [number, number, number], workPerThread: [
+    number, number, number
+  ] = [1, 1, 1]) {
     // TODO: figure out how to return non const two values.
     // if (mode == 0) {
     return this.dispatchAndSubmit(
