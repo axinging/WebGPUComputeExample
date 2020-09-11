@@ -14,10 +14,11 @@ yarn watch
 ```
 
 ## Status
+Add support any size except rgba32f. Matmul only support 256 aligned.
 ```
-add_buffer: Pass
-add_texture: Pass
-add_texturer32f: Pass
+add_buffer: Pass; Any size;
+add_texture(rgba32f): Pass; Must be 256 bytes aligned.
+add_texturer32f: Pass; Any size;
 matmul_buffer: Pass
 matmul_buffervec4: Pass
 matmul_packedbuffer: Pass
