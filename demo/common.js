@@ -13,7 +13,7 @@ export async function runTestMatmul(
   const secondMatrixSize = [size_x, size_y];
   const secondMatrix = utils.createFloat32Array(size_x, size_y);
   const shape = new Uint32Array([
-    firstMatrixSize[0], firstMatrixSize[1], seconxdMatrixSize[0],
+    firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
     secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
   ]);
   // Result check
@@ -34,7 +34,7 @@ export async function runTestMatmul(
     const op = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, [4,4,1]);
     await utils.time(
-        op, utils.executeOp, ' packed buffer WPT4x4 ', trials, reps);
+        op, utils.executeOp, 'matmul packed buffer WPT4x4 ', trials, reps);
   }
 
   {
@@ -43,14 +43,14 @@ export async function runTestMatmul(
     const op = new compute.MatmulTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, [WPT, WPT,1], format);
     await utils.time(
-        op, utils.executeOp, ' r32float texture WPT4x4 ', trials, reps);
+        op, utils.executeOp, 'matmul r32float texture WPT4x4 ', trials, reps);
   }
 
   {
     const WPT = 8;
     const op = new compute.MatmulBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape,[WPT, WPT,1]);
-    await utils.time(op, utils.executeOp, ' buffer vec4 WPT8x8 ', trials, reps);
+    await utils.time(op, utils.executeOp, 'matmul buffer vec4 WPT8x8 ', trials, reps);
   }
 
   {
@@ -59,27 +59,27 @@ export async function runTestMatmul(
     const op = new compute.MatmulTextureRGBA32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, [WPT, WPT,1], format);
     await utils.time(
-        op, utils.executeOp, ' rgba32float texture WPT8x8 ', trials, reps);
+        op, utils.executeOp, 'matmul rgba32float texture WPT8x8 ', trials, reps);
   }
 
   const testAll = false;
   if (testAll) {
     const op = new compute.MatmulBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-    await utils.time(op, utils.executeOp, ' buffer ', trials, reps);
+    await utils.time(op, utils.executeOp, 'matmul buffer ', trials, reps);
   }
 
   if (testAll) {
     const op = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-    await utils.time(op, utils.executeOp, ' packed buffer ', trials, reps);
+    await utils.time(op, utils.executeOp, 'matmul packed buffer ', trials, reps);
   }
 
   if (testAll) {
     const op = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, [2, 2,1]);
     await utils.time(
-        op, utils.executeOp, ' packed buffer WPT2x2 ', trials, reps);
+        op, utils.executeOp, 'matmul packed buffer WPT2x2 ', trials, reps);
   }
 }
 
@@ -169,6 +169,9 @@ export async function runTestAdd(
     const error = await checkCorrectnessAdd(
         device, glslang, firstMatrix, secondMatrix, size_x, size_y, shape);
     if (error) return;
+  }
+  if (trials == 0) {
+    return;
   }
 
   {
