@@ -5,7 +5,7 @@ const resultCheck = true;
 
 export async function runTestMatmul(
     device, glslang, size_x = 256, size_y = 256, trials = 50, reps = 50) {
-  console.log('Input size: ' + size_x + ',' + size_y+'---------------------------------------------------------');
+  console.log('Input size: ' + size_x + 'x' + size_y+'---------------------------------------------------------');
 
   const firstMatrixSize = [size_x, size_y];
   const firstMatrix = utils.createFloat32Array(size_x, size_y);
@@ -13,7 +13,7 @@ export async function runTestMatmul(
   const secondMatrixSize = [size_x, size_y];
   const secondMatrix = utils.createFloat32Array(size_x, size_y);
   const shape = new Uint32Array([
-    firstMatrixSize[0], firstMatrixSize[1], secondMatrixSize[0],
+    firstMatrixSize[0], firstMatrixSize[1], seconxdMatrixSize[0],
     secondMatrixSize[1], firstMatrixSize[0], firstMatrixSize[1]
   ]);
   // Result check
