@@ -270,13 +270,14 @@ export class BufferOp {
     // passEncoder.dispatch(dispatchX, dispatchY);
     if (workGroupSize[1] == 1 && workGroupSize[2] == 1) {
       passEncoder.dispatch(
-          dispatchX * dispatchY / workGroupSize[0] / workPerThread[0] /
-              workPerThread[1],
+          Math.ceil(
+              dispatchX * dispatchY / workGroupSize[0] / workPerThread[0] /
+              workPerThread[1]),
           1);
     } else {
       passEncoder.dispatch(
-          dispatchX / workGroupSize[0] / workPerThread[0],
-          dispatchY / workGroupSize[1] / workPerThread[1]);
+          Math.ceil(dispatchX / workGroupSize[0] / workPerThread[0]),
+          Math.ceil(dispatchY / workGroupSize[1] / workPerThread[1]));
     }
     /*
     if (this.enableTimeStamp) {
