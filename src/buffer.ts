@@ -278,6 +278,14 @@ export class BufferOp {
       passEncoder.dispatch(
           Math.ceil(dispatchX / workGroupSize[0] / workPerThread[0]),
           Math.ceil(dispatchY / workGroupSize[1] / workPerThread[1]));
+      /*
+  console.log(
+      'dispatchX / workGroupSize[0] / workPerThread[0] =' +
+      dispatchX / workGroupSize[0] / workPerThread[0]);
+  console.log(
+      'dispatchY / workGroupSize[1] / workPerThread[1] =' +
+      dispatchY / workGroupSize[1] / workPerThread[1]);
+      */
     }
     /*
     if (this.enableTimeStamp) {

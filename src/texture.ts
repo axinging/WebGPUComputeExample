@@ -47,7 +47,8 @@ export class TextureOp {
 
     // TODO: turn this into type of secondMatrix.
     // this didn't work under rgba32float.
-    if (this.format == 'rgba32float') {
+    if ((widthTex % 64 == 0) || this.format == 'rgba32float') {
+      // console.error('Not padding when the input size is 256 bytes aligned');
       new Float32Array(src.getMappedRange()).set(matrixData);
     } else {
       const matrixDataWithAlignment =
@@ -348,7 +349,8 @@ export class TextureOp {
     gpuReadBuffer.unmap();
     gpuReadBuffer.destroy();
     // this didn't work under rgba32f.
-    if (this.format == 'rgba32float') {
+    if ((widthTex % 64 == 0) || this.format == 'rgba32float') {
+      // console.error('Not padding when the input size is 256 bytes aligned');
       return arrayBuffer;
     } else {
       return this.removeTexturePadding(

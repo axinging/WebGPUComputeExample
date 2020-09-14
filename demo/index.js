@@ -17,17 +17,16 @@ import * as common from './common.js';
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
 
-  const trials = 50, reps = 50;
+  const trials = 50, reps = 50, warmupTrails = 50;
   var size = 256;
-  await common.runTestMatmul(device, glslang, size, size, trials, reps);
+  await common.runTestMatmul(device, glslang, size, size, trials, reps, warmupTrails);
   size = 512;
-  await common.runTestMatmul(device, glslang, size, size, trials, reps);
+  await common.runTestMatmul(device, glslang, size, size, trials, reps, warmupTrails);
   size = 1024;
-  await common.runTestMatmul(device, glslang, size, size, trials, reps);
+  await common.runTestMatmul(device, glslang, size, size, trials, reps, warmupTrails);
   size = 2048;
-  await common.runTestMatmul(device, glslang, size, size, trials, reps);
-
-  await common.runTestAdd(device, glslang, 4096, 256, trials, reps);
-  await common.runTestAdd(device, glslang, 4096, 1024, trials, reps);
+  await common.runTestMatmul(device, glslang, size, size, trials, reps, warmupTrails);
+  await common.runTestAdd(device, glslang, 4096, 256, trials, reps, warmupTrails);
+  await common.runTestAdd(device, glslang, 4096, 1024, trials, reps, warmupTrails);
 
 })();

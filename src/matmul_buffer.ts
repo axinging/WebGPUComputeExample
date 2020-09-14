@@ -79,7 +79,7 @@ export class MatmulBufferOp extends BufferOp {
           // Initialise the accumulation register
           float acc = 0.0;
           // Loop over all tiles
-          uint numTiles = K/TS;
+          uint numTiles = uint(ceil(K/TS));
 
           for (uint t=0u; t < numTiles; t++) {
 
