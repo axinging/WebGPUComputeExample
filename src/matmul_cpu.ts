@@ -15,9 +15,9 @@ export class MatmulCPUOp {
       secondMatrix: Float32Array|Uint32Array, shape: Uint32Array) {
     // This is from: backend_cpu/batchMatmul.
     const sharedDim = shape[1];
-    const leftDim = shape[1];
-    const rightDim = shape[1];
-    const batchDim = shape[1];
+    const leftDim = shape[0];
+    const rightDim = shape[3];
+    const batchDim = shape[2];
 
     const stridesA = [shape[0] * shape[1], shape[1]];
     const [aBatch, aOuterStep, aInnerStep] = [stridesA[0], stridesA[1], 1];
