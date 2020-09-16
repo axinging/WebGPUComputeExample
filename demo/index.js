@@ -1,10 +1,9 @@
-import * as compute from '@webgpu/compute';
 // import glslangModule from '@webgpu/glslang/dist/web-devel/glslang.onefile';
 import glslangInit from '@webgpu/glslang/dist/web-devel/glslang.onefile';
-// import * as tfwebgpu from '@tensorflow/tfjs-backend-webgpu';
-// import * as tf from '@tensorflow/tfjs-core';
-import * as utils from './utils.js';
+
 import * as common from './common.js';
+import * as commonwgs from './common_wgs.js';
+import * as utils from './utils.js';
 
 (async () => {
   if (!navigator.gpu) {
@@ -12,21 +11,75 @@ import * as common from './common.js';
         'WebGPU is not supported. Enable chrome://flags/#enable-unsafe-webgpu flag.');
     return;
   }
-  const adapter = await navigator.gpu.requestAdapter();
+   const adapter = await navigator.gpu.requestAdapter();
+  // GPURequestAdapterOptions can be: 'low-power' or 'high-performance'
+  // Below code is not tested. And will fail on Windows.
+  // const gpuOptions = {'high-performance'};
+  // const adapter = await navigator.gpu.requestAdapter(gpuOptions);
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
+  const trials = 2;
+  const repeat = 2;
+  const warmupTrials = 1;
 
-  const trials = 50, reps = 50, warmupTrails = 50;
+  console.error(
+      '**********************************************************Below is Add input size test**********************************************************');
+  for (var y = 1; y <= 8; y = y * 2) {
+    for (var x = 1; x <= 8; x = x * 2) {
+      await common.runTestAdd(
+          device, glslang, 256 * y, 256 * x, trials, repeat, warmupTrials);
+    }
+  }
+
+  console.error(
+    '**********************************************************Below is Matmul input size test**********************************************************');
   var size = 256;
-  await common.runTestMatmul(device, glslang, size, size, trials, reps, warmupTrails);
+  await common.runTestMatmul(device, glslang, size, size, trials, repeat, warmupTrials);
   size = 512;
-  await common.runTestMatmul(device, glslang, size, size, trials, reps, warmupTrails);
+  await common.runTestMatmul(device, glslang, size, size, trials, repeat, warmupTrials);
   size = 1024;
-  await common.runTestMatmul(device, glslang, size, size, trials, reps, warmupTrails);
+  await common.runTestMatmul(device, glslang, size, size, trials, repeat, warmupTrials);
   size = 2048;
-  await common.runTestMatmul(device, glslang, size, size, trials, reps, warmupTrails);
-  await common.runTestAdd(device, glslang, 4096, 256, trials, reps, warmupTrails);
-  await common.runTestAdd(device, glslang, 4096, 1024, trials, reps, warmupTrails);
+  await common.runTestMatmul(device, glslang, size, size, trials, repeat, warmupTrials);
 
+  console.error(
+      '**********************************************************Below is for work group size test for Add**********************************************************');
+  const inputSizeWGS = 1024;
+  await commonwgs.runTestAddBufferWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [64, 1, 1]);
+  await commonwgs.runTestAddBufferWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [128, 1, 1]);
+  await commonwgs.runTestAddBufferWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [256, 1, 1]);
+  await commonwgs.runTestAddBufferVec4WGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [64, 1, 1]);
+  await commonwgs.runTestAddBufferVec4WGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [128, 1, 1]);
+  await commonwgs.runTestAddBufferVec4WGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [256, 1, 1]);
+  await commonwgs.runTestAddTextureR32FWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [8, 8, 1]);
+  await commonwgs.runTestAddTextureR32FWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [16, 16, 1]);
+  await commonwgs.runTestAddTextureR32FWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [32, 32, 1]);
+  await commonwgs.runTestAddTextureRGBA32FWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [8, 8, 1]);
+  await commonwgs.runTestAddTextureRGBA32FWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [16, 16, 1]);
+  await commonwgs.runTestAddTextureRGBA32FWGS(
+      device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
+      [32, 32, 1]);
 })();
