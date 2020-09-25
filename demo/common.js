@@ -36,7 +36,7 @@ export async function runTestMatmul(
     const op = new compute.MatmulPackedBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, [4, 4, 1]);
     await utils.time(
-        op, utils.executeOp, 'matmul packed buffer WPT4x4 ', trials, reps, warmupTrails);
+        op, utils.executeOp, 'matmul buffer(float) WPT4x4 ', trials, reps, warmupTrails);
   }
 
   {
@@ -46,7 +46,7 @@ export async function runTestMatmul(
         device, glslang, firstMatrix, secondMatrix, shape, [WPT, WPT, 1],
         format);
     await utils.time(
-        op, utils.executeOp, 'matmul r32float texture WPT4x4 ', trials, reps, warmupTrails);
+        op, utils.executeOp, 'matmul texture(r32float) WPT4x4 ', trials, reps, warmupTrails);
   }
 
   {
@@ -54,7 +54,7 @@ export async function runTestMatmul(
     const op = new compute.MatmulBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape, [WPT, WPT, 1]);
     await utils.time(
-        op, utils.executeOp, 'matmul buffer vec4 WPT8x8 ', trials, reps, warmupTrails);
+        op, utils.executeOp, 'matmul buffer(vec4) WPT8x8 ', trials, reps, warmupTrails);
   }
 
   {
@@ -64,7 +64,7 @@ export async function runTestMatmul(
         device, glslang, firstMatrix, secondMatrix, shape, [WPT, WPT, 1],
         format);
     await utils.time(
-        op, utils.executeOp, 'matmul rgba32float texture WPT8x8 ', trials,
+        op, utils.executeOp, 'matmul texture(rgba32float) WPT8x8 ', trials,
         reps, warmupTrails);
   }
 
@@ -72,7 +72,7 @@ export async function runTestMatmul(
   if (testAll) {
     const op = new compute.MatmulBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
-    await utils.time(op, utils.executeOp, 'matmul buffer ', trials, reps, warmupTrails);
+    await utils.time(op, utils.executeOp, 'matmul buffer(float) ', trials, reps, warmupTrails);
   }
 
   if (testAll) {
@@ -202,14 +202,14 @@ export async function runTestAdd(
     const addOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape);
     await utils.time(
-        addOp, utils.executeOp, ' Add buffer ', trials, reps, warmupTrails);
+        addOp, utils.executeOp, ' Add buffer(float) ', trials, reps, warmupTrails);
   }
 
   {
     const addOp = new compute.AddTextureR32FOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float');
     await utils.time(
-        addOp, utils.executeOp, ' Add texture r32float ', trials, reps,
+        addOp, utils.executeOp, ' Add texture(r32float) ', trials, reps,
         warmupTrails);
   }
 
@@ -217,14 +217,14 @@ export async function runTestAdd(
     const addOp = new compute.AddBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape);
     await utils.time(
-        addOp, utils.executeOp, ' Add bufferVec4 ', trials, reps, warmupTrails);
+        addOp, utils.executeOp, ' Add buffer(vec4) ', trials, reps, warmupTrails);
   }
 
   {
     const addOp = new compute.AddTextureOp(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float');
     await utils.time(
-        addOp, utils.executeOp, ' Add texture rgba32float ', trials, reps,
+        addOp, utils.executeOp, ' Add texture(rgba32float) ', trials, reps,
         warmupTrails);
   }
 }

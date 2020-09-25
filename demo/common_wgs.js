@@ -43,7 +43,7 @@ export async function runTestAddBufferWGS(
     const addOp = new compute.AddBufferOp(
         device, glslang, firstMatrix, secondMatrix, shape, workgroupsize);
     await utils.time(
-        addOp, utils.executeOp, ' Add buffer ', trials, reps, warmupTrials);
+        addOp, utils.executeOp, ' Add buffer(float) ', trials, reps, warmupTrials);
   }
 }
 
@@ -87,7 +87,7 @@ export async function runTestAddBufferVec4WGS(
     const addOp = new compute.AddBufferVec4Op(
         device, glslang, firstMatrix, secondMatrix, shape, workgroupsize);
     await utils.time(
-        addOp, utils.executeOp, ' Add buffer vec4 ', trials, reps,
+        addOp, utils.executeOp, ' Add buffer(vec4)', trials, reps,
         warmupTrials);
   }
 }
@@ -133,7 +133,7 @@ export async function runTestAddTextureR32FWGS(
         device, glslang, firstMatrix, secondMatrix, shape, 'r32float',
         workgroupsize);
     await utils.time(
-        addOp, utils.executeOp, ' Add texture r32float ', trials, reps,
+        addOp, utils.executeOp, ' Add texture(r32float) ', trials, reps,
         warmupTrials);
   }
 }
@@ -182,7 +182,7 @@ export async function runTestAddTextureRGBA32FWGS(
         device, glslang, firstMatrix, secondMatrix, shape, 'rgba32float',
         workgroupsize);
     await utils.time(
-        addOp, utils.executeOp, ' Add texture rgba32float ', trials, reps,
+        addOp, utils.executeOp, ' Add texture(rgba32float) ', trials, reps,
         warmupTrials);
   }
 }

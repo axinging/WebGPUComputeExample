@@ -19,9 +19,9 @@ import * as utils from './utils.js';
   const enableTimeStamp = false;
   const device = await adapter.requestDevice();
   const glslang = await glslangInit();
-  const trials = 2;
-  const repeat = 2;
-  const warmupTrials = 1;
+  const trials = 50;
+  const repeat = 50;
+  const warmupTrials = 50;
 
   console.error(
       '**********************************************************Below is Add input size test**********************************************************');
