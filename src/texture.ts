@@ -41,7 +41,7 @@ export class TextureOp {
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            width, height, this.format);
+            height, width, this.format);
 
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
 
@@ -86,7 +86,7 @@ export class TextureOp {
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[0], this.shape[1], this.format);
+            this.shape[1], this.shape[0], this.format);
 
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
 
@@ -98,7 +98,7 @@ export class TextureOp {
   getBufferSize() {  // width: number, height: number) {
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[0], this.shape[1], this.format);
+            this.shape[1], this.shape[0], this.format);
 
     const bytesPerRow = tex_util.getBytesPerRow(widthTex);
     return bytesPerRow * heightTex;
@@ -122,7 +122,7 @@ export class TextureOp {
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[4], this.shape[5], this.format);
+            this.shape[5], this.shape[4], this.format);
     this.resultMatrixTexture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
       format: this.format,
@@ -318,7 +318,7 @@ export class TextureOp {
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[0], this.shape[1], this.format);
+            this.shape[1], this.shape[0], this.format);
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
     // Encode commands for copying texture to buffer.
     commandEncoder.copyTextureToBuffer(
@@ -450,7 +450,7 @@ export class TextureOp {
   getBufferSize2() {
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[0], this.shape[1], this.format);
+            this.shape[1], this.shape[0], this.format);
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
     const sliceSize = bytesPerRow * heightTex;
     return sliceSize;

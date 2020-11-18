@@ -31,7 +31,7 @@ export class CopyTextureOp {
       src: GPUBuffer, width: number, height: number) {
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            width, height, this.format);
+            height,width, this.format);
 
     const texture = this.device.createTexture({
       size: {width: widthTex, height: heightTex, depth: 1},
@@ -62,7 +62,7 @@ export class CopyTextureOp {
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[0], this.shape[1], this.format);
+            this.shape[1], this.shape[0], this.format);
 
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
 
@@ -130,7 +130,7 @@ export class CopyTextureOp {
 
     const [widthTex, heightTex] =
         tex_util.getPackedMatrixTextureShapeWidthHeight(
-            this.shape[0], this.shape[1], this.format);
+            this.shape[1], this.shape[0], this.format);
     console.log('widthTex = ' + widthTex + '; heightTex = ' + heightTex);
     const bytesPerRow = tex_util.getBytesPerRow(widthTex, this.kBytesPerTexel);
     // Encode commands for copying texture to buffer.

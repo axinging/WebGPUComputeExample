@@ -123,11 +123,11 @@ export function getPackedMatrixTextureShapeWidthHeight(
   if (format == 'rgba32float' || format == 'rgba32uint')
     // return [Math.max(1, Math.ceil(rows)), Math.max(1, Math.ceil(columns /
     // 4))];
-    return [Math.max(1, Math.ceil(rows / 4)), Math.max(1, Math.ceil(columns))];
+    return [Math.max(1, Math.ceil(columns / 4)), Math.max(1, Math.ceil(rows))];
   else if (format == 'rgba8uint')
-    return [rows, columns];
+    return [columns, rows];
   else
-    return [rows, columns];
+    return [columns, rows];
 }
 
 export function getPackedRGBAArraySizeFromMatrixShape(
