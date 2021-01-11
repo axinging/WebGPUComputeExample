@@ -48,7 +48,7 @@ export class TextureOp {
     // TODO: turn this into type of secondMatrix.
     // this didn't work under rgba32float.
     if (((widthTex % 64 == 0) && this.format == 'r32float') ||
-         (widthTex % 16 == 0 && this.format == 'rgba32float')) {
+        (widthTex % 16 == 0 && this.format == 'rgba32float')) {
       // console.error('Not padding when the input size is 256 bytes aligned');
       new Float32Array(src.getMappedRange()).set(matrixData);
     } else {
@@ -73,13 +73,13 @@ export class TextureOp {
         {texture: texture, mipLevel: 0, origin: {x: 0, y: 0, z: 0}},
         {width: widthTex, height: heightTex, depth: 1});
     this.device.defaultQueue.submit([encoder.finish()]);
+    // TODO: This is bad idea, src is not created by acquireBuffer.
     this.releaseBuffer(src);
     return texture;
   }
 
-  //  From: Dawn: ComputeTextureCopyBufferSize
-  // TODO: Make this works with different input size
-  //
+  // From: Dawn: ComputeTextureCopyBufferSize
+  // TODO: Make this works with different input size.
   getBufferSize3() {
     const blockHeight = 1;
     const blockWidth = 1;
@@ -351,13 +351,14 @@ export class TextureOp {
     gpuReadBuffer.unmap();
     gpuReadBuffer.destroy();
     // this didn't work under rgba32f.
-   if (((widthTex % 64 == 0) && this.format == 'r32float') ||
-         (widthTex % 16 == 0 && this.format == 'rgba32float')) {
+    if (((widthTex % 64 == 0) && this.format == 'r32float') ||
+        (widthTex % 16 == 0 && this.format == 'rgba32float')) {
       // console.error('Not padding when the input size is 256 bytes aligned');
       return arrayBuffer;
     } else {
       return this.removeTexturePadding(
-          new Float32Array(arrayBuffer), this.shape[0], this.shape[1], bytesPerRow);
+          new Float32Array(arrayBuffer), this.shape[0], this.shape[1],
+          bytesPerRow);
     }
   }
 
@@ -467,8 +468,7 @@ export class TextureOp {
       height: number,
       bytesPerRow: number,
   ) {
-    let textureDataWithPadding =
-        new Float32Array(bytesPerRow / 4 * height);
+    let textureDataWithPadding = new Float32Array(bytesPerRow / 4 * height);
 
     for (let y = 0; y < height; ++y) {
       for (let x = 0; x < width; ++x) {
