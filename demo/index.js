@@ -43,6 +43,7 @@ import * as utils from './utils.js';
   size = 2048;
   await common.runTestMatmul(device, glslang, size, size, trials, repeat, warmupTrials);
 
+  /*
   console.error(
       '**********************************************************Below is for work group size test for Add**********************************************************');
   const inputSizeWGS = 1024;
@@ -82,4 +83,5 @@ import * as utils from './utils.js';
   await commonwgs.runTestAddTextureRGBA32FWGS(
       device, glslang, inputSizeWGS, inputSizeWGS, trials, repeat, warmupTrials,
       [32, 32, 1]);
+   */
 })();

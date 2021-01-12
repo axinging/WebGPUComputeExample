@@ -74,7 +74,8 @@ export class TextureOp {
         {width: widthTex, height: heightTex, depth: 1});
     this.device.defaultQueue.submit([encoder.finish()]);
     // TODO: This is bad idea, src is not created by acquireBuffer.
-    this.releaseBuffer(src);
+    // this.releaseBuffer(src);
+    src.destroy();
     return texture;
   }
 

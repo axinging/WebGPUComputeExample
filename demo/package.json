@@ -22,6 +22,10 @@
     "buildmatmul": "cross-env NODE_ENV=production parcel build index_matmul.html --public-url ./",
     "watchalign": "cross-env NODE_ENV=development parcel index_rgba32f_align.html --no-hmr ",
     "buildalign": "cross-env NODE_ENV=production parcel build index_rgba32f_align.html --public-url ./",
+    "watchmemb": "cross-env NODE_ENV=development parcel index_memorybuffer.html --no-hmr ",
+    "buildmemb": "cross-env NODE_ENV=production parcel build index_memorybuffer.html --public-url ./",
+    "watchmemt": "cross-env NODE_ENV=development parcel index_memorytexture.html --no-hmr ",
+    "buildmemt": "cross-env NODE_ENV=production parcel build index_memorytexture.html --public-url ./",
     "lint": "eslint .",
     "link-local": "yalc link @webgpu/compute"
   },
